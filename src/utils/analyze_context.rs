@@ -197,7 +197,7 @@ pub struct AnalyzeContextUsageInput<'a> {
 fn estimate_json(value: &serde_json::Value) -> u64 {
     serde_json::to_string(value)
         .map(|value| {
-            (crate::services::token_estimation::rough_token_count_estimation(&value) as u64)
+            crate::services::token_estimation::rough_token_count_estimation(&value) as u64
         })
         .unwrap_or_default()
 }
@@ -306,9 +306,9 @@ fn count_message_breakdown(messages: &[Message]) -> ContextMessageBreakdown {
                     match content {
                         AssistantContent::ToolUse(tool) | AssistantContent::ServerToolUse(tool) => {
                             let tokens =
-                                (crate::services::token_estimation::rough_token_count_estimation(
+                                crate::services::token_estimation::rough_token_count_estimation(
                                     &format!("{}{}", tool.name, tool.input),
-                                ) as u64);
+                                ) as u64;
                             breakdown.tool_call_tokens += tokens;
                             calls.entry(tool.name.clone()).or_default().0 += tokens;
                         }
@@ -324,15 +324,15 @@ fn count_message_breakdown(messages: &[Message]) -> ContextMessageBreakdown {
                         }
                         AssistantContent::Text(text) | AssistantContent::Thinking { text, .. } => {
                             breakdown.assistant_message_tokens +=
-                                (crate::services::token_estimation::rough_token_count_estimation(
+                                crate::services::token_estimation::rough_token_count_estimation(
                                     text,
-                                ) as u64);
+                                ) as u64;
                         }
                         AssistantContent::RedactedThinking { data } => {
                             breakdown.assistant_message_tokens +=
-                                (crate::services::token_estimation::rough_token_count_estimation(
+                                crate::services::token_estimation::rough_token_count_estimation(
                                     data,
-                                ) as u64);
+                                ) as u64;
                         }
                         AssistantContent::WebSearchToolResult { content, .. } => {
                             breakdown.assistant_message_tokens += estimate_json(content);
@@ -369,9 +369,9 @@ fn count_message_breakdown(messages: &[Message]) -> ContextMessageBreakdown {
                         }
                         UserContent::Text(text) | UserContent::MetaText(text) => {
                             breakdown.user_message_tokens +=
-                                (crate::services::token_estimation::rough_token_count_estimation(
+                                crate::services::token_estimation::rough_token_count_estimation(
                                     text,
-                                ) as u64);
+                                ) as u64;
                         }
                         UserContent::RawImage { block, .. } => {
                             breakdown.user_message_tokens +=
@@ -404,9 +404,9 @@ fn count_message_breakdown(messages: &[Message]) -> ContextMessageBreakdown {
             }
             Message::System(system) => {
                 breakdown.user_message_tokens +=
-                    (crate::services::token_estimation::rough_token_count_estimation(
+                    crate::services::token_estimation::rough_token_count_estimation(
                         system.content().unwrap_or(""),
-                    ) as u64);
+                    ) as u64;
             }
             Message::HookResult(hook) => {
                 breakdown.user_message_tokens += estimate_json(&hook.attachment);
@@ -500,7 +500,7 @@ fn create_grid(
 
     let reserved_squares = reserved.map(&make_squares).unwrap_or_default();
     let free_target = total_squares.saturating_sub(reserved_squares.len());
-    let free = categories
+    let _free = categories
         .iter()
         .find(|category| category.name == "Free space");
     while squares.len() < free_target {

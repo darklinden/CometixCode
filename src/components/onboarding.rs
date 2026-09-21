@@ -35,6 +35,7 @@ pub(crate) enum OnboardingStepId {
 }
 
 impl OnboardingStepId {
+    #[allow(dead_code)]
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             Self::Preflight => "preflight",

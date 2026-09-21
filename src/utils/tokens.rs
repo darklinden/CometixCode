@@ -7,10 +7,8 @@
 //! so this port keeps the same ownership boundary and uses the last usage-bearing
 //! assistant as the anchor.
 
-use crate::services::token_estimation::{
-    rough_token_count_estimation, rough_token_count_estimation_for_messages,
-};
-use crate::types::message::{AssistantContent, AssistantMessage, Message, TokenUsage, UserContent};
+use crate::services::token_estimation::rough_token_count_estimation_for_messages;
+use crate::types::message::{AssistantContent, AssistantMessage, Message, TokenUsage};
 
 /// Maps to CC `utils/tokens.ts` `getTokenUsage(...)`.
 ///
@@ -126,6 +124,8 @@ pub fn token_count_with_estimation(messages: &[Message]) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::token_estimation::rough_token_count_estimation;
+    use crate::types::message::UserContent;
 
     fn user_text(text: impl Into<String>) -> Message {
         Message::User(crate::types::message::UserMessage {

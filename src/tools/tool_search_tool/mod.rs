@@ -90,6 +90,7 @@ pub(crate) fn pending_mcp_server_names(
 
 /// Search deferred tools by select:/keyword query.
 /// Maps to: CC `tools/ToolSearchTool/ToolSearchTool.ts` `call` (:328).
+#[allow(dead_code)]
 pub(crate) fn tool_search_output(input: &serde_json::Value) -> ToolSearchOutput {
     tool_search_output_from_tools_and_mcp_state(
         input,

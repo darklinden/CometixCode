@@ -428,8 +428,8 @@ pub fn It2SetupPrompt<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<crate::utils::theme::Theme>();
-    let mut step = hooks.use_state(It2SetupStep::default);
-    let mut package_manager = hooks.use_state(|| Option::<PythonPackageManager>::None);
+    let step = hooks.use_state(It2SetupStep::default);
+    let package_manager = hooks.use_state(|| Option::<PythonPackageManager>::None);
     let mut error = hooks.use_state(|| Option::<String>::None);
     let mut focused_index = hooks.use_state(|| 0usize);
     let mut pending_action = hooks.use_state(|| Option::<It2SetupAction>::None);

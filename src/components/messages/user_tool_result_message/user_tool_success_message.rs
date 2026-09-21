@@ -5,7 +5,6 @@ use super::{
     contains_ansi_escape, official_file_result_element, render_tool_result_lines_for_result,
     success_tool_result_is_nonvisual,
 };
-use crate::components::markdown::Markdown;
 use crate::components::shell::use_expand_shell_output;
 use crate::components::structured_diff::color_diff::SyntaxHighlightTheme;
 use crate::state::app_state::use_app_state;

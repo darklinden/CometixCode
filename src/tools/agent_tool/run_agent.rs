@@ -19,7 +19,7 @@ use crate::services::api::claude::SystemPrompt;
 use crate::tool::{ToolCallProgressFn, ToolUseContext};
 use crate::types::message::{AssistantContent, Message, TokenUsage, UserContent};
 use crate::types::permissions::{
-    PermissionBehavior, PermissionMode, PermissionPromptChoice, PermissionPromptResponse,
+    PermissionMode, PermissionPromptChoice, PermissionPromptResponse,
     PermissionRequest,
 };
 use crate::types::tools::Tool;
@@ -2017,6 +2017,7 @@ mod tests {
     use crate::types::message::{
         AssistantContent, AssistantMessage, StopReason, ToolResult, ToolUseBlock, UserMessage,
     };
+    use crate::utils::permissions::permission_rule::PermissionBehavior;
     use std::io::Write;
 
     fn tool(name: &str) -> Tool {

@@ -10,7 +10,7 @@
 
 use super::hooks_config_snapshot::get_hooks_config_from_snapshot;
 use crate::services::hooks::env::{
-    EnvHookExecutionResult, HookOutsideReplResult, TOOL_HOOK_EXECUTION_TIMEOUT_MS,
+    EnvHookExecutionResult, TOOL_HOOK_EXECUTION_TIMEOUT_MS,
     execute_cwd_changed_hooks_with_config, execute_file_changed_hooks_with_config,
 };
 use crate::services::hooks::{HookEvent, RegisteredHooks};

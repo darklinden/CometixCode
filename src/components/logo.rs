@@ -5,7 +5,4 @@
 //! `components::logo::Logo` call sites while `Messages` owns the main-screen
 //! logo boundary.
 
-pub(crate) use crate::components::logo_v2::logo_v2::{
-    LOGO_DISPLAY_NAME, Logo, LogoDisplayData, display_width, format_cwd_line,
-    format_model_and_billing, truncate_to_width,
-};
+pub(crate) use crate::components::logo_v2::logo_v2::Logo;

@@ -142,7 +142,7 @@ pub fn TrustDialog<'a>(
     let theme = hooks.use_context::<Theme>();
     let options = trust_dialog_options();
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
+    let focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
     let mut pending_choice = hooks.use_state(|| Option::<TrustDialogChoice>::None);
 
     if props.snapshot.has_trust_dialog_accepted {

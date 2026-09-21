@@ -381,15 +381,15 @@ pub fn AskUserQuestionPermissionRequest(
     let hide_submit_tab_flag = hide_submit_tab(&questions);
     let mut state = hooks.use_state(MultipleChoiceState::default);
     // Maps to: CC `components/permissions/AskUserQuestionPermissionRequest/AskUserQuestionPermissionRequest.tsx:182-222`.
-    let mut pasted_contents_by_question =
+    let pasted_contents_by_question =
         hooks.use_state(BTreeMap::<String, BTreeMap<usize, PastedContent>>::new);
-    let mut next_paste_id = hooks.use_state(|| 0usize);
-    let mut focused_index = hooks.use_state(|| 0usize);
-    let mut multi_submit_focused = hooks.use_state(|| false);
-    let mut footer_focused = hooks.use_state(|| false);
-    let mut footer_index = hooks.use_state(|| 0usize);
-    let mut submit_focus = hooks.use_state(|| 0usize);
-    let mut notes_focused = hooks.use_state(|| false);
+    let next_paste_id = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
+    let multi_submit_focused = hooks.use_state(|| false);
+    let footer_focused = hooks.use_state(|| false);
+    let footer_index = hooks.use_state(|| 0usize);
+    let submit_focus = hooks.use_state(|| 0usize);
+    let notes_focused = hooks.use_state(|| false);
     let mut pending_response = hooks.use_state(|| Option::<PermissionPromptResponse>::None);
     let mut pending_cancel = hooks.use_state(|| false);
     let mut editor_error = hooks.use_state(|| Option::<String>::None);

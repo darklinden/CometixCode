@@ -1,5 +1,4 @@
 use crate::utils::config::GlobalConfig;
-use crate::utils::env_utils;
 use crate::utils::settings::types::SettingsJson;
 use crate::utils::theme;
 

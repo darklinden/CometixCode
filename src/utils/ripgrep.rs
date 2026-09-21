@@ -65,6 +65,7 @@ struct RipgrepAvailability {
     working: bool,
     #[allow(dead_code)]
     last_tested_ms: u128,
+    #[allow(dead_code)]
     config: RipgrepConfig,
 }
 

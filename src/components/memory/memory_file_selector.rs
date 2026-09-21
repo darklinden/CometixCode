@@ -390,7 +390,7 @@ pub fn MemoryFileSelector<'a>(
                 .unwrap_or(0)
         }
     });
-    let mut focus = hooks.use_state(|| MemoryFocus::Select);
+    let focus = hooks.use_state(|| MemoryFocus::Select);
     let mut pending_action = hooks.use_state(|| Option::<MemorySelectorAction>::None);
     let option_count = options.len();
     if focused_index.get() >= option_count {

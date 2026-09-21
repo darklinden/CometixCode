@@ -12,7 +12,7 @@ use crate::utils::stats::{
 use chrono::{DateTime, Local, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 #[cfg(test)]
 use std::sync::OnceLock;
 use std::sync::{LazyLock, Mutex};

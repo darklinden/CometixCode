@@ -118,7 +118,7 @@ pub fn EnterPlanModePermissionRequest<'a>(
     let theme = hooks.use_context::<Theme>();
     let options = enter_plan_mode_permission_options();
     let option_count = options.len();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_select = hooks.use_state(|| Option::<EnterPlanModePermissionOptionValue>::None);
     let mut pending_cancel = hooks.use_state(|| false);
 

@@ -16,7 +16,6 @@
 //! (P5 G10).
 
 use iocraft::prelude::*;
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use crate::services::mcp::config::all_configured_mcp_servers_readonly;
@@ -24,7 +23,7 @@ use crate::services::mcp::types::ScopedMcpServerConfig;
 use crate::services::mcp::types::{McpServerConnectionType, McpServerSnapshot};
 use crate::state::app_state_store::McpWriter;
 use crate::state::store::AppStore;
-use crate::utils::config::{ProjectConfig, load_global_config, normalize_project_path};
+use crate::utils::config::{ProjectConfig, normalize_project_path};
 
 /// Maps to: CC `MCPConnectionManagerProps` (`:47-51`) — `dynamicMcpConfig` and
 /// `isStrictMcpConfig` are props at the source too, carried here inside
@@ -197,6 +196,10 @@ pub fn project_config_from_global_config() -> ProjectConfig {
 
 /// Maps to: CC `MCPConnectionManager` callback using the configured server map
 /// from `useManageMCPConnections(...)` when the AppState row lacks config.
+// `IndexMap::remove` is deprecated in indexmap 2.x because its ordering is
+// ambiguous; this is a one-shot lookup on a map that is dropped immediately,
+// so the order does not matter and the call is kept as-is.
+#[allow(deprecated)]
 pub fn configured_server_from_global_config(server_name: &str) -> Option<ScopedMcpServerConfig> {
     let project_config = project_config_from_global_config();
     all_configured_mcp_servers_readonly(

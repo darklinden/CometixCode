@@ -3,7 +3,6 @@
 //! `commands::resume` module; selector UI is `components/log_selector.rs`,
 //! matching the official `ResumeCommand → LogSelector` split.
 
-use crate::commands::resume;
 use crate::components::log_selector::LogSelector;
 use crate::components::spinner::SpinnerGlyph;
 use crate::utils::cross_project_resume::{CrossProjectResumeResult, check_cross_project_resume};

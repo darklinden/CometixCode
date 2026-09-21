@@ -676,7 +676,6 @@ mod tests {
     }
 
     #[test]
-    #[test]
     fn tool_to_api_schema_strips_swarm_fields_when_agent_swarms_are_off() {
         let _env_guard = crate::utils::env_utils::TEST_ENV_LOCK.lock().unwrap();
         let _teams =

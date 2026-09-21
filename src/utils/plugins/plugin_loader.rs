@@ -2429,6 +2429,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn test_loaded_plugin(name: &str, source: &str, enabled: bool) -> LoadedPlugin {
         LoadedPlugin {
             name: name.to_string(),
@@ -2457,6 +2458,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn merge_plugin_sources_drops_managed_session_plugins_and_preserves_precedence() {
         let session_alpha = test_loaded_plugin("alpha", "alpha@inline", true);
         let session_beta = test_loaded_plugin("beta", "beta@inline", true);

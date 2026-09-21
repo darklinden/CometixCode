@@ -165,6 +165,7 @@ pub(crate) fn simple_diff_lines(old: &str, new: &str) -> Vec<String> {
 }
 
 /// Wrap diff lines into a whole-input hunk for legacy callers.
+#[allow(dead_code)]
 pub(crate) fn simple_diff_hunk(old: &str, new: &str, lines: &[String]) -> StructuredDiffHunk {
     StructuredDiffHunk {
         old_start: 1,

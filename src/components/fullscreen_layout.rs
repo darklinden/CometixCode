@@ -62,7 +62,7 @@ pub struct FullscreenLayoutProps {
     pub scroll_keybindings_active: Option<bool>,
     /// Enables less/tmux-style raw pager keys in transcript modal mode.
     pub scroll_keybindings_modal: Option<bool>,
-    pub on_scroll: Handler<(bool)>,
+    pub on_scroll: Handler<bool>,
     pub on_pill_click: HandlerMut<'static, ()>,
     pub on_sticky_prompt_click: HandlerMut<'static, ()>,
     /// Test seam / staged wiring override. `None` reads the official env gate.

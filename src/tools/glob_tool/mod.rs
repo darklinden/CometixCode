@@ -91,6 +91,7 @@ fn to_relative_path(path: &std::path::Path, cwd: &std::path::Path) -> String {
 
 /// Execute a permitted Glob tool use, producing the CC-shaped output.
 /// Maps to: CC `tools/GlobTool/GlobTool.ts:153-175` `call(...)`.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn glob_output(
     args: &serde_json::Value,
     cwd: Option<&std::path::Path>,

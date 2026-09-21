@@ -1098,6 +1098,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     #[derive(Clone, Debug)]
     struct SingleToolBoundaryDeps {
         name: &'static str,
@@ -1136,6 +1137,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     #[derive(Clone, Debug)]
     struct CowThenBoundaryDeps {
         file_path: String,
@@ -1188,6 +1190,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     async fn run_single_tool_boundary(
         name: &'static str,
         input: serde_json::Value,

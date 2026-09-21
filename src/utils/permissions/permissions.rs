@@ -2494,6 +2494,7 @@ fn web_fetch_permission_rule_content(input: &serde_json::Value, fallback: &str) 
 /// Maps to: CC accept-edits mode file permission checks inside
 /// `utils/permissions/permissions.ts`.
 
+#[allow(dead_code)]
 fn normalized_absolute_permission_path(path: &str) -> Option<std::path::PathBuf> {
     if path.starts_with("//") || path.starts_with("\\\\") {
         return None;
@@ -2510,6 +2511,7 @@ fn normalized_absolute_permission_path(path: &str) -> Option<std::path::PathBuf>
     Some(normalize_permission_path(&absolute_path))
 }
 
+#[allow(dead_code)]
 fn path_is_inside_working_dir_normalized(path: &std::path::Path) -> bool {
     let Ok(cwd) = std::env::current_dir() else {
         return false;
@@ -2517,6 +2519,7 @@ fn path_is_inside_working_dir_normalized(path: &std::path::Path) -> bool {
     path.starts_with(normalize_permission_path(&cwd))
 }
 
+#[allow(dead_code)]
 fn normalize_permission_path(path: &std::path::Path) -> std::path::PathBuf {
     let mut normalized = std::path::PathBuf::new();
     for component in path.components() {
@@ -2531,6 +2534,7 @@ fn normalize_permission_path(path: &std::path::Path) -> std::path::PathBuf {
     normalized
 }
 
+#[allow(dead_code)]
 fn path_has_sensitive_component(path: &std::path::Path) -> bool {
     path.components().any(|component| {
         let value = component.as_os_str().to_string_lossy();

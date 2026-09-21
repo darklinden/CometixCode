@@ -81,7 +81,7 @@ pub fn AutoModeOptInDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<AutoModeOptInChoice>::None);
     let options = auto_mode_opt_in_options(props.decline_exits);
     let option_count = options.len().max(1);

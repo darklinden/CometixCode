@@ -586,7 +586,7 @@ fn sibling_tools_resolved(tool_use_id: &str, lookups: Option<&MessageLookups>) -
 mod tests {
     use super::*;
     use crate::types::message::{
-        GroupedToolUseMessage, SystemMessageLevel, ToolResultStatus, ToolUseProgressMessage,
+        GroupedToolUseMessage, SystemMessageLevel,
     };
     use std::collections::BTreeSet;
 

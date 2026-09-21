@@ -138,11 +138,13 @@ pub struct Output {
 /// Validation runs at the shared pre-hook gate; this function performs the
 /// file read/JSON mutation/write and returns the official output shape,
 /// including error-as-data behavior.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn notebook_edit_output(args: &serde_json::Value) -> Output {
     let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
     notebook_edit_output_with_cwd(args, &cwd)
 }
 
+#[allow(dead_code)]
 fn notebook_edit_output_with_cwd(args: &serde_json::Value, cwd: &std::path::Path) -> Output {
     notebook_edit_output_with_target(args, cwd, None, None)
 }
@@ -1315,7 +1317,7 @@ mod tests {
             "new_source": "2"
         });
         let tool = NotebookEditTool;
-        let mut context = crate::tool::ToolUseContext::default();
+        let context = crate::tool::ToolUseContext::default();
         assert!(matches!(
             tool.validate_input(&args, &context),
             crate::tool::ValidationResult::Error { error_code: 9, .. }
@@ -1388,7 +1390,7 @@ mod tests {
         let path = temp_notebook_path("validation-codes");
         std::fs::write(&path, "not json").unwrap();
         let timestamp_ms = crate::utils::file::get_file_modification_time(&path);
-        let mut context = crate::tool::ToolUseContext::default();
+        let context = crate::tool::ToolUseContext::default();
         context.read_file_state.set_entry(ReadFileStateEntry {
             path: path.display().to_string(),
             content: None,
@@ -1906,7 +1908,7 @@ mod tests {
             "cell_id": "cell-a",
             "new_source": "new"
         }));
-        let mut context = crate::tool::ToolUseContext::default();
+        let context = crate::tool::ToolUseContext::default();
         let current_timestamp = crate::utils::file::get_file_modification_time(&path).unwrap();
         context
             .read_file_state
@@ -1982,7 +1984,7 @@ mod tests {
                 ..crate::utils::file_history::FileHistoryState::default()
             });
         let store = crate::state::store::AppStore::new(app_state, None);
-        let mut context = crate::tool::ToolUseContext::default().with_app_store(store.clone());
+        let context = crate::tool::ToolUseContext::default().with_app_store(store.clone());
         context
             .read_file_state
             .set_entry(crate::utils::query_helpers::ReadFileStateEntry {

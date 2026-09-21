@@ -24,8 +24,7 @@ use super::worker_badge::WorkerBadgeProps;
 use crate::components::custom_select::{Select, SelectLayout, SelectOptionData};
 use crate::tool::ToolPermissionContext;
 use crate::types::permissions::{
-    PermissionMode, PermissionPromptChoice, PermissionPromptResponse, PermissionUpdate,
-    PermissionUpdateDestination,
+    PermissionPromptChoice, PermissionPromptResponse, PermissionUpdate,
 };
 use crate::utils::theme::Theme;
 use iocraft::prelude::*;
@@ -600,6 +599,8 @@ mod tests {
     use futures::{StreamExt, stream};
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
+    use crate::types::permissions::PermissionUpdateDestination;
+    use crate::types::permissions::PermissionMode;
 
     fn key(code: KeyCode) -> TerminalEvent {
         TerminalEvent::Key(KeyEvent::new(KeyEventKind::Press, code))

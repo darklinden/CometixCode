@@ -31,7 +31,7 @@ fn status_color(theme: &Theme, status: Option<&str>) -> Color {
 #[component]
 pub fn UserAgentNotificationMessage(
     props: &UserAgentNotificationMessageProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     // CC `:30` — `if (!summary) return null`.
     let Some(summary) = crate::utils::messages::extract_tag(&props.text, "summary") else {

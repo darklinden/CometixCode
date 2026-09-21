@@ -33,7 +33,7 @@
 //! `AgentTool.tsx:727-754`, ported as `mod.rs#fork_parent_system_prompt_for_spawn`.
 
 use super::built_in::general_purpose_agent::general_purpose_agent;
-use super::load_agents_dir::{AgentDefinition, AgentDefinitionSource};
+use super::load_agents_dir::AgentDefinition;
 use super::run_agent::{self, RunAgentInput};
 use crate::types::message::{Message, UserContent, UserMessage};
 
@@ -533,6 +533,7 @@ fn bump_resumed_worktree_mtime(worktree_path: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tools::agent_tool::load_agents_dir::AgentDefinitionSource;
 
     #[test]
     fn resume_agent_without_transcript_reports_official_error_boundary() {

@@ -5,8 +5,10 @@
 //! visible glyph matrix without hardcoded RGB values.
 
 use crate::utils::stats::DailyActivity;
-use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
+use chrono::{Datelike, Local, TimeZone, Utc};
 use std::collections::BTreeMap;
+#[cfg(test)]
+use chrono::NaiveDate;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct HeatmapOptions {

@@ -10,8 +10,7 @@ use crate::components::custom_select::SelectOptionData;
 #[cfg(test)]
 use crate::components::model_picker::displayed_effort;
 use crate::components::model_picker::{
-    MODEL_NO_PREFERENCE, ModelEffortLevel, ModelPicker, ModelPickerSelection, cycle_effort,
-    model_picker_options,
+    MODEL_NO_PREFERENCE, ModelEffortLevel, ModelPicker, ModelPickerSelection,
 };
 use crate::state::app_state::use_app_state_maybe_outside_of_provider;
 use crate::state::store::AppStore;
@@ -111,6 +110,7 @@ fn apply_wrapper_model_state(store: &AppStore, model: Option<String>, is_fast_mo
     });
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn handle_select_output(option: &SelectOptionData, effort: Option<ModelEffortLevel>) -> String {
     handle_select_message(selected_model_value(&option.value), effort, false)
 }
@@ -257,6 +257,8 @@ mod tests {
     use futures::{StreamExt, stream};
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
+    use crate::components::model_picker::model_picker_options;
+    use crate::components::model_picker::cycle_effort;
 
     fn key(code: KeyCode) -> TerminalEvent {
         TerminalEvent::Key(KeyEvent::new(KeyEventKind::Press, code))

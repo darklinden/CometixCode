@@ -1615,7 +1615,7 @@ mod tests {
             crate::types::permissions::PermissionMode::Default,
         );
         // Abort before run_agent so the test does not need a live model.
-        let mut context = context_with_general_purpose_agent();
+        let context = context_with_general_purpose_agent();
         context.abort_controller.abort();
         let result =
             runtime.block_on(SkillTool.call(&request.input, &request, &context, None, None, None));

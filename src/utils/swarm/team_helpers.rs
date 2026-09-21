@@ -352,6 +352,7 @@ pub(crate) fn generate_unique_teammate_name(base_name: &str, team_name: Option<&
 
 /// Maps to: CC `teamHelpers.ts:235-251` `addHiddenPaneId` —
 /// `readTeamFile` (`:236`) → modify → `writeTeamFile` (`:245`).
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn add_hidden_pane_id(team_name: &str, pane_id: &str) -> bool {
     let Some(mut record) = read_team_file(team_name) else {
         return false;
@@ -366,6 +367,7 @@ pub(crate) fn add_hidden_pane_id(team_name: &str, pane_id: &str) -> bool {
 
 /// Maps to: CC `teamHelpers.ts:259-276` `removeHiddenPaneId` —
 /// `readTeamFile` (`:260`) → modify → `writeTeamFile` (`:270`).
+#[allow(dead_code)]
 pub(crate) fn remove_hidden_pane_id(team_name: &str, pane_id: &str) -> bool {
     let Some(mut record) = read_team_file(team_name) else {
         return false;
@@ -382,6 +384,7 @@ pub(crate) fn remove_hidden_pane_id(team_name: &str, pane_id: &str) -> bool {
 
 /// Maps to: CC `teamHelpers.ts:285-317` `removeMemberFromTeam` —
 /// `readTeamFile` (`:289`) → modify → `writeTeamFile` (`:312`).
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn remove_member_from_team(team_name: &str, tmux_pane_id: &str) -> bool {
     let Some(mut record) = read_team_file(team_name) else {
         return false;
@@ -441,6 +444,7 @@ pub(crate) fn set_member_mode(team_name: &str, member_name: &str, mode: &str) ->
 /// calls this "a single atomic operation" that "avoids race conditions when
 /// updating multiple teammates at once"; that only holds if the read is the
 /// disk read.
+#[allow(dead_code)]
 pub(crate) fn set_multiple_member_modes(team_name: &str, updates: &[(&str, &str)]) -> bool {
     let Some(mut record) = read_team_file(team_name) else {
         return false;
@@ -471,6 +475,7 @@ pub(crate) fn set_multiple_member_modes(team_name: &str, updates: &[(&str, &str)
 /// radius. (CC's version is `async` only because it sits on the fs/promises
 /// pair — the read-modify-write is still un-serialized there, so the sync Rust
 /// shape is equivalent, not weaker.)
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn set_member_active(team_name: &str, member_name: &str, is_active: bool) -> bool {
     let Some(mut record) = read_team_file(team_name) else {
         return false;

@@ -63,7 +63,7 @@ pub fn InvalidSettingsDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<InvalidSettingsChoice>::None);
     let options = invalid_settings_options();
     let option_count = options.len().max(1);

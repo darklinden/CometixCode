@@ -7,7 +7,6 @@ pub mod system_init;
 use crate::types::message::{
     Attachment, AttachmentMessage, Message, ToolResultContentBlock, UserContent, UserMessage,
 };
-use chrono::Utc;
 use serde_json::Value;
 
 /// Maps to: CC `utils/messages.ts#normalizeContentFromAPI:2651-2763`.
@@ -1744,12 +1743,14 @@ fn remove_tag_section(content: &str, tag: &str) -> String {
 // `MessageLookups.toolUseByToolUseID` entry shape used to resolve a
 // `tool_result` back to its originating tool_use.
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, Default)]
 pub(crate) struct ToolUseLookup {
     pub(crate) tool_name: String,
     pub(crate) input: Option<serde_json::Value>,
 }
 
+#[allow(dead_code)]
 pub(crate) type ToolUseLookups = std::collections::HashMap<String, ToolUseLookup>;
 
 /// Maps to: CC `utils/messages.ts:2861-2871` `getUserMessageText`.
@@ -5047,6 +5048,7 @@ mod message_merge_tests {
 #[cfg(test)]
 mod api_normalization_tests {
     use super::*;
+    use chrono::Utc;
     use crate::types::message::{AttachmentMessage, ToolResult};
     use crate::utils::messages::{create_assistant_message, create_user_message};
     use serde_json::json;

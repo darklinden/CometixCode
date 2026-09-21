@@ -357,7 +357,7 @@ fn latest_tool_for_detail(
 #[component]
 pub fn MCPSettings(props: &MCPSettingsProps, mut hooks: Hooks) -> impl Into<AnyElement<'static>> {
     let mut view_state = hooks.use_state(MCPViewState::default);
-    let mut did_complete_empty = hooks.use_state(|| false);
+    let did_complete_empty = hooks.use_state(|| false);
     let runtime_mcp =
         crate::state::app_state::use_app_state(&mut hooks, |state| (*state.mcp).clone());
     let servers = if let Some(ctx) = hooks.try_use_context::<StartupDiagnosticsSnapshot>() {

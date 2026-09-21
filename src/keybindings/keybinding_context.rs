@@ -10,7 +10,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use super::default_bindings::default_bindings;
 use super::keybinding_provider_setup::CHORD_TIMEOUT;
@@ -259,6 +259,7 @@ mod tests {
     use super::*;
     use crate::keybindings::parser::parse_keystroke;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Duration;
 
     #[test]
     fn chord_completion_dispatches_registered_handler() {

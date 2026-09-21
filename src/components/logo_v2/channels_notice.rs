@@ -11,7 +11,7 @@ use iocraft::prelude::*;
 
 pub use crate::bootstrap::state::ChannelEntry;
 use crate::services::mcp::channel_allowlist::{
-    ChannelAllowlistEntry, get_channel_allowlist, is_channels_enabled,
+    get_channel_allowlist, is_channels_enabled,
 };
 use crate::services::mcp::channel_notification::{
     ChannelAllowlistSource, EffectiveChannelAllowlist,
@@ -261,6 +261,7 @@ pub fn ChannelsNotice(props: &ChannelsNoticeProps, hooks: Hooks) -> impl Into<An
 mod tests {
     use super::*;
     use crate::utils::theme;
+    use crate::services::mcp::channel_allowlist::ChannelAllowlistEntry;
 
     fn render(snapshot: ChannelsNoticeSnapshot) -> String {
         element! {

@@ -173,4 +173,4 @@ mod runtime {
 }
 
 #[cfg(feature = "mcp_runtime")]
-pub(crate) use runtime::{WebSocketTransport, connect_mcp_websocket_transport};
+pub(crate) use runtime::connect_mcp_websocket_transport;

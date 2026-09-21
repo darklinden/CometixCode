@@ -65,7 +65,7 @@ pub fn ClaudeMdExternalIncludesDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<ClaudeMdExternalIncludesChoice>::None);
     let options = claude_md_external_includes_options();
     let option_count = options.len().max(1);

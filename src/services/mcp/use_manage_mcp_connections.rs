@@ -26,7 +26,6 @@ use crate::state::app_state_store::{McpState, McpWriter};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::LazyLock;
 use std::sync::atomic::Ordering;
-use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
 /// Maps to: CC `useManageMCPConnections.ts:95#getErrorKey`.

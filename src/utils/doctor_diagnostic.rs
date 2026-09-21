@@ -461,6 +461,7 @@ fn normalize_path_text(path: &Path) -> String {
         .to_string()
 }
 
+#[allow(dead_code)]
 fn which_in_path(binary: &str) -> Option<String> {
     let path = std::env::var_os("PATH")?;
     for dir in std::env::split_paths(&path) {

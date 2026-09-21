@@ -13,10 +13,10 @@ use anyhow::{Context, Result, anyhow, bail};
 use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, Shutdown, TcpListener, TcpStream, ToSocketAddrs};
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use std::process::Child;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 const MAX_HTTP_HEADER_BYTES: usize = 64 * 1024;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);

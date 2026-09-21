@@ -14,7 +14,7 @@ use super::load_hooks_config;
 use super::matching::get_matching_hooks;
 use super::parsing::{ParsedHookOutput, parse_hook_output, process_hook_json_output};
 use super::{HookContext, HookEvent, RegisteredHooks, build_hook_env_vars, create_base_hook_input};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::path::Path;
 use std::time::Duration;
 
@@ -458,6 +458,7 @@ pub async fn execute_config_change_hooks(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Map;
 
     fn config(value: Value) -> RegisteredHooks {
         let config: crate::services::hooks::HooksConfig = serde_json::from_value(value).unwrap();

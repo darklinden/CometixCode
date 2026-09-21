@@ -284,18 +284,18 @@ pub fn PluginSettings(
         }
     );
     let initial_view_state = get_initial_view_state(parsed_command);
-    let mut view_state = use_plugin_ui_state(&mut hooks, || initial_view_state.clone());
-    let mut active_tab = use_plugin_ui_state(&mut hooks, || {
+    let view_state = use_plugin_ui_state(&mut hooks, || initial_view_state.clone());
+    let active_tab = use_plugin_ui_state(&mut hooks, || {
         get_initial_tab(&initial_view_state).to_string()
     });
-    let mut input_value = use_plugin_ui_state(&mut hooks, || match &initial_view_state {
+    let input_value = use_plugin_ui_state(&mut hooks, || match &initial_view_state {
         ViewState::AddMarketplace { initial_value } => initial_value.clone().unwrap_or_default(),
         _ => String::new(),
     });
-    let mut cursor_offset = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut error = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut result = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut child_search_active = use_plugin_ui_state(&mut hooks, || false);
+    let cursor_offset = use_plugin_ui_state(&mut hooks, || 0usize);
+    let error = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let result = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let child_search_active = use_plugin_ui_state(&mut hooks, || false);
     let store = crate::state::app_state::use_set_app_state(&mut hooks);
     let plugin_error_count = crate::state::app_state::use_app_state(&mut hooks, |state| {
         state.plugins.errors.len()
@@ -317,7 +317,7 @@ pub fn PluginSettings(
     let set_view_state = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = view_state;
+                let state = view_state;
                 state.set(next);
             })
         },
@@ -326,7 +326,7 @@ pub fn PluginSettings(
     let set_active_tab = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = active_tab;
+                let state = active_tab;
                 state.set(next);
             })
         },
@@ -335,7 +335,7 @@ pub fn PluginSettings(
     let set_error = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = error;
+                let state = error;
                 state.set(next);
             })
         },
@@ -344,7 +344,7 @@ pub fn PluginSettings(
     let set_result = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = result;
+                let state = result;
                 state.set(next);
             })
         },
@@ -353,7 +353,7 @@ pub fn PluginSettings(
     let set_input_value = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = input_value;
+                let state = input_value;
                 state.set(next);
             })
         },
@@ -362,7 +362,7 @@ pub fn PluginSettings(
     let set_cursor_offset = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = cursor_offset;
+                let state = cursor_offset;
                 state.set(next);
             })
         },
@@ -371,7 +371,7 @@ pub fn PluginSettings(
     let set_child_search_active = hooks.use_memo(
         move || {
             Handler::from(move |next| {
-                let mut state = child_search_active;
+                let state = child_search_active;
                 state.set(next);
             })
         },
@@ -398,9 +398,9 @@ pub fn PluginSettings(
     let handle_tab_change = hooks.use_memo(
         move || {
             Handler::from(move |tab: String| {
-                let mut active_tab = active_tab;
-                let mut error = error;
-                let mut view_state = view_state;
+                let active_tab = active_tab;
+                let error = error;
+                let view_state = view_state;
                 active_tab.set(tab.clone());
                 error.set(None);
                 match tab.as_str() {
@@ -592,6 +592,7 @@ enum ErrorRowAction {
         name: String,
     },
     ManagedOnly {
+        #[allow(dead_code)]
         name: String,
     },
     None,
@@ -824,7 +825,7 @@ fn remove_extra_marketplace(
     sources: &[(crate::utils::settings::SettingSource, String)],
 ) {
     use crate::utils::settings::{get_settings_for_source, update_settings_for_source};
-    use serde_json::{Value, json};
+    use serde_json::Value;
     for (source, _) in sources {
         let Some(settings) = get_settings_for_source(*source) else {
             continue;
@@ -880,9 +881,9 @@ fn ErrorsTabContent(
     };
     let plugins = crate::state::app_state::use_app_state(&mut hooks, |s| s.plugins.clone());
     let store = crate::state::app_state::use_set_app_state(&mut hooks);
-    let mut selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut action_message = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut failures = use_plugin_ui_state(&mut hooks, Vec::<MarketplaceLoadingFailure>::new);
+    let selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
+    let action_message = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let failures = use_plugin_ui_state(&mut hooks, Vec::<MarketplaceLoadingFailure>::new);
     hooks.use_effect(
         move || {
             crate::utils::process_runtime::runtime_handle_for_detached_work()

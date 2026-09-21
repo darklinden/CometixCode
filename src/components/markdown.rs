@@ -237,6 +237,7 @@ fn linkify_issue_references(text: &str) -> String {
         .into_owned()
 }
 
+#[allow(dead_code)]
 fn normalize_inline_text(text: &str) -> String {
     text.trim().to_string()
 }
@@ -713,6 +714,7 @@ fn strip_ansi_for_width(input: &str) -> String {
     out
 }
 
+#[allow(dead_code)]
 fn display_width_ansi(input: &str) -> usize {
     UnicodeWidthStr::width(strip_ansi_for_width(input).as_str())
 }

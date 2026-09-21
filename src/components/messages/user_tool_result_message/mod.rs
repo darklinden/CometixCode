@@ -17,10 +17,7 @@ use self::user_tool_canceled_message::UserToolCanceledMessage;
 use self::user_tool_error_message::UserToolErrorMessage;
 use self::user_tool_reject_message::UserToolRejectMessage;
 use self::user_tool_success_message::UserToolSuccessMessage;
-use self::utils::{ToolRenderBackground, ToolRenderLine, ToolRenderOptions, ToolRenderTone};
-use crate::components::file_edit_tool_updated_message::FileEditToolUpdatedMessage;
-use crate::components::file_edit_tool_use_rejected_message::FileEditToolUseRejectedMessage;
-use crate::components::notebook_edit_tool_use_rejected_message::NotebookEditToolUseRejectedMessage;
+use self::utils::{ToolRenderLine, ToolRenderOptions, ToolRenderTone};
 use crate::tools::{
     ask_user_question_tool, bash_tool, config_tool, enter_plan_mode_tool, enter_worktree_tool,
     exit_plan_mode_tool, exit_worktree_tool, file_edit_tool, file_read_tool, file_write_tool,
@@ -29,8 +26,7 @@ use crate::tools::{
     send_message_tool, skill_tool, synthetic_output_tool, task_output_tool, task_stop_tool,
     web_fetch_tool, web_search_tool,
 };
-use crate::types::message::{ReadResultKind, ToolResultStatus};
-use crate::utils::truncate::truncate;
+use crate::types::message::ToolResultStatus;
 use iocraft::prelude::*;
 
 #[derive(Default, Props)]
@@ -1052,6 +1048,7 @@ pub(crate) fn tool_name_resolves(tool_name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::components::messages::user_tool_result_message::utils::ToolRenderBackground;
 
     #[test]
     fn malformed_read_success_keeps_raw_output_while_hiding_the_row() {

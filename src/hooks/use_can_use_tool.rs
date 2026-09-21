@@ -8,7 +8,7 @@
 use crate::hooks::tool_permission::handlers::interactive_handler::handle_interactive_permission;
 use crate::tool::ToolPermissionContext;
 use crate::types::message::{AssistantMessage, ToolUseBlock};
-use crate::types::message::{RenderableMessage, RenderableMessageKind, ToolUseStatus};
+use crate::types::message::{RenderableMessage, RenderableMessageKind};
 use crate::types::permissions::{PermissionBehavior, PermissionDecision, ToolUseConfirm};
 use crate::types::tools::Tool;
 pub use crate::utils::permissions::permissions::HasPermissionsToUseToolResult as CanUseToolResult;

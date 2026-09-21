@@ -96,7 +96,7 @@ pub fn DiffDialog<'a>(
     let git_diff_data = use_diff_data(&mut hooks);
     let turn_diffs = use_turn_diffs(&mut hooks, &props.messages);
 
-    let mut view_mode = hooks.use_state(ViewMode::default);
+    let view_mode = hooks.use_state(ViewMode::default);
     let mut selected_index = hooks.use_state(|| 0usize);
     let mut source_index = hooks.use_state(|| 0usize);
     let mut previous_source_index = hooks.use_state(|| 0usize);

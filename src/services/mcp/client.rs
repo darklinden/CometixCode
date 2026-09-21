@@ -1081,6 +1081,10 @@ mod runtime {
     use futures::stream::{self, BoxStream};
     use http::{HeaderName, HeaderValue};
     use rmcp::handler::client::ClientHandler;
+    // MCP SEP-2577 deprecates Roots. rmcp's `ClientHandler::list_roots` still
+    // requires `ListRootsResult`/`Root` in its signature, so the port imports
+    // and implements them unchanged until rmcp drops them.
+    #[allow(deprecated)]
     use rmcp::model::{
         CallToolRequestParams, ClientCapabilities, ClientInfo, ClientNotification,
         CustomNotification, ElicitRequestParams as RmcpElicitRequestParams,
@@ -1103,7 +1107,7 @@ mod runtime {
     };
     use rmcp::{ErrorData as McpError, RoleClient, serve_client};
     use serde::{Deserialize, Serialize};
-    use std::collections::{BTreeMap, HashMap, VecDeque};
+    use std::collections::{BTreeMap, HashMap};
     use std::fmt;
     use std::future::Future;
     use std::path::PathBuf;
@@ -1215,6 +1219,7 @@ mod runtime {
         out
     }
 
+    #[allow(dead_code)]
     fn cancel_elicitation_result() -> RmcpElicitResult {
         RmcpElicitResult::new(RmcpElicitationAction::Cancel)
     }
@@ -1632,6 +1637,9 @@ mod runtime {
             ClientInfo::new(capabilities, implementation)
         }
 
+        // Roots is deprecated by SEP-2577, but this signature is dictated by
+        // rmcp's `ClientHandler` trait — it cannot be migrated unilaterally.
+        #[allow(deprecated)]
         fn list_roots(
             &self,
             _context: RequestContext<RoleClient>,
@@ -3087,6 +3095,7 @@ mod runtime {
         Ok(fetch_resources_for_client(&peer, name).await)
     }
 
+    #[allow(dead_code)]
     pub async fn drain_mcp_connection_callback_observations()
     -> Vec<crate::services::mcp::use_manage_mcp_connections::McpConnectionCallbackObservation> {
         crate::services::mcp::use_manage_mcp_connections::drain_mcp_connection_callback_observations().await

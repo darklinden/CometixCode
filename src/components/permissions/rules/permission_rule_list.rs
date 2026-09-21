@@ -33,7 +33,7 @@ use crate::keybindings::types::ContextName;
 use crate::keybindings::use_keybinding::use_keybinding;
 use crate::tool::ToolPermissionContext;
 use crate::types::permissions::{
-    PermissionBehavior, PermissionRule, PermissionRuleSource, PermissionRuleValue,
+    PermissionBehavior, PermissionRule, PermissionRuleSource,
 };
 use crate::types::permissions::{PermissionUpdate, PermissionUpdateDestination};
 use crate::utils::auto_mode_denials::{AutoModeDenial, get_auto_mode_denials};

@@ -93,7 +93,7 @@ pub fn RemoteCallout<'a>(
     props: &mut RemoteCalloutProps<'a>,
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_selection = hooks.use_state(|| Option::<RemoteCalloutSelection>::None);
     let options = remote_callout_options();
     let option_count = options.len().max(1);

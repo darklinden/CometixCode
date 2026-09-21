@@ -130,7 +130,7 @@ pub fn SandboxPermissionRequest<'a>(
         .unwrap_or_else(should_allow_managed_sandbox_domains_only);
     let options = sandbox_permission_options(&host, managed_domains_only);
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_select = hooks.use_state(|| Option::<SandboxPermissionOptionValue>::None);
 
     hooks.use_terminal_events({

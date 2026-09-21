@@ -1039,10 +1039,12 @@ impl SharedFileStateCache {
         FileReadSourceTurn::run(|| self.with_cache_in_source_turn(|cache| cache.keys()))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn len(&self) -> usize {
         FileReadSourceTurn::run(|| self.with_cache_in_source_turn(|cache| cache.len()))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_empty(&self) -> bool {
         FileReadSourceTurn::run(|| self.with_cache_in_source_turn(|cache| cache.is_empty()))
     }
@@ -1095,6 +1097,7 @@ impl SharedOrderedTriggerSet {
         operation(&mut set)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn add(&self, value: String) -> bool {
         FileReadSourceTurn::run(|| self.with_set_in_source_turn(|set| set.insert(value)))
     }
@@ -1118,10 +1121,12 @@ impl SharedOrderedTriggerSet {
         FileReadSourceTurn::run(|| self.with_set_in_source_turn(|set| set.is_empty()))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn contains(&self, value: &str) -> bool {
         FileReadSourceTurn::run(|| self.with_set_in_source_turn(|set| set.contains(value)))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn len(&self) -> usize {
         FileReadSourceTurn::run(|| self.with_set_in_source_turn(|set| set.len()))
     }
@@ -1894,9 +1899,9 @@ impl ToolUseContext {
 /// to a real field is mechanical once `ToolResult` gains a builder.
 ///
 /// `mcpMeta` is not yet ported.
-pub struct ToolResult {
+pub(crate) struct ToolResult {
     /// CC `ToolResult.data` — the tool's typed output.
-    pub data: ToolOutput,
+    pub(crate) data: ToolOutput,
     /// CC `ToolResult.newMessages` (Tool.ts:323). Preserved by tool
     /// execution and yielded after the primary tool_result; most ports still
     /// return an empty list until their CC side effects are migrated.
@@ -1908,7 +1913,12 @@ pub struct ToolResult {
 /// variant from the transitional `Composed` shape to a real CC-shaped output;
 /// each new variant must be cross-reviewed against that tool's CC
 /// `outputSchema` and `mapToolResultToToolResultBlockParam`.
-pub enum ToolOutput {
+///
+/// Crate-private: every variant payload is a per-tool output type that is
+/// itself `pub(crate)`. The lib exists to host `bin/cometix`; no output type
+/// is part of an external API, so widening the payloads to `pub` would only
+/// manufacture nameable-but-unconstructible shells.
+pub(crate) enum ToolOutput {
     /// Pre-composed result row for non-schema paths: tool execution errors
     /// (CC throws and wraps via `classifyToolError`; this port returns the
     /// composed error row directly) and unported-tool stubs. Every success
@@ -2118,7 +2128,10 @@ pub struct ToolPromptOptions<'a> {
 /// Defaultable methods mirror CC `buildTool` / `TOOL_DEFAULTS` (Tool.ts:748-769):
 /// fail-closed for concurrency/read-only; `check_permissions` defers to the
 /// general permission system with allow+updatedInput.
-pub trait ToolCall: Sync {
+///
+/// Crate-private: trait methods mention `ToolOutput`/`ToolResult`, which are
+/// `pub(crate)`; see `ToolOutput`'s note.
+pub(crate) trait ToolCall: Sync {
     /// Primary tool name (CC `Tool.name`).
     fn name(&self) -> &'static str;
 
@@ -2195,6 +2208,7 @@ pub trait ToolCall: Sync {
     }
 
     /// Maps to: CC `Tool.isDestructive?(input)` (default false).
+    #[allow(dead_code)]
     fn is_destructive(&self, _args: &serde_json::Value) -> bool {
         false
     }
@@ -2210,6 +2224,7 @@ pub trait ToolCall: Sync {
     /// reads it as `tool.isOpenWorld?.({}) ?? false` (`cli/print.ts:1662`,
     /// `components/mcp/MCPToolListView.tsx:46`); MCP tools source it from
     /// `annotations.openWorldHint` (`services/mcp/client.ts:1807-1809`).
+    #[allow(dead_code)]
     fn is_open_world(&self, _args: &serde_json::Value) -> bool {
         false
     }
@@ -2425,6 +2440,7 @@ pub trait ToolCall: Sync {
     /// fullscreen click-to-expand.
     /// Maps to: CC `Tool.isResultTruncated?(output)` (Tool.ts:615), read as
     /// `tool?.isResultTruncated?.(...) ?? false` (`Messages.tsx:759`).
+    #[allow(dead_code)]
     fn is_result_truncated(&self, _data: &ToolOutput) -> bool {
         false
     }

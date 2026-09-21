@@ -10,7 +10,7 @@
 
 use crate::tool::ToolPermissionContext;
 use crate::types::permissions::{
-    AdditionalWorkingDirectory, PermissionMode, PermissionRuleSource, PermissionUpdate,
+    PermissionMode, PermissionUpdate,
     PermissionUpdateDestination,
 };
 use crate::utils::bash::parsed_command::OutputRedirection;
@@ -1252,6 +1252,8 @@ fn home_dir_string() -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::permissions::permission_rule::PermissionRuleSource;
+    use crate::types::permissions::AdditionalWorkingDirectory;
 
     fn context_with_allowed_dir(dir: &Path) -> ToolPermissionContext {
         let mut context = ToolPermissionContext::default();

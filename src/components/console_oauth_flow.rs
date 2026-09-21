@@ -24,6 +24,7 @@ pub(crate) enum ConsoleOAuthMode {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ForceLoginMethod {
     ClaudeAi,
+    #[allow(dead_code)]
     Console,
 }
 
@@ -42,17 +43,24 @@ pub(crate) fn forced_method_message(method: Option<ForceLoginMethod>) -> Option<
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum OAuthStatus {
     Idle,
+    #[allow(dead_code)]
     PlatformSetup,
+    #[allow(dead_code)]
     ReadyToStart,
+    #[allow(dead_code)]
     WaitingForLogin {
         url: String,
     },
+    #[allow(dead_code)]
     CreatingApiKey,
+    #[allow(dead_code)]
     AboutToRetry,
+    #[allow(dead_code)]
     Success {
         token: Option<String>,
         email: Option<String>,
     },
+    #[allow(dead_code)]
     Error {
         message: String,
         can_retry: bool,

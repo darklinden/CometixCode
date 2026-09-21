@@ -134,7 +134,7 @@ pub fn renderable_messages_from_entries(entries: &[serde_json::Value]) -> Vec<Re
 /// `content` stays the raw wire text and the API projection builds tool_result
 /// params from tool_use_id/content/is_error only (services/api/claude.rs).
 pub fn messages_from_entries(entries: &[serde_json::Value]) -> Vec<crate::types::message::Message> {
-    let mut messages = crate::utils::conversation::into_typed_messages(entries.to_vec());
+    let messages = crate::utils::conversation::into_typed_messages(entries.to_vec());
     messages
 }
 
@@ -437,7 +437,7 @@ mod tests {
     use super::*;
     use crate::components::messages::user_tool_result_message::utils::ToolRenderOptions;
     use crate::types::message::{
-        ReadResultKind, RenderableMessageKind, SearchResultMode, ToolResultStatus, ToolUseStatus,
+        RenderableMessageKind, ToolResultStatus, ToolUseStatus,
     };
     use crate::utils::messages::{
         CANCEL_MESSAGE, NO_RESPONSE_REQUESTED, PLAN_REJECTION_PREFIX, REJECT_MESSAGE,

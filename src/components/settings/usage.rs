@@ -5,7 +5,7 @@
 use iocraft::prelude::*;
 
 #[component]
-pub fn Usage(mut hooks: Hooks) -> impl Into<AnyElement<'static>> {
+pub fn Usage(hooks: Hooks) -> impl Into<AnyElement<'static>> {
     element! {
         View(padding_left: 1u32) {
             Text(content: "Usage data not yet available.", color: hooks.use_context::<crate::utils::theme::Theme>().subtle)

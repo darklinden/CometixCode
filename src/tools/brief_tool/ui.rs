@@ -25,7 +25,7 @@ pub enum BriefResultLayout {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct BriefRenderedMessage {
-    pub output: BriefOutput,
+    pub(crate) output: BriefOutput,
     pub layout: BriefResultLayout,
     pub timestamp: String,
 }
@@ -89,7 +89,7 @@ pub(crate) fn output_to_value(output: &BriefOutput) -> serde_json::Value {
 /// Maps to: CC `tools/BriefTool/UI.tsx:16-78` `renderToolResultMessage`.
 /// L1 (`React/Ink -> iocraft`): the returned value is retained render data;
 /// `BriefToolResultMessage` below performs only the equivalent element projection.
-pub fn render_tool_result_message(
+pub(crate) fn render_tool_result_message(
     output: &BriefOutput,
     options: BriefRenderOptions,
 ) -> Option<BriefRenderedMessage> {
@@ -127,7 +127,7 @@ pub fn render_tool_result_message(
 
 #[derive(Clone, Debug, Default, Props)]
 pub struct AttachmentListProps {
-    pub attachments: Vec<BriefAttachmentOutput>,
+    pub(crate) attachments: Vec<BriefAttachmentOutput>,
 }
 
 /// Maps to: CC `tools/BriefTool/UI.tsx:81-105` `AttachmentList`.

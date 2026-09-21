@@ -497,7 +497,7 @@ pub struct ScrollKeybindingHandlerProps {
     pub is_active: bool,
     pub is_modal: bool,
     pub scroll_handle: Option<Ref<ScrollBoxHandle>>,
-    pub on_scroll: Handler<(bool)>,
+    pub on_scroll: Handler<bool>,
 }
 
 /// Maps to: CC `components/ScrollKeybindingHandler.tsx:420-535`

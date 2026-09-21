@@ -281,6 +281,7 @@ pub(crate) fn set(key: impl AsRef<OsStr>, value: impl AsRef<OsStr>) {
 }
 
 /// One-key `delete process.env[key]` convenience.
+#[allow(dead_code)]
 pub(crate) fn remove(key: impl AsRef<OsStr>) {
     let mut update = begin_update();
     update.remove(key);

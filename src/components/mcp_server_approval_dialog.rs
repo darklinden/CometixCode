@@ -73,7 +73,7 @@ pub fn MCPServerApprovalDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<MCPServerApprovalChoice>::None);
     let options = mcp_server_approval_options();
     let option_count = options.len().max(1);

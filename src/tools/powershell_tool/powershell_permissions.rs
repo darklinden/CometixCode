@@ -713,6 +713,7 @@ fn safety_ask(command: &str, reason: &str) -> PermissionResult {
     }
 }
 
+#[allow(dead_code)]
 fn ask_for_approval(command: &str, reason: &str) -> PermissionResult {
     let decision_reason = PermissionDecisionReason::Other {
         reason: reason.to_string(),

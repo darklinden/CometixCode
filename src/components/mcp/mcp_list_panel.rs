@@ -5,7 +5,7 @@
 //! Selection/menu actions remain callback seams; no MCP client operations run here.
 
 use super::mcp_parsing_warnings::McpParsingWarnings;
-use super::types::{AgentMcpServerInfo, ServerInfo, mcp_client_state_from_parts};
+use super::types::{AgentMcpServerInfo, ServerInfo};
 use crate::components::configurable_shortcut_hint::ConfigurableShortcutHint;
 use crate::components::design_system::byline::Byline;
 use crate::components::design_system::dialog::Dialog;
@@ -487,6 +487,7 @@ mod tests {
     use super::*;
     use crate::services::mcp::types::{ScopedMcpServerConfig, Transport};
     use crate::utils::theme;
+    use crate::components::mcp::types::mcp_client_state_from_parts;
 
     fn server(name: &str, scope: ConfigScope, status: McpServerConnectionType) -> ServerInfo {
         ServerInfo {

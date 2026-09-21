@@ -128,8 +128,8 @@ pub(crate) fn output_to_value(output: &Output) -> serde_json::Value {
 /// Maps to: CC `TaskOutputTool.tsx:422-562` `TaskOutputResultDisplay`.
 pub(crate) fn render_tool_result_message(
     raw_output: Option<&serde_json::Value>,
-    fallback: &str,
-    status: ToolResultStatus,
+    _fallback: &str,
+    _status: ToolResultStatus,
     options: ToolRenderOptions,
 ) -> Vec<ToolRenderLine> {
     let Some(output) = raw_output.and_then(parse_output) else {

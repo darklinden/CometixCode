@@ -68,7 +68,6 @@ use crate::components::teams::teams_dialog::{
 };
 use crate::components::thinking_toggle::{ThinkingToggle, thinking_toggle_requires_confirmation};
 use crate::components::vim_text_input::{VimMode, VimTextInput};
-use crate::context::notifications::use_notifications;
 use crate::hooks::notifs::external_editor_hint::{
     ApiKeyVerificationStatus, external_editor_hint_notification_from_state,
 };
@@ -93,6 +92,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use unicode_width::UnicodeWidthStr;
 
+#[allow(dead_code)]
 const PROMPT_CHAR: &str = "❯";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -440,6 +440,7 @@ fn restore_stash_or_clear(
 /// Maps to PromptInput.tsx `handleModelSelect`: model changes clear the
 /// session override and disable Fast mode when the selected model cannot use it.
 /// Effort apply is official ModelPicker `handleSelect` / `bt`.
+#[cfg_attr(not(test), allow(dead_code))]
 fn apply_prompt_model_selection(
     state: &mut crate::state::app_state_store::AppState,
     model: Option<String>,
@@ -2947,7 +2948,7 @@ pub fn PromptInput<'a>(
     // the live sources (both height sites read the same carrier — see
     // prompt_input_footer.rs Footer).
     let _footer_layout_epoch = footer_layout_wake.epoch();
-    let verbose = use_app_state(&mut hooks, |state| state.verbose);
+    let _verbose = use_app_state(&mut hooks, |state| state.verbose);
     // Maps to: CC Notifications.tsx:80-83 tokenUsage useMemo ([messages]
     // identity dep); PromptInput's height budget needs the same value.
     let token_usage = hooks.use_memo(
@@ -2981,7 +2982,7 @@ pub fn PromptInput<'a>(
     // Maps to: CC StatusLine.tsx:195 `useAppState(s => s.statusLineText)` +
     // PromptInputFooter.tsx:136 `statusLineShouldDisplay(settings)`, both
     // re-derived from live AppState per render (no startup snapshot).
-    let status_line_text = use_app_state(&mut hooks, |state| state.status_line_text.clone());
+    let _status_line_text = use_app_state(&mut hooks, |state| state.status_line_text.clone());
     let status_line_configured = use_app_state(&mut hooks, |state| {
         crate::components::status_line::status_line_should_display(&state.settings)
     });
@@ -3370,7 +3371,7 @@ mod tests {
     use crate::utils::env_utils::EnvVarGuard;
     use crate::utils::theme;
     use futures::{StreamExt, stream};
-    use std::collections::BTreeMap;
+    
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::Duration;

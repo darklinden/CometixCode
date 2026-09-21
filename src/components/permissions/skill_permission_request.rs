@@ -203,7 +203,7 @@ pub fn SkillPermissionRequest<'a>(
     let original_cwd = original_cwd_for_label();
     let options = skill_permission_options(&skill, &original_cwd, props.show_always_allow_options);
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_select = hooks.use_state(|| Option::<SkillPermissionOptionValue>::None);
     let mut pending_cancel = hooks.use_state(|| false);
 

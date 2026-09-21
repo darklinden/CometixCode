@@ -958,6 +958,7 @@ mod tests {
     /// description for that tool.
     #[test]
     fn tool_call_prompt_matches_eager_wire_description_for_every_registered_tool() {
+        #[allow(unused_imports)]
         use crate::tool::ToolCall as _;
         let _env_guard = crate::utils::env_utils::TEST_ENV_LOCK
             .lock()

@@ -118,7 +118,7 @@ pub fn image_path_to_file_url(path: &Path) -> String {
 
 fn path_to_file_url(path: &Path) -> String {
     let path_string = path.to_string_lossy().replace('\\', "/");
-    let mut normalized = path_string.as_str();
+    let normalized = path_string.as_str();
     let mut prefix = "file://";
     #[cfg(windows)]
     {

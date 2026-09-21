@@ -125,6 +125,7 @@ pub(crate) struct SendMessageOutput {
 /// Maps to: CC `tools/SendMessageTool/SendMessageTool.ts` `call` (:741),
 /// dispatching to `handleMessage`:149 / `handleBroadcast`:191 /
 /// `handleShutdownRequest`:268 / `handlePlanApproval`:434 et al.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn send_message_output(input: &serde_json::Value) -> SendMessageOutput {
     send_message_output_for_context(input, None)
 }

@@ -3622,7 +3622,7 @@ PY\n\
         let mtime = crate::utils::file::get_file_modification_time_result(&path).expect("mtime");
         let path_str = path.display().to_string();
 
-        let mut context = crate::tool::ToolUseContext::default();
+        let context = crate::tool::ToolUseContext::default();
         context
             .read_file_state
             .set_entry(crate::utils::query_helpers::ReadFileStateEntry {

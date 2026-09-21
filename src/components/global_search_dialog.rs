@@ -300,7 +300,7 @@ pub fn GlobalSearchDialog<'a>(
         query: hooks.use_state(move || initial_query_for_query.clone()),
         cursor: hooks.use_state(move || initial_query_len),
     };
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_action = hooks.use_state(|| Option::<GlobalSearchAction>::None);
     let root = hooks.use_const(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
     let root_path = root.clone();

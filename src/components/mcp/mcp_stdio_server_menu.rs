@@ -4,7 +4,7 @@
 //! transport lifecycle and settings writes remain in `services/mcp/*`.
 
 use super::capabilities_section::CapabilitiesSection;
-use super::types::{ServerInfo, mcp_client_state_from_parts};
+use super::types::ServerInfo;
 use super::utils::reconnect_helpers::handle_reconnect_result;
 use crate::components::configurable_shortcut_hint::ConfigurableShortcutHint;
 use crate::components::custom_select::select::{Select, SelectLayout, SelectOptionData};
@@ -118,7 +118,7 @@ pub fn MCPStdioServerMenu<'a>(
         crate::services::mcp::mcp_connection_manager::use_mcp_reconnect(&mut hooks);
     let toggle_mcp_server =
         crate::services::mcp::mcp_connection_manager::use_mcp_toggle_enabled(&mut hooks);
-    let mut is_reconnecting = hooks.use_state(|| false);
+    let is_reconnecting = hooks.use_state(|| false);
     let mut pending_runtime_result = hooks.use_state(|| Option::<String>::None);
     let mut pending_runtime_cancel = hooks.use_state(|| false);
     let runtime_action = hooks.use_async_handler({
@@ -361,6 +361,7 @@ mod tests {
     use futures::StreamExt;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
+    use crate::components::mcp::types::mcp_client_state_from_parts;
 
     fn server(status: McpServerConnectionType) -> ServerInfo {
         ServerInfo {

@@ -705,7 +705,7 @@ pub fn ManagePlugins(
         &snapshot.pending,
         &flagged,
     );
-    let mut searching = hooks.use_state(|| false);
+    let searching = hooks.use_state(|| false);
     let mut search = crate::hooks::use_search_input::use_search_input(&mut hooks, "");
     let query = search.text();
     let lower = query.to_lowercase();
@@ -1141,9 +1141,9 @@ pub fn ManagePlugins(
         .unwrap_or_default();
     let chosen = filtered.clone();
     let menu_for_key = menu.clone();
-    let result = props.set_result.clone();
+    let _result = props.set_result.clone();
     let complete = props.on_manage_complete.clone();
-    let parent = props.set_view_state.clone();
+    let _parent = props.set_view_state.clone();
     let search_mode = set_searching.clone();
     let select_active = list_active
         || matches!(

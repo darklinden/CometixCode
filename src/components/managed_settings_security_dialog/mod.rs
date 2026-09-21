@@ -73,7 +73,7 @@ pub fn ManagedSettingsSecurityDialog<'a>(
     let settings_list = format_dangerous_settings_list(&dangerous);
     let options = managed_settings_security_options();
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
+    let focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
     let mut pending_choice = hooks.use_state(|| Option::<ManagedSettingsSecurityChoice>::None);
 
     hooks.use_terminal_events({

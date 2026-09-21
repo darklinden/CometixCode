@@ -31,10 +31,10 @@ pub fn get_agent_descriptions_total_tokens(
         .iter()
         .filter(|agent| agent.source != "built-in")
         .map(|agent| {
-            (crate::services::token_estimation::rough_token_count_estimation(&format!(
+            crate::services::token_estimation::rough_token_count_estimation(&format!(
                 "{}: {}",
                 agent.agent_type, agent.when_to_use
-            )) as u64)
+            )) as u64
         })
         .sum()
 }

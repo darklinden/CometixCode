@@ -814,7 +814,7 @@ pub fn Stats<'a>(props: &mut StatsProps<'a>, mut hooks: Hooks) -> impl Into<AnyE
     let mut all_time_stats = hooks.use_state(|| Option::<ClaudeCodeStats>::None);
     let mut stats_cache = hooks.use_state(BTreeMap::<StatsDateRange, ClaudeCodeStats>::new);
     let mut date_range = hooks.use_state(StatsDateRange::default);
-    let mut active_tab = hooks.use_state(StatsTab::default);
+    let active_tab = hooks.use_state(StatsTab::default);
     let mut header_focused = hooks.use_state(|| true);
     let mut is_loading_filtered = hooks.use_state(|| false);
     let mut copy_status = hooks.use_state(|| Option::<String>::None);
@@ -1089,7 +1089,7 @@ struct StatsStyledBlockProps {
 #[component]
 fn StatsStyledBlock(
     props: &StatsStyledBlockProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     element! {
@@ -1145,7 +1145,7 @@ struct StatsOverviewContentProps {
 #[component]
 fn StatsOverviewContent(
     props: &StatsOverviewContentProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     let overview = overview_data(&props.stats, props.date_range, false, 0);
@@ -1306,7 +1306,7 @@ struct StatsModelsContentProps {
 #[component]
 fn StatsModelsContent(
     props: &StatsModelsContentProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     let entries = sorted_model_entries(&props.stats);
@@ -1400,7 +1400,7 @@ struct StatsSuccessContentProps {
 #[component]
 fn StatsSuccessContent(
     props: &StatsSuccessContentProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     let all_time_stats = props
@@ -1470,11 +1470,11 @@ fn StatsSuccessContent(
 
 /// Maps to: CC `components/Stats.tsx#StatsContent` render states.
 #[component]
-pub fn StatsContent(props: &StatsContentProps, mut hooks: Hooks) -> impl Into<AnyElement<'static>> {
+pub fn StatsContent(props: &StatsContentProps, hooks: Hooks) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     let data = props.data.clone();
     let result = data.result.clone();
-    let copy_status = data.copy_status.clone().unwrap_or_default();
+    let _copy_status = data.copy_status.clone().unwrap_or_default();
 
     match result {
         StatsResult::Loading => element! {
@@ -1513,7 +1513,7 @@ pub struct DateRangeSelectorProps {
 #[component]
 pub fn DateRangeSelector(
     props: &DateRangeSelectorProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     let display = date_range_selector_display(props.date_range, props.is_loading);

@@ -10,8 +10,7 @@ use crate::types::plugin::LoadedPlugin;
 use crate::types::plugin::PluginError;
 use crate::utils::config::McpServerConfig;
 use serde_json::Value;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Maps to: CC `mcpPluginIntegration.ts:589-640#getPluginMcpServers`.
 pub async fn get_plugin_mcp_servers(
@@ -627,6 +626,8 @@ mod tests {
     use crate::types::plugin::get_plugin_error_message;
     use crate::utils::plugins::plugin_loader::create_plugin_from_path_for_test as create_plugin_from_path;
     use std::io::Write;
+    use std::fs;
+    use std::path::PathBuf;
 
     fn temp_dir(label: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!(

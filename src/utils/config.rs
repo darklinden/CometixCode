@@ -9,7 +9,6 @@ use std::sync::{LazyLock, RwLock};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use super::env_utils;
 
 fn serialize_global_config_env<S>(
     env: &Option<IndexMap<String, String>>,
@@ -1174,7 +1173,7 @@ fn global_config_disk_value(config: &GlobalConfig) -> anyhow::Result<serde_json:
 }
 
 fn known_global_config_keys() -> anyhow::Result<Vec<String>> {
-    let mut known_value = serde_json::to_value(GlobalConfig::default())?;
+    let known_value = serde_json::to_value(GlobalConfig::default())?;
     let mut default_value = create_official_default_global_config_value()?;
     remove_null_object_fields_recursively(&mut default_value);
 
@@ -1566,10 +1565,12 @@ fn would_lose_auth_state(cached: &GlobalConfig, fresh: &GlobalConfig) -> bool {
     lost_oauth || lost_onboarding
 }
 
-/// Maps to: CC `config.ts` `TEST_GLOBAL_CONFIG_FOR_TESTING` — test-only
-/// override returned by `getGlobalConfig()` under NODE_ENV=test so component
-/// harnesses can inject a custom global config without touching disk.
-/// Thread-local because Rust tests run in parallel.
+// Maps to: CC `config.ts` `TEST_GLOBAL_CONFIG_FOR_TESTING` — test-only
+// override returned by `getGlobalConfig()` under NODE_ENV=test so component
+// harnesses can inject a custom global config without touching disk.
+// Thread-local because Rust tests run in parallel.
+// Plain `//` (not `///`): rustdoc cannot attach docs to a `thread_local!`
+// invocation, so `///` here would only trip `unused_doc_comments`.
 #[cfg(test)]
 thread_local! {
     static TEST_GLOBAL_CONFIG: std::cell::RefCell<Option<GlobalConfig>> =
@@ -2283,7 +2284,7 @@ mod tests {
 
     #[test]
     fn get_or_create_user_id_is_stable_across_calls_without_a_preseeded_id() {
-        use crate::utils::env_utils::{EnvVarGuard, TEST_ENV_LOCK};
+        use crate::utils::env_utils::TEST_ENV_LOCK;
         let _env = TEST_ENV_LOCK.lock().unwrap();
         let previous = replace_test_global_config(Some(GlobalConfig::default()));
         let first = get_or_create_user_id();

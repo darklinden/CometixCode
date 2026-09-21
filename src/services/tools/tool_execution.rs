@@ -1273,6 +1273,7 @@ struct ToolInputSchemaValidationError {
     raw: String,
 }
 
+#[allow(dead_code)]
 fn json_type_name(value: &serde_json::Value) -> &'static str {
     match value {
         serde_json::Value::Null => "null",
@@ -1287,6 +1288,7 @@ fn json_type_name(value: &serde_json::Value) -> &'static str {
 /// Exact Zod-v4 issue projection for Glob's strict two-field schema.
 /// Exact Zod-v4 issue projection for CC `GrepTool.inputSchema` after its
 /// semantic number/boolean preprocessors have run.
+#[allow(dead_code)]
 fn tool_input_schema_error_from_issues(
     tool_name: &str,
     issues: Vec<serde_json::Value>,
@@ -1976,6 +1978,7 @@ async fn dynamic_mcp_tool_result(
 }
 
 /// Normalize a path for display (forward slashes on all platforms).
+#[allow(dead_code)]
 pub(crate) fn display_path(path: &std::path::Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
@@ -4094,7 +4097,7 @@ mod tests {
     use super::*;
     use crate::tool::ToolPermissionContext;
     use crate::types::message::{
-        RenderableMessage, RenderableMessageKind, SystemMessage, ToolUseStatus,
+        RenderableMessage, RenderableMessageKind, SystemMessage,
     };
     use crate::types::permissions::PermissionRuleValue;
     use crate::utils::env_utils::EnvVarGuard;
@@ -6295,7 +6298,7 @@ mod tests {
             }]
         }))
         .unwrap();
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         for path in [&approved, &rewritten] {
             context
                 .read_file_state
@@ -10227,7 +10230,7 @@ fn attach_model_content_blocks(
 mod executor_tests {
     use super::*;
     use crate::tools::tool_search_tool::tool_search_matches;
-    use crate::types::message::{ReadResultKind, SearchResultMode};
+    
     use crate::types::permissions::PermissionMode;
     use crate::utils::cron_tasks::reset_cron_tasks_for_test;
     use crate::utils::env_utils::EnvVarGuard;
@@ -11450,7 +11453,7 @@ rl.on('line', line => {
         let root =
             std::env::temp_dir().join(format!("cometix-write-edit-{}", uuid::Uuid::new_v4()));
         let path = root.join("nested").join("file.txt");
-        let mut context = crate::tool::ToolUseContext::default();
+        let context = crate::tool::ToolUseContext::default();
         let write_request = mock_permission_request_with_input(
             "perm-write".to_string(),
             "toolu_write".to_string(),

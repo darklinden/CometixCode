@@ -6,9 +6,7 @@
 
 use crate::components::context_suggestions::ContextSuggestions;
 use crate::utils::analyze_context::{
-    CollapseStatusSnapshot, ContextAgentInfo, ContextCategory, ContextData, ContextGridSquare,
-    ContextMemoryFileInfo, ContextSkillFrontmatterInfo, ContextSkillsInfo, ContextSource,
-    ContextToolInfo,
+    CollapseStatusSnapshot, ContextAgentInfo, ContextCategory, ContextData, ContextSkillFrontmatterInfo, ContextSource,
 };
 use crate::utils::context_suggestions::generate_context_suggestions;
 use crate::utils::file::get_display_path;
@@ -363,6 +361,10 @@ pub fn ContextVisualization(
 mod tests {
     use super::*;
     use crate::utils::theme;
+    use crate::utils::analyze_context::ContextToolInfo;
+    use crate::utils::analyze_context::ContextSkillsInfo;
+    use crate::utils::analyze_context::ContextMemoryFileInfo;
+    use crate::utils::analyze_context::ContextGridSquare;
 
     #[test]
     fn context_visualization_filters_visible_categories_like_official() {

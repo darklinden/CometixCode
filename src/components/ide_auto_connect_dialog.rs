@@ -126,7 +126,7 @@ pub fn IdeAutoConnectDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<IdeAutoConnectChoice>::None);
     let mut pending_cancel = hooks.use_state(|| false);
     let options = ide_auto_connect_options();
@@ -175,7 +175,7 @@ pub fn IdeDisableAutoConnectDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<IdeAutoConnectChoice>::None);
     let mut pending_cancel = hooks.use_state(|| false);
     let options = ide_disable_auto_connect_options();

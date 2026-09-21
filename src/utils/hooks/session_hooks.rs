@@ -67,6 +67,7 @@ struct SessionHookEntry {
     /// merge path still flattens this into `HooksConfig`; the shared hook
     /// orchestrator will consume `get_session_hook_matchers(...)` to pass
     /// `CLAUDE_PLUGIN_ROOT` for skill hooks.
+    #[allow(dead_code)]
     skill_root: Option<String>,
 }
 

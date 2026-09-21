@@ -279,11 +279,13 @@ impl QueryEngine {
     }
 
     /// Maps to CC `QueryEngine.ts:1158-1160` `QueryEngine.interrupt()`.
+    #[allow(dead_code)]
     pub(crate) fn interrupt(&self) {
         self.control.interrupt();
     }
 
     /// Maps to CC `QueryEngine.ts:1162-1164` `QueryEngine.getMessages()`.
+    #[allow(dead_code)]
     pub(crate) fn get_messages(&self) -> &[Message] {
         self.carry
             .as_ref()
@@ -313,6 +315,7 @@ impl QueryEngine {
     }
 
     /// Maps to CC `QueryEngine.ts:1166-1168` `QueryEngine.getReadFileState()`.
+    #[allow(dead_code)]
     pub(crate) fn get_read_file_state(
         &self,
     ) -> Vec<crate::utils::query_helpers::ReadFileStateEntry> {
@@ -322,6 +325,7 @@ impl QueryEngine {
     }
 
     /// Maps to CC `QueryEngine.ts:1170-1172` `QueryEngine.getSessionId()`.
+    #[allow(dead_code)]
     pub(crate) fn get_session_id(&self) -> String {
         crate::bootstrap::state::get_session_id()
     }

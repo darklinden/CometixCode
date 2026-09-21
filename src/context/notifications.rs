@@ -913,7 +913,7 @@ mod tests {
 
     #[test]
     fn immediate_timeout_clear_filters_invalidated_queue_like_official() {
-        let (_store, mut writer) = notifications_writer(NotificationsState {
+        let (_store, writer) = notifications_writer(NotificationsState {
             current: Some(
                 Notification::text("now", "Now", NotificationPriority::Immediate)
                     .with_invalidates(["stale".to_string()]),
@@ -935,7 +935,7 @@ mod tests {
 
     #[test]
     fn non_immediate_timeout_clear_keeps_invalidates_as_queue_metadata_only() {
-        let (_store, mut writer) = notifications_writer(NotificationsState {
+        let (_store, writer) = notifications_writer(NotificationsState {
             current: Some(
                 Notification::text("notice", "Notice", NotificationPriority::Low)
                     .with_invalidates(["queued".to_string()]),

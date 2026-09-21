@@ -2125,6 +2125,7 @@ fn parse_stream_assistant_history(
     .ok_or_else(|| format!("stream-json line {line_number} has no assistant message"))
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn parse_stream_json_input(input: &str) -> Result<String, String> {
     input
         .lines()

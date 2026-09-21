@@ -94,6 +94,7 @@ pub fn parse_cli_config(argv: &[String]) -> CliConfig {
     while index < args.len() {
         let arg = args[index].clone();
 
+        #[allow(unused_assignments)]
         if let Some(sub) = SUBCOMMANDS.iter().find(|s| **s == arg) {
             config.subcommand = Some((*sub).to_string());
             if *sub == "daemon" {
@@ -106,6 +107,8 @@ pub fn parse_cli_config(argv: &[String]) -> CliConfig {
                 config.background = true;
             }
             // Consume remaining as opaque for now.
+            // The store is dead — `break` leaves the loop before `index` is
+            // read again — but it is kept to mirror the source's cursor update.
             index = args.len();
             break;
         }

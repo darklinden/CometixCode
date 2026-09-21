@@ -92,7 +92,7 @@ impl TextInputState {
 }
 
 /// Maps to: `useTextInput({...})`.
-pub fn use_text_input(hooks: &mut Hooks, mut options: UseTextInputOptions) -> TextInputState {
+pub fn use_text_input(hooks: &mut Hooks, options: UseTextInputOptions) -> TextInputState {
     let mut notifications = crate::context::notifications::use_notifications(hooks);
     let exit = use_exit(hooks);
     let escape = use_double_press(hooks);
@@ -660,7 +660,7 @@ mod tests {
                 ready.set(true);
             }
         });
-        let mut cleared = hooks.use_state(Vec::<String>::new);
+        let cleared = hooks.use_state(Vec::<String>::new);
         let original_value = value.read().clone();
         let _input = use_text_input(
             &mut hooks,

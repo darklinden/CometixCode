@@ -589,7 +589,7 @@ mod tests {
     use super::*;
     use crate::components::messages_list::Messages;
     use crate::components::prompt_input::PromptInput;
-    use crate::types::message::{RenderableMessage, RenderableMessageKind, ToolUseStatus};
+    use crate::types::message::RenderableMessage;
     use crate::types::permissions::{PermissionMode, PermissionRuleValue};
     use crate::utils::theme;
     use futures::StreamExt;

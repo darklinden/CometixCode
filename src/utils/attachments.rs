@@ -4160,7 +4160,7 @@ mod tests {
             }],
             ..Default::default()
         };
-        let mut context = ToolUseContext::default().with_mcp_state(state);
+        let context = ToolUseContext::default().with_mcp_state(state);
 
         let attachment =
             get_mcp_instructions_delta_attachment(&context, &[]).expect("instruction delta");
@@ -4200,7 +4200,7 @@ mod tests {
             }],
             ..Default::default()
         };
-        let mut context = ToolUseContext::default()
+        let context = ToolUseContext::default()
             .with_mcp_state(state)
             .with_main_loop_model("claude-sonnet-4-6")
             .with_tools(vec![

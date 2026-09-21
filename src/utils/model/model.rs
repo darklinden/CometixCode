@@ -480,6 +480,7 @@ pub fn get_marketing_name_for_model(model_id: &str) -> Option<String> {
 mod tests {
     use super::*;
 
+    #[allow(dead_code)]
     fn env<'a>(pairs: &'a [(&'a str, &'a str)]) -> impl Fn(&str) -> Option<String> + 'a {
         move |key| {
             pairs

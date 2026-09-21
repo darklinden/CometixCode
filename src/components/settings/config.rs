@@ -1031,7 +1031,7 @@ pub fn Config<'a>(props: &mut ConfigProps<'a>, mut hooks: Hooks) -> impl Into<An
 
                     let options = settings_submenu_options(active_submenu);
                     let count = options.len();
-                    let modifiers =
+                    let _modifiers =
                         if let TerminalEvent::Key(KeyEvent { modifiers, .. }) = event.event() {
                             *modifiers
                         } else {
@@ -1742,7 +1742,7 @@ mod tests {
     use futures::{StreamExt, stream};
     use std::fs;
     use std::path::PathBuf;
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
     use std::time::{Duration, SystemTime};
 
     #[test]

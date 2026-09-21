@@ -486,6 +486,9 @@ pub fn get_api_key_from_config_or_macos_keychain() -> Option<AnthropicApiKeyWith
     // Maps to: CC `utils/auth.ts:1051-1083` macOS branch. This legacy API-key
     // path remains in the auth owner; only service-name/cache helpers are
     // delegated to their source-shaped secure-storage owners.
+    // `username`/`service_name` below feed only the `not(test)` keychain call,
+    // so the test build legitimately leaves them unread.
+    #[cfg_attr(test, allow(unused_variables))]
     #[cfg(target_os = "macos")]
     let primary_api_key = {
         let username = crate::utils::secure_storage::mac_os_keychain_helpers::get_username();
@@ -788,6 +791,7 @@ async fn check_and_refresh_oauth_token_if_needed_impl(force: bool) -> anyhow::Re
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn secure_storage_credentials_has_claude_ai_scope(
     get_env: &impl Fn(&str) -> Option<String>,
 ) -> bool {

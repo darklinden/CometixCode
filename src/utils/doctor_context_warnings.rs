@@ -199,10 +199,10 @@ pub fn check_mcp_tools(tools: &[Tool]) -> Option<ContextWarning> {
     let mut total_tokens = 0u64;
     let mut tools_by_server: HashMap<String, (usize, u64)> = HashMap::new();
     for tool in mcp_tools {
-        let tokens = (crate::services::token_estimation::rough_token_count_estimation(&format!(
+        let tokens = crate::services::token_estimation::rough_token_count_estimation(&format!(
             "{}{}",
             tool.name, tool.description
-        )) as u64);
+        )) as u64;
         total_tokens += tokens;
         let server_name = tool
             .name

@@ -551,6 +551,7 @@ where
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 async fn run_query_actor<D>(
     params: QueryParams,
     deps: D,
@@ -4901,6 +4902,7 @@ fn assistant_message_for_tool_use<'a>(
     })
 }
 
+#[allow(dead_code)]
 fn tool_use_block_by_id<'a>(
     tool_use_blocks: &'a [crate::types::message::ToolUseBlock],
     tool_use_id: &str,
@@ -5402,6 +5404,7 @@ fn tool_use_description_for_current_transcript(
     .unwrap_or_default()
 }
 
+#[allow(dead_code)]
 fn tool_use_input_from_transcript_summary(tool_name: &str, description: &str) -> serde_json::Value {
     match tool_name {
         "Bash" | "PowerShell" => serde_json::json!({ "command": description }),
@@ -5939,6 +5942,7 @@ mod tests {
     };
     use crate::utils::env_utils::EnvVarGuard;
 
+    #[allow(dead_code)]
     /// A2.3 test extractors: rows carry the real `AssistantMessage`; these read
     /// the row's first non-identity block the way the renderer does.
     fn row_assistant_text(message: &RenderableMessage) -> Option<&str> {
@@ -5963,6 +5967,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn row_is_api_error(message: &RenderableMessage) -> bool {
         matches!(
             &message.kind,

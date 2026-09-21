@@ -9,7 +9,7 @@ use crate::types::plugin::LoadedPlugin;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Maps to CC `loadPluginAgents.ts#loadPluginAgents`.
 pub fn load_plugin_agents_readonly() -> Vec<AgentDefinition> {
@@ -321,11 +321,12 @@ fn inject_agent_memory_tools(tools: &mut Option<Vec<String>>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::plugin::{PluginComponent, PluginError};
+    use std::path::PathBuf;
+    
     use crate::utils::plugins::plugin_loader::{
         create_plugin_from_path_for_test as create_plugin_from_path, parse_marketplace_plugin_entry,
     };
-    use crate::utils::plugins::schemas::PluginManifest;
+    
     use std::io::Write;
 
     fn temp_dir(name: &str) -> PathBuf {
@@ -346,7 +347,6 @@ mod tests {
         file.write_all(content.as_bytes()).expect("write");
     }
 
-    #[test]
     #[test]
     fn load_plugin_agents_from_default_directory_namespaces_and_ignores_trust_escalation_fields() {
         let root = temp_dir("default");

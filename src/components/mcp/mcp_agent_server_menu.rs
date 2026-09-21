@@ -139,7 +139,7 @@ pub fn MCPAgentServerMenu<'a>(
     let mut pending_action = hooks.use_state(|| Option::<AgentServerMenuAction>::None);
     let mut pending_cancel = hooks.use_state(|| false);
     let mut is_authenticating = hooks.use_state(|| false);
-    let mut auth_error = hooks.use_state(|| Option::<String>::None);
+    let auth_error = hooks.use_state(|| Option::<String>::None);
     let mut authorization_url = hooks.use_state(|| Option::<String>::None);
     let mut auth_abort_handle =
         hooks.use_state(|| Option::<crate::services::mcp::auth::McpOAuthAbortHandle>::None);
@@ -152,7 +152,7 @@ pub fn MCPAgentServerMenu<'a>(
         let agent_server = agent_server.clone();
         let mut is_authenticating = is_authenticating;
         let mut auth_error = auth_error;
-        let mut authorization_url = authorization_url;
+        let authorization_url = authorization_url;
         let mut auth_abort_handle = auth_abort_handle;
         let auth_abort_cleanup = auth_abort_cleanup.clone();
         let mut pending_auth_result = pending_auth_result;

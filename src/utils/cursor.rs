@@ -826,6 +826,7 @@ fn snap_to_grapheme_boundary(text: &str, cursor: usize) -> usize {
         .unwrap_or(0)
 }
 
+#[allow(dead_code)]
 fn prev_boundary(text: &str, cursor: usize) -> usize {
     let cursor = clamp_byte_offset(text, cursor);
     if cursor == 0 {

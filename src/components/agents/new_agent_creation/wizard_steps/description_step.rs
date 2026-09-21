@@ -78,7 +78,7 @@ pub fn DescriptionStep(mut hooks: Hooks) -> impl Into<AnyElement<'static>> {
             true
         },
     );
-    let mut value_for_editor = value;
+    let value_for_editor = value;
     let editor_sender = editor_channel.0.clone();
     use_keybinding(
         &mut hooks,

@@ -64,7 +64,7 @@ pub fn AddMarketplace(
             let Some(parsed)=crate::utils::plugins::parse_marketplace_input::parse_marketplace_input(input).await else{set_error(Some("Invalid marketplace source format. Try: owner/repo, https://..., or ./path".into()));return;};
             if let Some(error)=parsed.get("error").and_then(|v|v.as_str()){set_error(Some(error.into()));return;}
             set_error(None);is_loading.set(true);progress_message.set(String::new());
-            let progress=move|message:&str|{let mut state=progress_message;state.set(message.into());Ok(())};
+            let progress=move|message:&str|{let state=progress_message;state.set(message.into());Ok(())};
             let result: anyhow::Result<String>=async{
                 let added=crate::utils::plugins::marketplace_manager::add_marketplace_source(&parsed,Some(&progress)).await?;
                 crate::utils::plugins::marketplace_manager::save_marketplace_to_settings(&added.name,&serde_json::json!({"source":added.resolved_source}),crate::utils::settings::SettingSource::User)?;

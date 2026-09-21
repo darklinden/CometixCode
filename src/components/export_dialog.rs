@@ -430,7 +430,7 @@ mod tests {
         let done = trace.clone();
         let frames = futures::executor::block_on(async {
             let (sender, receiver) = async_channel::unbounded();
-            let mut app = element! {
+            let app = element! {
                 ContextProvider(value: Context::owned(crate::state::store::AppStore::new(crate::state::app_state_store::AppState::default(), None))) {
                     ContextProvider(value: Context::owned(runtime)) {
                         ContextProvider(value: Context::owned(*crate::utils::theme::current())) {
@@ -765,7 +765,7 @@ mod tests {
         props: &UnmountAfterExportProps,
         mut hooks: Hooks,
     ) -> impl Into<AnyElement<'static>> {
-        let mut mounted = hooks.use_state(|| true);
+        let mounted = hooks.use_state(|| true);
         let (command_stdout, _) = hooks.use_output();
         let done = props.done.clone();
         if !mounted.get() {
@@ -800,7 +800,7 @@ mod tests {
         let done_for_app = done.clone();
         let frames = futures::executor::block_on(async {
             let (sender, receiver) = async_channel::unbounded();
-            let mut app = element! {
+            let app = element! {
                 ContextProvider(value: Context::owned(crate::state::store::AppStore::new(crate::state::app_state_store::AppState::default(), None))) {
                     ContextProvider(value: Context::owned(KeybindingRuntime::with_default_bindings())) {
                         ContextProvider(value: Context::owned(*crate::utils::theme::current())) {

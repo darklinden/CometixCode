@@ -352,7 +352,7 @@ pub async fn check_for_async_hook_responses() -> Vec<AsyncHookResponse> {
         }
 
         let stdout = process.stdout();
-        let stderr = process.stderr();
+        let _stderr = process.stderr();
         if entry.snapshot.response_attachment_sent || stdout.trim().is_empty() {
             stop_interval(entry);
             remove_ids.push(process_id);

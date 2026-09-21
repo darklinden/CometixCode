@@ -85,6 +85,7 @@ fn local_highlights(highlights: &[TextHighlight], start: usize, end: usize) -> V
         .collect()
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn rendered_value(lines: &[RenderedLine]) -> String {
     lines
         .iter()

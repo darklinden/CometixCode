@@ -546,7 +546,7 @@ pub fn remove_transcript_message(
             .map_err(|_| anyhow::anyhow!("Project dropped removeMessageByUuid response"))?
             .map_err(anyhow::Error::msg)?;
 
-        let refresh_parent = if let Ok(mut meta) = get_project().current_session_meta.write() {
+        let refresh_parent = if let Ok(meta) = get_project().current_session_meta.write() {
             get_session_messages(&crate::bootstrap::state::get_session_id())
                 .write()
                 .unwrap_or_else(|error| error.into_inner())
@@ -3447,6 +3447,7 @@ fn is_compact_boundary(entry: &serde_json::Value) -> bool {
         && entry.get("subtype").and_then(|v| v.as_str()) == Some(SUBTYPE_COMPACT_BOUNDARY)
 }
 
+#[allow(dead_code)]
 fn truncate_chars(s: &str, max_chars: usize) -> String {
     if s.chars().count() <= max_chars {
         s.to_string()

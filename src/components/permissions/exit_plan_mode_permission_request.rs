@@ -275,10 +275,10 @@ pub fn ExitPlanModePermissionRequest<'a>(
     let request = props.request.clone().unwrap_or_else(default_request);
     let initial_plan = plan_content_from_request(&request);
     let mut current_plan = hooks.use_state(|| initial_plan.clone());
-    let mut plan_feedback = hooks.use_state(String::new);
+    let plan_feedback = hooks.use_state(String::new);
     // Maps to: CC `components/permissions/ExitPlanModePermissionRequest/ExitPlanModePermissionRequest.tsx:210-217`.
-    let mut pasted_contents = hooks.use_state(BTreeMap::<usize, PastedContent>::new);
-    let mut next_paste_id = hooks.use_state(|| 0usize);
+    let pasted_contents = hooks.use_state(BTreeMap::<usize, PastedContent>::new);
+    let next_paste_id = hooks.use_state(|| 0usize);
     let mut editor_error = hooks.use_state(|| Option::<String>::None);
     let mut show_save_message = hooks.use_state(|| false);
     let mut editor_result = hooks.use_state(|| Option::<EditorResult>::None);
@@ -349,7 +349,7 @@ pub fn ExitPlanModePermissionRequest<'a>(
         }
     }
     let option_count = options.len();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     // The bool distinguishes Select.onChange (feedback/images included) from
     // Select.onCancel (plain rejection), matching CC's separate callbacks.
     let mut pending_select =

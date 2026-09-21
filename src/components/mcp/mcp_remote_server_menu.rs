@@ -4,7 +4,7 @@
 //! source-owned URL selection/browser dispatch and renders runtime snapshots.
 
 use super::capabilities_section::CapabilitiesSection;
-use super::types::{ServerInfo, mcp_client_state_from_parts};
+use super::types::ServerInfo;
 use super::utils::reconnect_helpers::handle_reconnect_result;
 use crate::components::configurable_shortcut_hint::ConfigurableShortcutHint;
 use crate::components::custom_select::select::{Select, SelectLayout, SelectOptionData};
@@ -251,9 +251,9 @@ pub fn MCPRemoteServerMenu<'a>(
         crate::services::mcp::mcp_connection_manager::use_mcp_reconnect(&mut hooks);
     let toggle_mcp_server =
         crate::services::mcp::mcp_connection_manager::use_mcp_toggle_enabled(&mut hooks);
-    let mut is_reconnecting = hooks.use_state(|| false);
+    let is_reconnecting = hooks.use_state(|| false);
     let mut is_authenticating = hooks.use_state(|| false);
-    let mut authorization_url = hooks.use_state(|| Option::<String>::None);
+    let authorization_url = hooks.use_state(|| Option::<String>::None);
     let mut manual_callback_submit =
         hooks.use_state(|| Option::<crate::services::mcp::auth::McpManualCallbackSubmit>::None);
     let mut auth_abort_handle =
@@ -268,7 +268,7 @@ pub fn MCPRemoteServerMenu<'a>(
     let mut is_claude_ai_clearing_auth = hooks.use_state(|| false);
     let mut claude_ai_clear_auth_url = hooks.use_state(|| Option::<String>::None);
     let mut claude_ai_clear_auth_browser_opened = hooks.use_state(|| false);
-    let mut url_copied = hooks.use_state(|| false);
+    let url_copied = hooks.use_state(|| false);
     let mut auth_error = hooks.use_state(|| Option::<String>::None);
     let mut pending_runtime_result = hooks.use_state(|| Option::<String>::None);
     let mut pending_runtime_cancel = hooks.use_state(|| false);
@@ -989,6 +989,7 @@ mod tests {
     use futures::StreamExt;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
+    use crate::components::mcp::types::mcp_client_state_from_parts;
 
     struct EnvRestore {
         _env: crate::utils::env_utils::EnvVarGuard,
@@ -1388,7 +1389,7 @@ mod tests {
         let _tmux = EnvRestore::unset("TMUX");
         let _oauth = EnvRestore::unset("CLAUDE_CODE_CUSTOM_OAUTH_URL");
         let (sender, receiver) = async_channel::unbounded();
-        let mut app = element! {
+        let app = element! {
             ContextProvider(value: Context::owned(crate::keybindings::keybinding_context::KeybindingRuntime::with_default_bindings())) {
                 RemoteToggleHarness(server: Some(server(McpServerConnectionType::NeedsAuth, Transport::ClaudeAiProxy, None)), cancels: Arc::new(Mutex::new(0)))
             }
@@ -1452,7 +1453,7 @@ mod tests {
         let _tmux = EnvRestore::set("TMUX", "fixture");
         let _oauth = EnvRestore::unset("CLAUDE_CODE_CUSTOM_OAUTH_URL");
         let (sender, receiver) = async_channel::unbounded();
-        let mut app = element! {
+        let app = element! {
             ContextProvider(value: Context::owned(crate::keybindings::keybinding_context::KeybindingRuntime::with_default_bindings())) {
                 RemoteToggleHarness(server: Some(server(McpServerConnectionType::NeedsAuth, Transport::ClaudeAiProxy, None)), cancels: Arc::new(Mutex::new(0)), unmount_on_escape: true)
             }

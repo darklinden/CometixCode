@@ -35,6 +35,7 @@ fn prepare_image_bytes(bytes: Vec<u8>, media_type: &str) -> ClipboardImage {
     }
 }
 
+#[allow(dead_code)]
 fn prepare_image_base64(data: String, media_type: &str) -> ClipboardImage {
     if let Ok(resized) = crate::utils::image_resizer::maybe_resize_and_downsample_image_base64(
         &data,

@@ -135,6 +135,7 @@ pub(crate) fn get_legacy_api_key_prefetch_result() -> Option<Option<String>> {
 
 /// Maps to: CC `utils/secureStorage/keychainPrefetch.ts:115-117`
 /// `clearLegacyApiKeyPrefetch`.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn clear_legacy_api_key_prefetch() {
     *LEGACY_API_KEY_PREFETCH
         .lock()

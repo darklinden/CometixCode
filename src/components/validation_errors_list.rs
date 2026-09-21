@@ -101,7 +101,7 @@ pub struct ValidationErrorsListProps {
 #[component]
 pub fn ValidationErrorsList(
     props: &mut ValidationErrorsListProps,
-    mut hooks: Hooks,
+    hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
     if props.errors.is_empty() {

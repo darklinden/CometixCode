@@ -17,7 +17,7 @@ use iocraft::prelude::*;
 #[derive(Default, Props)]
 pub struct CondensedLogoProps {
     pub columns: usize,
-    pub data: LogoDisplayData,
+    pub(crate) data: LogoDisplayData,
     pub show_guest_passes_upsell: bool,
     pub guest_passes_reward_text: Option<String>,
     pub show_overage_credit_upsell: bool,

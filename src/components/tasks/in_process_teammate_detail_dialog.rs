@@ -105,7 +105,7 @@ pub fn InProcessTeammateDetailDialog<'a>(
         );
     }
     let theme = hooks.use_context::<Theme>();
-    let terminal = teammate.status != TaskStatus::Running;
+    let _terminal = teammate.status != TaskStatus::Running;
     let terminal_label = match teammate.status {
         TaskStatus::Completed => Some(("Completed", theme.success)),
         TaskStatus::Failed => Some(("Failed", theme.error)),

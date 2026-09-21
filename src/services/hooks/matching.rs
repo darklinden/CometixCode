@@ -5,7 +5,7 @@
 //! User-authorized structural decomposition: CC keeps these functions in its
 //! ~5k-line hook monolith; Rust keeps matcher policy in `services/hooks`.
 
-use super::{HookConfigEntry, HookEvent};
+use super::HookEvent;
 use crate::schemas::hooks::{RegisteredHook, RegisteredHooks};
 
 /// A matched hook ready for execution.
@@ -239,6 +239,7 @@ pub fn hook_dedup_key(matched: &MatchedHook, payload: &str) -> String {
 mod tests {
     use super::*;
     use crate::services::hooks::{HookCommand, HooksConfig, test_support::registered_config};
+    use crate::utils::settings::types::HookConfigEntry;
 
     /// Test-side shim: fixtures stay in the settings-shaped `HooksConfig` (so
     /// they can be mutated field-by-field) and are folded into the

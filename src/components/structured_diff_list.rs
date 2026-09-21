@@ -49,6 +49,7 @@ pub fn structured_diff_list_lines(
     )
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn lines_to_text(lines: &[ToolRenderLine]) -> String {
     lines
         .iter()

@@ -372,7 +372,7 @@ pub fn BashPermissionRequest<'a>(
         props.classifier_status,
         BashClassifierStatus::AutoApproved { .. }
     );
-    let mut feedback_state = hooks.use_state(ShellPermissionFeedbackState::default);
+    let feedback_state = hooks.use_state(ShellPermissionFeedbackState::default);
     let accept_feedback = hooks.use_state(String::new);
     let accept_feedback_cursor = hooks.use_state(|| 0usize);
     let reject_feedback = hooks.use_state(String::new);

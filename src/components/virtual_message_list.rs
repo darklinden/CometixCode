@@ -78,7 +78,7 @@ pub fn default_extract_search_text(message: &VirtualTranscriptMessage) -> String
 /// the heuristic (:899-901). Callers with no tool-lookup path fall back to
 /// [`default_extract_search_text`] (`VirtualMessageList.tsx:40-46`). CC lowers
 /// once here because the per-keystroke match loop only does `indexOf`.
-pub fn extract_search_text(
+pub(crate) fn extract_search_text(
     message: &VirtualTranscriptMessage,
     tool_result: Option<(&dyn crate::tool::ToolCall, &crate::tool::ToolOutput)>,
 ) -> String {

@@ -134,9 +134,9 @@ pub fn SandboxSettings<'a>(
         .clone()
         .unwrap_or_else(check_dependencies_readonly);
     let tabs = tabs_for_dep_check(&dep_check);
-    let mut tab_index = hooks.use_state(|| 0usize);
-    let mut mode_focus = hooks.use_state(|| 0usize);
-    let mut override_focus = hooks.use_state(|| 0usize);
+    let tab_index = hooks.use_state(|| 0usize);
+    let mode_focus = hooks.use_state(|| 0usize);
+    let override_focus = hooks.use_state(|| 0usize);
     let mut pending_result = hooks.use_state(|| Option::<Option<String>>::None);
 
     let current_enabled = get_sandbox_enabled_setting(&settings);

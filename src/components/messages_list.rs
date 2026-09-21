@@ -21,9 +21,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::types::message::{
-    Attachment, GroupedToolUseMessage, ReadResultKind, RenderableMessage, RenderableMessageKind,
-    SearchResultMode, StructuredDiffHunk, SystemMessage, SystemMessageLevel, ToolResultStatus,
-    ToolUseProgressMessage, ToolUseStatus,
+    Attachment, GroupedToolUseMessage, RenderableMessage, RenderableMessageKind, SystemMessage,
+    ToolUseProgressMessage,
 };
 #[cfg(test)]
 use crate::types::message::{
@@ -71,14 +70,17 @@ pub(crate) struct MessagesRenderSlice {
 }
 
 impl MessagesRenderSlice {
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.end.saturating_sub(self.start)
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    #[allow(dead_code)]
     pub fn iter(&self) -> impl Iterator<Item = &RenderableMessage> {
         self.messages[self.start..self.end].iter()
     }
@@ -1868,6 +1870,9 @@ mod tests {
     use crate::utils::status_notice_definitions::{MAX_MEMORY_CHARACTER_COUNT, MemoryFileInfo};
     use crate::utils::theme;
     use futures::StreamExt;
+    use crate::types::message::ToolUseStatus;
+    use crate::types::message::ToolResultStatus;
+    use crate::types::message::SystemMessageLevel;
 
     /// Maps to: CC `Messages.tsx:209-247` `dropTextInBriefTurns` — a turn
     /// that called SendUserMessage drops its assistant text rows; tool rows,

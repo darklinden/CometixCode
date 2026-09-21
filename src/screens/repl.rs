@@ -52,13 +52,10 @@ use crate::services::mcp::elicitation_handler::{
     url_retry_waiting_dismiss_result,
 };
 use crate::services::mcp::types::McpPromptSnapshot;
-use crate::services::tools::tool_execution::{
-    check_permissions_and_call_tool, check_permissions_and_call_tool_with_response,
-};
+use crate::services::tools::tool_execution::check_permissions_and_call_tool_with_response;
 use crate::services::tools::tool_orchestration::run_tools_for_message;
 use crate::tool::ToolPermissionContext;
 use crate::tool::ToolUseContext;
-use crate::types::command::ResumeEntrypoint;
 use crate::types::message::Message;
 use crate::types::message::UserContent;
 use crate::types::message::{
@@ -998,6 +995,7 @@ struct StreamingTextPreview {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum StreamingTextDisplayMode {
     /// Strict CC parity: render only completed lines from `streamingText`.
+    #[allow(dead_code)]
     Line,
     /// Cometix extension: render the unstable suffix too, preserving the
     /// accidental character-by-character streaming effect without mutating the
@@ -1926,6 +1924,7 @@ fn push_system_notice(
     history_state.set(Arc::new(entries));
 }
 
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn messages_memo_key(
     messages: &Arc<Vec<RenderableMessage>>,
@@ -2310,6 +2309,7 @@ fn local_command_ui_dismiss_result(panel: &LocalCommandPanel) -> Option<String> 
 }
 
 impl ActiveLocalCommandUi {
+    #[cfg_attr(not(test), allow(dead_code))]
     fn from_slash_command(
         command: LocalCommandUi,
         invocation: SlashCommandInvocation,
@@ -2388,6 +2388,7 @@ fn clear_local_command_ui(current: Option<ActiveLocalCommandUi>) -> Option<Activ
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn preserve_local_command_ui_against_non_local_tool_update(
     current: Option<ActiveLocalCommandUi>,
 ) -> Option<ActiveLocalCommandUi> {
@@ -3640,7 +3641,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     // retain the existing 250ms pending-slot poll, but resolve on the published
     // process runtime. Source void promises outlive the initiating component;
     // only their State delivery is mount-scoped (existing REPL channel carrier).
-    let mut hint_recommendation = hooks.use_state(|| {
+    let hint_recommendation = hooks.use_state(|| {
         Option::<crate::utils::plugins::hint_recommendation::PluginHintRecommendation>::None
     });
     let hint_resolution_tasks = hooks.use_const(|| {
@@ -3913,7 +3914,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     // Alias kept for call-site clarity: permission reads/writes go through
     // AppStore (CC useAppState + useSetAppState), not a transitional lens.
     let permission_store = app_store.clone();
-    let mut inbox_poller_state =
+    let inbox_poller_state =
         hooks.use_state(crate::hooks::use_inbox_poller::InboxPollerState::default);
     let mut classifier_approvals = hooks.use_state(ClassifierApprovalsState::default);
     let initial_resume_restore_stores = props.initial_resume_restore_stores.clone();
@@ -4426,15 +4427,15 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     // Maps to: CC REPL.tsx:2011 `isMessageSelectorVisible`. The option list
     // itself is derived inside MessageSelector via use_memo keyed on the
     // messages Arc pointer (CC useMemo([messages]) reference semantics).
-    let mut message_selector_visible = hooks.use_state(|| false);
+    let message_selector_visible = hooks.use_state(|| false);
     // Maps to: CC REPL `screen` + `showAllInTranscript`.
-    let mut screen = hooks.use_state(Screen::default);
-    let mut show_all_in_transcript = hooks.use_state(|| false);
+    let screen = hooks.use_state(Screen::default);
+    let show_all_in_transcript = hooks.use_state(|| false);
     let mut should_exit = hooks.use_state(|| false);
     let process_exit_code = hooks
         .try_use_context::<Arc<std::sync::atomic::AtomicI32>>()
         .map(|code| code.clone());
-    let mut redraw_generation = hooks.use_state(|| 0u64);
+    let redraw_generation = hooks.use_state(|| 0u64);
     let mut prompt_input_generation = hooks.use_state(|| 0u64);
     // Maps to: CC REPL-owned controlled `input`; PromptInput may unmount while
     // a local command panel is shown, but unsent text survives remount.
@@ -5931,7 +5932,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
             let permission_sink_for_submit = permission_sink_for_submit.clone();
             let thinking_config_for_submit = thinking_config_for_submit.clone();
             let system_prompt_overrides = system_prompt_overrides_for_submit.clone();
-            let permission_context_for_submit_handler =
+            let _permission_context_for_submit_handler =
                 permission_context_for_submit_handler.clone();
             let runtime_mcp_context_for_submit = runtime_mcp_context_for_submit.clone();
             let initial_main_thread_agent_definition_for_submit =
@@ -6007,7 +6008,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
                     hook_session_id: command_context.agent_id.clone().unwrap_or_else(crate::bootstrap::state::get_session_id),
                     context: command_context.clone(),
                 };
-                let mut result = if let Some(completed) = completed_local_command {
+                let result = if let Some(completed) = completed_local_command {
                     prompt_submit_for_submit.complete_local_command_deferred_query(
                         completed.continuation.input,
                         completed.processed,
@@ -6491,11 +6492,11 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     // Maps to: CC REPL.tsx onSubmit -> handlePromptSubmit.
     // Repl owns UI state and executes typed local command UI actions returned
     // by the handle_prompt_submit/process_user_input/process_slash_command seam.
-    let mock_pump_tx_for_submit = mock_pump_tx.clone();
-    let prompt_submit_for_submit = prompt_submit.clone();
-    let channel_permission_callbacks_for_submit = channel_permission_callbacks.clone();
+    let _mock_pump_tx_for_submit = mock_pump_tx.clone();
+    let _prompt_submit_for_submit = prompt_submit.clone();
+    let _channel_permission_callbacks_for_submit = channel_permission_callbacks.clone();
     let app_store_for_submit = app_store.clone();
-    let thinking_config_for_submit = thinking_config.clone();
+    let _thinking_config_for_submit = thinking_config.clone();
     let system_prompt_overrides_for_submit = system_prompt_overrides.clone();
     let mut prompt_input_generation_for_submit = prompt_input_generation;
     let mut restored_input_for_submit = restored_input;
@@ -6503,24 +6504,24 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     let runtime_mcp_context_for_submit = runtime_mcp_context.clone();
     let prompt_shell_sender_for_submit = prompt_shell_channel.0.clone();
     let mut active_prompt_shell_for_submit = active_prompt_shell_command;
-    let initial_main_thread_agent_definition_for_submit =
+    let _initial_main_thread_agent_definition_for_submit =
         initial_main_thread_agent_definition.clone();
-    let main_thread_agent_definition_for_submit = main_thread_agent_definition;
-    let mut loaded_nested_memory_paths_for_submit = loaded_nested_memory_paths;
-    let resume_processing_tx_for_submit = resume_processing_tx.clone();
-    let context_processing_tx_for_submit = context_processing_tx.clone();
+    let _main_thread_agent_definition_for_submit = main_thread_agent_definition;
+    let _loaded_nested_memory_paths_for_submit = loaded_nested_memory_paths;
+    let _resume_processing_tx_for_submit = resume_processing_tx.clone();
+    let _context_processing_tx_for_submit = context_processing_tx.clone();
     let speculation_acceptance_tx_for_submit = speculation_acceptance_tx.clone();
-    let compact_processing_tx_for_submit = compact_processing_tx.clone();
-    let mut active_compact_abort_for_submit = active_compact_abort;
-    let plan_processing_tx_for_submit = plan_processing_tx.clone();
-    let keybindings_processing_tx_for_submit = keybindings_processing_tx.clone();
-    let context_terminal_cols_for_submit = terminal_cols;
-    let initial_tools_for_submit = initial_tools.clone();
+    let _compact_processing_tx_for_submit = compact_processing_tx.clone();
+    let _active_compact_abort_for_submit = active_compact_abort;
+    let _plan_processing_tx_for_submit = plan_processing_tx.clone();
+    let _keybindings_processing_tx_for_submit = keybindings_processing_tx.clone();
+    let _context_terminal_cols_for_submit = terminal_cols;
+    let _initial_tools_for_submit = initial_tools.clone();
     let commands_for_submit = commands.clone();
-    let copy_direct_action_for_submit = copy_direct_action.clone();
-    let rename_generation_action_for_submit = rename_generation_action.clone();
+    let _copy_direct_action_for_submit = copy_direct_action.clone();
+    let _rename_generation_action_for_submit = rename_generation_action.clone();
     let mut user_input_on_processing_for_submit = user_input_on_processing;
-    let mut response_length_ref_for_submit = response_length_ref;
+    let _response_length_ref_for_submit = response_length_ref;
     let ide_selection_for_submit = ide_selection;
     let has_interruptible_tool_in_progress_for_submit =
         Arc::clone(&has_interruptible_tool_in_progress);
@@ -6529,7 +6530,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     let permission_queue_for_submit = permission_queue;
     let prompt_query_action_for_submit = prompt_query_action.clone();
     let mut on_submit = move |submission: PromptSubmission| {
-        let system_prompt_overrides = system_prompt_overrides_for_submit.clone();
+        let _system_prompt_overrides = system_prompt_overrides_for_submit.clone();
         let from_keybinding = submission.from_keybinding;
         let submitted_image_ids = submission
             .pasted_contents
@@ -7774,7 +7775,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
         }
     };
 
-    let mut on_diff_done = move |done: DiffDialogDone| {
+    let on_diff_done = move |done: DiffDialogDone| {
         if done.display != crate::utils::worktree::CommandResultDisplay::Skip {
             if let Some(active) = active_local_command_ui.read().clone() {
                 if let Some(invocation) = active.invocation.as_ref() {
@@ -7791,7 +7792,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
         active_local_command_ui.set(clear_local_command_ui(current));
     };
 
-    let mut on_hooks_done = move |done: HooksConfigMenuDone| {
+    let on_hooks_done = move |done: HooksConfigMenuDone| {
         if done.display != crate::utils::worktree::CommandResultDisplay::Skip {
             if let Some(active) = active_local_command_ui.read().clone() {
                 if let Some(invocation) = active.invocation.as_ref() {
@@ -7808,7 +7809,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
         active_local_command_ui.set(clear_local_command_ui(current));
     };
 
-    let mut on_agents_done = move |result: String| {
+    let on_agents_done = move |result: String| {
         if let Some(active) = active_local_command_ui.read().clone() {
             if let Some(invocation) = active.invocation.as_ref() {
                 append_local_command_invocation_result(
@@ -7823,7 +7824,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
         active_local_command_ui.set(clear_local_command_ui(current));
     };
 
-    let mut on_skills_done = move |done: SkillsMenuDone| {
+    let on_skills_done = move |done: SkillsMenuDone| {
         if done.display != crate::utils::worktree::CommandResultDisplay::Skip {
             if let Some(active) = active_local_command_ui.read().clone() {
                 if let Some(invocation) = active.invocation.as_ref() {
@@ -8089,7 +8090,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
 
     let permission_context_for_sandbox = permission_store.clone();
     let app_store_for_sandbox = app_store.clone();
-    let mut on_sandbox_permission_response = move |response: crate::components::permissions::sandbox_permission_request::SandboxPermissionResponse| {
+    let on_sandbox_permission_response = move |response: crate::components::permissions::sandbox_permission_request::SandboxPermissionResponse| {
         let current_request = {
             let app = app_store_for_sandbox.get();
             app.worker_sandbox_permissions.queue.first().cloned()
@@ -9871,6 +9872,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
 
 #[cfg(test)]
 mod tests {
+    use crate::types::command::ResumeEntrypoint;
     struct BranchFixtureDirectory(std::path::PathBuf);
     impl BranchFixtureDirectory {
         fn new() -> Self {

@@ -91,7 +91,7 @@ pub fn Settings<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let initial_tab = props.default_tab.unwrap_or(SettingsTab::Config);
-    let mut selected_tab = hooks.use_state(move || initial_tab);
+    let selected_tab = hooks.use_state(move || initial_tab);
     let (_, rows) = hooks.use_terminal_size();
     // Maps to: CC contentHeight = max(15, min(floor(rows * 0.8), 30))
     let content_height = (rows as f32 * 0.8).min(30.0).max(15.0) as u32;
@@ -299,7 +299,7 @@ mod tests {
             &mut hooks,
             crate::keybindings::keybinding_context::KeybindingRuntime::with_default_bindings(),
         );
-        let mut closed = hooks.use_state(|| false);
+        let closed = hooks.use_state(|| false);
         element! {
             ContextProvider(value: Context::owned(runtime)) {
 

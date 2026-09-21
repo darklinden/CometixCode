@@ -46,12 +46,12 @@ pub(crate) struct VerboseAgentToolResultProjection {
 /// every forwarded message in `progressMessages` for `extractLastToolInfo`
 /// (`:1053-1060`) and `calculateAgentStats` (`:795-804`).
 pub(crate) fn verbose_agent_transcript_tool_result_projection(
-    tool_name: &str,
+    _tool_name: &str,
     success: bool,
-    content: &str,
+    _content: &str,
     tool_use_result: Option<&serde_json::Value>,
 ) -> Option<VerboseAgentToolResultProjection> {
-    let tool_use_result = tool_use_result?;
+    let _tool_use_result = tool_use_result?;
     let status = if success {
         crate::types::message::ToolResultStatus::Success
     } else {

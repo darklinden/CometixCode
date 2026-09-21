@@ -228,7 +228,7 @@ pub fn HistorySearchDialog<'a>(
         query: hooks.use_state(move || initial_query_for_query.clone()),
         cursor: hooks.use_state(move || initial_query_len),
     };
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_action = hooks.use_state(|| Option::<HistorySearchAction>::None);
 
     let pending = {

@@ -224,7 +224,7 @@ pub fn WebFetchPermissionRequest<'a>(
     let hostname = web_fetch_hostname_from_url(&url).unwrap_or_else(|| url.clone());
     let options = web_fetch_permission_options(&hostname, props.show_always_allow_options);
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_select = hooks.use_state(|| Option::<WebFetchPermissionOptionValue>::None);
     let mut pending_cancel = hooks.use_state(|| false);
 

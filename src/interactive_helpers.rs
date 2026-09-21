@@ -306,9 +306,9 @@ fn SetupScreensHost<'a>(
     // a source-shaped prop (CC reads them from disk) and the post-approval MCP
     // refresh target is an explicit prop (see `SetupScreensHostProps`).
     let setup_screens_snapshot = props.snapshot.clone();
-    let mcp_startup = props.mcp_startup.clone();
+    let _mcp_startup = props.mcp_startup.clone();
     let startup_settings = props.startup_settings.clone();
-    let mcp_writer = props.mcp_writer.clone();
+    let _mcp_writer = props.mcp_writer.clone();
 
     // Gate visibility from props each render; dismissal is local state.
     // (Do not seed use_state from props — iocraft may first-mount with Default props.)
@@ -321,7 +321,7 @@ fn SetupScreensHost<'a>(
 
     // Maps to: CC `interactiveHelpers.tsx:218` + `mcpServerApproval.tsx:16-19`
     // — both derive the pending list from the settings snapshot read off disk.
-    let mut pending_mcpjson_servers_state = hooks.use_state({
+    let pending_mcpjson_servers_state = hooks.use_state({
         let startup_settings = startup_settings.clone();
         move || crate::main::pending_mcpjson_approval_servers(&startup_settings.settings)
     });

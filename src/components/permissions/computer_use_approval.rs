@@ -349,7 +349,7 @@ fn ComputerUseTccPanel(
     let on_done = props.on_done.clone();
     let on_done_cancel = props.on_done.clone();
     let options = computer_use_tcc_options(tcc_state);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_done = hooks.use_state(|| false);
 
     hooks.use_terminal_events({
@@ -463,7 +463,7 @@ fn ComputerUseAppListPanel(
         let request = request.clone();
         move || default_checked_bundle_ids(&request)
     });
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_allow = hooks.use_state(|| Option::<bool>::None);
     let options = [AppListOption::AllowAll, AppListOption::Deny];
 

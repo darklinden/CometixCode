@@ -145,6 +145,7 @@ fn description_already_exists(description: &str, existing_descriptions: &[String
         .any(|existing| existing.to_lowercase().trim_end() == normalized)
 }
 
+#[allow(dead_code)]
 fn suggestion_rules(suggestions: &[PermissionUpdate]) -> Vec<&PermissionRuleValue> {
     suggestions
         .iter()

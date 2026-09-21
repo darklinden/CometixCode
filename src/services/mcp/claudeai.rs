@@ -255,7 +255,7 @@ pub fn has_claude_ai_mcp_ever_connected(name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
     #[test]
     fn env_defined_falsy_matches_official_claudeai_gate() {

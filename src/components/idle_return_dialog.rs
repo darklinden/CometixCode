@@ -88,7 +88,7 @@ pub fn IdleReturnDialog<'a>(
     props: &mut IdleReturnDialogProps<'a>,
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_action = hooks.use_state(|| Option::<IdleReturnAction>::None);
     let options = idle_return_options();
     let option_count = options.len().max(1);

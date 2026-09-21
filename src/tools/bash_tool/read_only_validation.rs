@@ -16,6 +16,7 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
+#[cfg_attr(not(test), allow(dead_code))]
 const PRIVATE_COMMAND_NAMES: &[&str] = &[
     "xargs",
     "file",
@@ -41,6 +42,7 @@ const PRIVATE_COMMAND_NAMES: &[&str] = &[
     "fd",
     "fdfind",
 ];
+#[cfg_attr(not(test), allow(dead_code))]
 const ANT_PRIVATE_COMMAND_NAMES: &[&str] = &["aki"];
 
 fn private_command_config(

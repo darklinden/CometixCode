@@ -169,7 +169,7 @@ pub fn DesktopUpsellStartup<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let mut show_handoff = hooks.use_state(|| false);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_selection = hooks.use_state(|| Option::<DesktopUpsellSelection>::None);
     let mut pending_done = hooks.use_state(|| Option::<DesktopUpsellDone>::None);
     let options = desktop_upsell_options();

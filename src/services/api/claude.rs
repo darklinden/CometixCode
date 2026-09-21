@@ -21,7 +21,7 @@ use crate::types::tools::Tool;
 use crate::utils::betas::{
     ADVISOR_BETA_HEADER, CONTEXT_MANAGEMENT_BETA_HEADER, EFFORT_BETA_HEADER,
     PROMPT_CACHING_SCOPE_BETA_HEADER, REDACT_THINKING_BETA_HEADER, STRUCTURED_OUTPUTS_BETA_HEADER,
-    TASK_BUDGETS_BETA_HEADER, TOOL_SEARCH_BETA_HEADER_3P, get_bedrock_extra_body_params_betas,
+    TASK_BUDGETS_BETA_HEADER, get_bedrock_extra_body_params_betas,
     get_merged_betas, get_model_betas, get_tool_search_beta_header,
     model_supports_structured_outputs, should_include_first_party_only_betas,
     should_use_global_cache_scope,
@@ -282,6 +282,7 @@ fn prompt_cache_1h_allowlist() -> Vec<String> {
     crate::utils::settings::get_prompt_cache_1h_allowlist()
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn prompt_cache_1h_allowlist_from_feature_value(value: Option<&serde_json::Value>) -> Vec<String> {
     value
         .and_then(|value| value.get("allowlist"))
@@ -1854,6 +1855,7 @@ impl Options {
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn local_message_param_to_sdk(
     param: &MessageParam,
 ) -> anyhow::Result<anthropic_sdk::resources::messages::MessageParam> {
@@ -2980,6 +2982,7 @@ enum ActiveClaudeStreamBlock {
         tool_use_id: String,
         content: JsonValue,
     },
+    #[allow(dead_code)]
     Ignored,
 }
 
@@ -4911,6 +4914,7 @@ fn single_shot_query_options(
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::betas::TOOL_SEARCH_BETA_HEADER_3P;
     #[test]
     fn api_stream_and_fallback_normalize_plan_before_typed_messages_like_official() {
         let _env_lock = crate::utils::env_utils::TEST_ENV_LOCK.lock().unwrap();

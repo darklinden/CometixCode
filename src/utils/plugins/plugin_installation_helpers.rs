@@ -1,7 +1,7 @@
 //! Maps to: CC `utils/plugins/pluginInstallationHelpers.ts`.
 //! Shared canonical installation chain for CLI, panel, and hint callbacks.
 use crate::utils::settings::constants::SettingSource;
-use anyhow::{anyhow, bail};
+use anyhow::bail;
 use serde_json::{Map, Value};
 use std::path::{Path, PathBuf};
 /// Maps to: CC pluginInstallationHelpers.ts:73-75#getCurrentTimestamp.
@@ -472,6 +472,7 @@ pub async fn install_plugin_from_marketplace(params: InstallPluginParams) -> Ins
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::anyhow;
 
     // Test fixture only: resolve the imported marketplace then call the real
     // UI wrapper and inspect canonical registry output, without a second DFS,

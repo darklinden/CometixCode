@@ -75,7 +75,7 @@ pub fn PluginHintMenu<'a>(
     let theme = hooks.use_context::<Theme>();
     let options = plugin_hint_options(&props.plugin_name);
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
+    let focused_index = hooks.use_state(|| props.focused_index.min(option_count - 1));
     let mut pending_response = hooks.use_state(|| Option::<PluginHintResponse>::None);
 
     hooks.use_interval(

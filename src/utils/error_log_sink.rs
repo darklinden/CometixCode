@@ -45,6 +45,7 @@ impl JsonlWriter {
     }
 
     /// Maps to: CC `utils/errorLogSink.ts:56` delegated `flush`.
+    #[allow(dead_code)]
     fn flush(&self) -> io::Result<()> {
         self.writer.flush()
     }

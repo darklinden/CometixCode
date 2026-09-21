@@ -7,7 +7,7 @@
 //! Also owns `parseReferences` / `formatImageRef` from the same official file.
 
 use crate::components::prompt_input::input_paste::PastedContent;
-use crate::utils::{config, env_utils};
+use crate::utils::config;
 use chrono::Utc;
 use regex::Regex;
 use serde::{Deserialize, Serialize};

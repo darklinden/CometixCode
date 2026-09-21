@@ -83,20 +83,20 @@ pub fn BrowseMarketplace(
     let test_imports = hooks
         .try_use_context::<super::plugin_details_helpers::PluginUiTestImports>()
         .map(|f| f.clone());
-    let mut view_state = use_plugin_ui_state(&mut hooks, || ViewState::MarketplaceList);
-    let mut selected_marketplace = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut selected_plugin = use_plugin_ui_state(&mut hooks, || None::<InstallablePlugin>);
-    let mut marketplaces = use_plugin_ui_state(&mut hooks, Vec::<MarketplaceInfo>::new);
-    let mut available_plugins = use_plugin_ui_state(&mut hooks, Vec::<InstallablePlugin>::new);
-    let mut loading = use_plugin_ui_state(&mut hooks, || true);
-    let mut install_counts = use_plugin_ui_state(&mut hooks, || None::<InstallCounts>);
-    let mut selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut selected_for_install = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
-    let mut installing_plugins = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
-    let mut details_menu_index = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut is_installing = use_plugin_ui_state(&mut hooks, || false);
-    let mut install_error = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut warning = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let view_state = use_plugin_ui_state(&mut hooks, || ViewState::MarketplaceList);
+    let selected_marketplace = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let selected_plugin = use_plugin_ui_state(&mut hooks, || None::<InstallablePlugin>);
+    let marketplaces = use_plugin_ui_state(&mut hooks, Vec::<MarketplaceInfo>::new);
+    let available_plugins = use_plugin_ui_state(&mut hooks, Vec::<InstallablePlugin>::new);
+    let loading = use_plugin_ui_state(&mut hooks, || true);
+    let install_counts = use_plugin_ui_state(&mut hooks, || None::<InstallCounts>);
+    let selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
+    let selected_for_install = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
+    let installing_plugins = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
+    let details_menu_index = use_plugin_ui_state(&mut hooks, || 0usize);
+    let is_installing = use_plugin_ui_state(&mut hooks, || false);
+    let install_error = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let warning = use_plugin_ui_state(&mut hooks, || None::<String>);
     let view = view_state.read().clone();
     let list_active = matches!(view, ViewState::PluginList);
     let details_active = matches!(view, ViewState::PluginDetails);

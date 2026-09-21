@@ -435,6 +435,7 @@ fn javascript_parse_int_base10(text: &str) -> Option<f64> {
 /// Maps to: CC `tools/GrepTool/GrepTool.ts` `call` (:310) — builds ripgrep
 /// argv, calls `ripGrep`, then content (:466-474) / count (:514-522) /
 /// files_with_matches (:565-571) post-processing + `applyHeadLimit`.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn grep_output(
     args: &serde_json::Value,
     cwd: Option<&std::path::Path>,

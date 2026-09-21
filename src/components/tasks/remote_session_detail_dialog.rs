@@ -339,7 +339,7 @@ fn option(label: &str, value: &str) -> SelectOptionData {
 fn render_review_detail(
     session: &RemoteSessionDetailData,
     can_kill: bool,
-    mut pending: State<Option<InputAction>>,
+    pending: State<Option<InputAction>>,
     mut pending_menu: State<Option<MenuAction>>,
     theme: Theme,
 ) -> AnyElement<'static> {
@@ -406,7 +406,7 @@ fn render_ultraplan_detail(
     session: &RemoteSessionDetailData,
     phase: Option<&str>,
     can_kill: bool,
-    mut pending: State<Option<InputAction>>,
+    pending: State<Option<InputAction>>,
     mut pending_menu: State<Option<MenuAction>>,
     theme: Theme,
 ) -> AnyElement<'static> {

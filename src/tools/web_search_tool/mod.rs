@@ -129,7 +129,7 @@ pub(crate) enum WebSearchResultItem {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Output {
     pub query: String,
-    pub results: Vec<WebSearchResultItem>,
+    pub(crate) results: Vec<WebSearchResultItem>,
     pub duration_seconds: f64,
 }
 

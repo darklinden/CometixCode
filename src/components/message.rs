@@ -9,7 +9,6 @@ use super::messages::*;
 use super::messages_list::MessageLookups;
 use crate::types::message::{
     RenderableMessage, RenderableMessageKind, SystemMessage, SystemMessageLevel,
-    ToolUseProgressMessage, ToolUseStatus,
 };
 use iocraft::prelude::*;
 use std::collections::HashSet;

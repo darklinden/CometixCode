@@ -313,7 +313,7 @@ pub fn Notifications(
     props: &NotificationsProps,
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
-    let context = use_notifications(&mut hooks);
+    let _context = use_notifications(&mut hooks);
     // Maps to: CC `useNotification()` — `useAppState(s => s.notifications.current)`.
     // Read here, above the `props.suppressed` early return: this is a hook, and
     // iocraft resolves hooks by call index, so a read placed after the return

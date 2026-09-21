@@ -28,7 +28,6 @@ use crate::components::messages::user_tool_result_message::utils::{
     ToolRenderLine, ToolRenderOptions, ToolRenderTone,
 };
 use crate::tools::bash_tool::sed_edit_parser::parse_sed_edit_command;
-use crate::types::message::ToolResultStatus;
 use crate::utils::file::get_display_path;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 

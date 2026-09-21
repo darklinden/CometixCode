@@ -100,14 +100,17 @@ pub struct WriteOutput {
     pub(crate) original_file: Option<String>,
     /// Captured synchronously immediately after the write, before remote Git
     /// diff awaits, matching CC's `readFileState.set(...timestamp)` ordering.
+    #[allow(dead_code)]
     pub(crate) read_timestamp_ms: i64,
     pub(crate) git_diff: Option<crate::utils::git_diff::ToolUseDiff>,
+    #[allow(dead_code)]
     pub(crate) dynamic_skill_dirs: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
 pub struct WriteErrorOutput {
     pub(crate) content: String,
+    #[allow(dead_code)]
     pub(crate) dynamic_skill_dirs: Vec<String>,
 }
 
@@ -920,7 +923,7 @@ mod tests {
             "file_path": path.display().to_string(),
             "content": "not written"
         });
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         context.read_file_state.set_entry(read_state(&path, ""));
         assert_eq!(
             FileWriteTool.validate_input(&args, &context),
@@ -1019,7 +1022,7 @@ mod tests {
             ValidationResult::Error { error_code: 2, .. }
         ));
 
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         context
             .read_file_state
             .set_entry(read_state(&path, "old\n"));
@@ -1060,7 +1063,7 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let path = root.join("existing.txt");
         std::fs::write(&path, "same\n").unwrap();
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         context
             .read_file_state
             .set_entry(read_state(&path, "same\n"));
@@ -1094,7 +1097,7 @@ mod tests {
         // ReadTool decodes through UTF-8 with replacement; WriteTool detects
         // UTF-16 independently. With unchanged mtime, CC permits the rewrite.
         let old = String::from_utf8_lossy(&std::fs::read(&path).unwrap()).into_owned();
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         context.read_file_state.set_entry(read_state(&path, &old));
         let request = request(&path, "new\n");
         let result = FileWriteTool
@@ -1200,7 +1203,7 @@ mod tests {
                 ..crate::utils::file_history::FileHistoryState::default()
             });
         let store = crate::state::store::AppStore::new(app_state, None);
-        let mut context = ToolUseContext::default().with_app_store(store.clone());
+        let context = ToolUseContext::default().with_app_store(store.clone());
         context
             .read_file_state
             .set_entry(read_state(&path, "old\n"));
@@ -1273,7 +1276,7 @@ mod tests {
                 ..crate::utils::file_history::FileHistoryState::default()
             });
         let store = crate::state::store::AppStore::new(app_state, None);
-        let mut context = ToolUseContext::default().with_app_store(store.clone());
+        let context = ToolUseContext::default().with_app_store(store.clone());
         context
             .read_file_state
             .set_entry(read_state(&path, "old history\n"));
@@ -1581,7 +1584,7 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let path = root.join("empty.txt");
         std::fs::write(&path, "").unwrap();
-        let mut context = ToolUseContext::default();
+        let context = ToolUseContext::default();
         context.read_file_state.set_entry(read_state(&path, ""));
         let request = request(&path, "filled");
         let result = FileWriteTool

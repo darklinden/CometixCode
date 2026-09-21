@@ -875,7 +875,7 @@ mod tests {
         for drop_observer in [false, true] {
             let filename = format!("copy-fixture-{}.txt", uuid::Uuid::new_v4());
             let result = std::sync::Arc::new(std::sync::Mutex::new(None));
-            let mut app = element! { CopyUnmountHarness(filename: filename.clone(), result: result.clone(), drop_observer) };
+            let app = element! { CopyUnmountHarness(filename: filename.clone(), result: result.clone(), drop_observer) };
             let mut app = element! {
                 ContextProvider(value: Context::owned(iocraft::Clipboard::new(std::sync::Arc::new(crate::utils::exec_file_no_throw::ExecFileClipboardBackend)))) {
                     #(app)

@@ -158,7 +158,10 @@ impl SecureStorageBackend for MacOsKeychainStorage {
 
     /// Maps to: CC `utils/secureStorage/macOsKeychainStorage.ts:159-177` `delete`.
     fn delete(&self) -> anyhow::Result<bool> {
+        // Both are consumed only by the `not(test)` keychain branch below.
+        #[cfg_attr(test, allow(unused_variables))]
         let username = get_username();
+        #[cfg_attr(test, allow(unused_variables))]
         let service_name = get_mac_os_keychain_storage_service_name(CREDENTIALS_SERVICE_SUFFIX)?;
         if !crate::constants::oauth::OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED {
             return Err(crate::constants::oauth::OAuthCredentialSideEffectsUnavailable.into());

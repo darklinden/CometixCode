@@ -217,6 +217,7 @@ pub fn UserToolRejectMessage(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use iocraft::prelude::ElementExt as _;
 
     fn render_reject(tool_name: &str, tool_input: Option<serde_json::Value>) -> String {

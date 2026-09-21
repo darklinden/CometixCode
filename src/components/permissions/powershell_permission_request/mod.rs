@@ -279,7 +279,7 @@ pub fn PowerShellPermissionRequest<'a>(
     props.explainer_load_state = explanation.load_state();
     let command = powershell_command_from_request(&request);
     let input_description = powershell_description_from_request(&request);
-    let mut feedback_state = hooks.use_state(ShellPermissionFeedbackState::default);
+    let feedback_state = hooks.use_state(ShellPermissionFeedbackState::default);
     let accept_feedback = hooks.use_state(String::new);
     let accept_feedback_cursor = hooks.use_state(|| 0usize);
     let reject_feedback = hooks.use_state(String::new);

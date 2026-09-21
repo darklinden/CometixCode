@@ -79,7 +79,7 @@ pub fn TeleportRepoMismatchDialog<'a>(
     mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let theme = hooks.use_context::<Theme>();
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_choice = hooks.use_state(|| Option::<TeleportRepoMismatchChoice>::None);
     let available_paths = props.initial_paths.clone();
     let options = teleport_repo_mismatch_options(&available_paths);

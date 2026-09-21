@@ -235,7 +235,7 @@ pub fn FallbackPermissionRequest<'a>(
         props.show_always_allow_options,
     );
     let option_count = options.len().max(1);
-    let mut focused_index = hooks.use_state(|| 0usize);
+    let focused_index = hooks.use_state(|| 0usize);
     let mut pending_select = hooks.use_state(|| Option::<FallbackPermissionOptionValue>::None);
     let mut pending_cancel = hooks.use_state(|| false);
 

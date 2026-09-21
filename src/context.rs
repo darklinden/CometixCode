@@ -234,6 +234,7 @@ fn build_system_context_with_cache_breaker(
     context
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn get_git_status() -> Option<String> {
     // Maps to CC `context.ts` `getGitStatus()`.
     if run_git(["rev-parse", "--is-inside-work-tree"])? != "true" {
@@ -271,6 +272,7 @@ fn get_git_status() -> Option<String> {
     Some(parts.join("\n\n"))
 }
 
+#[cfg_attr(test, allow(dead_code))]
 fn run_git<const N: usize>(args: [&str; N]) -> Option<String> {
     let output = std::process::Command::new("git").args(args).output().ok()?;
     if !output.status.success() {

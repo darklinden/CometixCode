@@ -67,7 +67,7 @@ pub fn PluginOptionsFlow(
         }
         result
     });
-    let mut index = hooks.use_state(|| 0usize);
+    let index = hooks.use_state(|| 0usize);
     let latest_done =
         hooks.use_const(|| std::sync::Arc::new(std::sync::Mutex::new(props.on_done.clone())));
     *latest_done.lock().unwrap_or_else(|e| e.into_inner()) = props.on_done.clone();

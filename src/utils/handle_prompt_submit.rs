@@ -134,6 +134,7 @@ pub struct HandlePromptSubmitResult {
 /// can store it with `use_const` and clone it cheaply across renders.
 #[derive(Clone, Debug)]
 pub struct HandlePromptSubmit<D> {
+    #[allow(dead_code)]
     deps: D,
     /// Maps to CC `handlePromptSubmit` `BaseExecutionParams.commands`.
     commands: Arc<Vec<Command>>,

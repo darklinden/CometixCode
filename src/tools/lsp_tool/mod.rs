@@ -75,6 +75,7 @@ pub(crate) struct Output {
 
 /// Maps to: CC `tools/LSPTool/LSPTool.ts` `validateInput(...)` return shape.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub(crate) struct LspValidationResult {
     pub(crate) result: bool,
     pub(crate) message: Option<String>,
@@ -82,6 +83,7 @@ pub(crate) struct LspValidationResult {
 }
 
 impl LspValidationResult {
+    #[allow(dead_code)]
     fn ok() -> Self {
         Self {
             result: true,
@@ -90,6 +92,7 @@ impl LspValidationResult {
         }
     }
 
+    #[allow(dead_code)]
     fn error(message: impl Into<String>, error_code: u32) -> Self {
         Self {
             result: false,
@@ -106,6 +109,7 @@ fn is_unc_path_for_lsp(path: &str) -> bool {
 }
 
 /// Maps to: CC `tools/LSPTool/LSPTool.ts` `validateInput(...)`.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) async fn validate_lsp_input(
     input: &serde_json::Value,
     cwd: &std::path::Path,

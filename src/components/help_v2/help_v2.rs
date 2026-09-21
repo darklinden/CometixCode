@@ -117,7 +117,7 @@ pub fn HelpV2<'a>(props: &mut HelpV2Props<'a>, mut hooks: Hooks) -> impl Into<An
         .collect::<HashSet<_>>()
         .len();
 
-    let mut selected_tab = hooks.use_state(|| HelpTab::General);
+    let selected_tab = hooks.use_state(|| HelpTab::General);
     let mut header_focused = hooks.use_state(|| true);
     let mut command_focused_index = hooks.use_state(|| 0usize);
     let mut should_close = hooks.use_state(|| false);

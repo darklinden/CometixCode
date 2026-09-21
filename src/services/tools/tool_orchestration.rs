@@ -417,10 +417,10 @@ pub fn run_tools_for_message_events(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::tools::tool_execution::ToolContextModifierOperation;
+    
     use crate::tool::ToolPermissionContext;
     use crate::types::message::{AssistantContent, StopReason};
-    use crate::types::message::{RenderableMessage, RenderableMessageKind, ToolUseStatus};
+    use crate::types::message::RenderableMessage;
     use crate::types::permissions::PermissionRuleValue;
     use std::collections::HashMap;
 

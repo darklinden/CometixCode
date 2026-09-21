@@ -524,6 +524,7 @@ pub(crate) fn count_lines(content: &str) -> usize {
 /// verbose); early-exit scan for the (MAX+1)th line instead of splitting
 /// the whole (possibly huge) content; a trailing EOL is a terminator, not
 /// a new line.
+#[allow(dead_code)]
 pub(crate) fn is_result_truncated(output: &super::WriteOutput) -> bool {
     if output.kind != super::WriteOutputKind::Create {
         return false;

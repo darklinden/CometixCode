@@ -202,6 +202,7 @@ pub(crate) fn block_content_text(block: &serde_json::Value) -> String {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn first_line(text: &str) -> String {
     text.lines()
         .map(str::trim)

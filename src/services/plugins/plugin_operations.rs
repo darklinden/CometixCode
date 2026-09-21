@@ -463,7 +463,7 @@ pub async fn set_plugin_enabled_op(
         });
     }
     let source = SettingSource::from(scope_to_setting_source(resolved).unwrap());
-    let mut entries = get_settings_for_source(source)
+    let entries = get_settings_for_source(source)
         .and_then(|s| s.enabled_plugins)
         .and_then(|v| v.as_object().cloned())
         .unwrap_or_default();

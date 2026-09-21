@@ -92,10 +92,10 @@ pub fn SelectMulti<'a>(
         props.focus_value.as_deref(),
         props.initial_focus_last,
     );
-    let mut focused_index = hooks.use_state(|| initial_focus);
-    let mut selected_values = hooks.use_state(|| props.default_value.clone());
-    let mut input_values = hooks.use_state(|| initial_input_values(&props.options));
-    let mut is_submit_focused = hooks.use_state(|| false);
+    let focused_index = hooks.use_state(|| initial_focus);
+    let selected_values = hooks.use_state(|| props.default_value.clone());
+    let input_values = hooks.use_state(|| initial_input_values(&props.options));
+    let is_submit_focused = hooks.use_state(|| false);
     let mut images_selected = hooks.use_state(|| false);
     let mut selected_image_index = hooks.use_state(|| 0usize);
     let mut pending_actions = hooks.use_state(Vec::<SelectMultiAction>::new);

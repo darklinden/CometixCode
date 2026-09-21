@@ -731,7 +731,7 @@ pub fn MessageSelector<'a>(
     let mut error = hooks.use_state(|| Option::<String>::None);
     let mut is_restoring = hooks.use_state(|| false);
     let mut restoring_option = hooks.use_state(|| Option::<RestoreOption>::None);
-    let mut feedback = hooks.use_state(BTreeMap::<String, String>::new);
+    let feedback = hooks.use_state(BTreeMap::<String, String>::new);
     let mut input_accepted = hooks.use_state(|| Option::<String>::None);
     let mut input_cancelled = hooks.use_state(|| false);
     let mut pending_action = hooks.use_state(|| Option::<PendingSelectorAction>::None);

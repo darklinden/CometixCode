@@ -27,7 +27,6 @@ use crate::utils::plugins::{
     schemas::PluginScope,
 };
 use iocraft::prelude::*;
-use serde_json::Value;
 use std::collections::HashSet;
 
 /// Maps to: CC DiscoverPlugins.tsx:50-59#Props.
@@ -63,26 +62,26 @@ pub fn DiscoverPlugins(
     let test_imports = hooks
         .try_use_context::<super::plugin_details_helpers::PluginUiTestImports>()
         .map(|f| f.clone());
-    let mut view_state = use_plugin_ui_state(&mut hooks, || ViewState::PluginList);
-    let mut selected_plugin = use_plugin_ui_state(&mut hooks, || None::<InstallablePlugin>);
-    let mut available_plugins = use_plugin_ui_state(&mut hooks, Vec::<InstallablePlugin>::new);
-    let mut loading = use_plugin_ui_state(&mut hooks, || true);
-    let mut install_counts = use_plugin_ui_state(&mut hooks, || None::<InstallCounts>);
-    let mut is_search_mode = use_plugin_ui_state(&mut hooks, || false);
+    let view_state = use_plugin_ui_state(&mut hooks, || ViewState::PluginList);
+    let selected_plugin = use_plugin_ui_state(&mut hooks, || None::<InstallablePlugin>);
+    let available_plugins = use_plugin_ui_state(&mut hooks, Vec::<InstallablePlugin>::new);
+    let loading = use_plugin_ui_state(&mut hooks, || true);
+    let install_counts = use_plugin_ui_state(&mut hooks, || None::<InstallCounts>);
+    let is_search_mode = use_plugin_ui_state(&mut hooks, || false);
     let on_search_mode_change = props.on_search_mode_change.clone();
     let set_is_search_mode = Handler::from(move |active| {
         is_search_mode.set(active);
         on_search_mode_change(active);
     });
     let mut search = crate::hooks::use_search_input::use_search_input(&mut hooks, "");
-    let mut selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut selected_for_install = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
-    let mut installing_plugins = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
-    let mut details_menu_index = use_plugin_ui_state(&mut hooks, || 0usize);
-    let mut is_installing = use_plugin_ui_state(&mut hooks, || false);
-    let mut install_error = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut warning = use_plugin_ui_state(&mut hooks, || None::<String>);
-    let mut empty_reason = use_plugin_ui_state(&mut hooks, || None::<EmptyMarketplaceReason>);
+    let selected_index = use_plugin_ui_state(&mut hooks, || 0usize);
+    let selected_for_install = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
+    let installing_plugins = use_plugin_ui_state(&mut hooks, HashSet::<String>::new);
+    let details_menu_index = use_plugin_ui_state(&mut hooks, || 0usize);
+    let is_installing = use_plugin_ui_state(&mut hooks, || false);
+    let install_error = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let warning = use_plugin_ui_state(&mut hooks, || None::<String>);
+    let empty_reason = use_plugin_ui_state(&mut hooks, || None::<EmptyMarketplaceReason>);
     let view = view_state.read().clone();
     let details_active = matches!(view, ViewState::PluginDetails);
     let is_terminal_focused = hooks.use_terminal_focus();
@@ -737,6 +736,7 @@ pub(super) mod tests {
     use futures::StreamExt;
     use serde_json::json;
     use std::time::Duration;
+    use serde_json::Value;
 
     #[derive(Default, Props)]
     pub(crate) struct DiscoverKeybindingTestRootProps {
