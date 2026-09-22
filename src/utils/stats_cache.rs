@@ -106,7 +106,12 @@ pub fn with_stats_cache_lock<T>(callback: impl FnOnce() -> T) -> T {
 /// Maps to: CC `utils/statsCache.ts#loadStatsCache`.
 pub fn load_stats_cache() -> PersistedStatsCache {
     let path = get_stats_cache_path();
-    let content = match std::fs::read_to_string(&path) {
+    let fs = crate::utils::fs_operations::get_fs_implementation();
+    let content = match futures::executor::block_on(
+        fs.read_file(&path, crate::utils::fs_operations::BufferEncoding::Utf8),
+    )
+    .map(|text| text.to_string_lossy())
+    {
         Ok(content) => content,
         Err(error) => {
             tracing::debug!(path = %path.display(), %error, "failed to load stats cache");
@@ -146,10 +151,8 @@ pub fn save_stats_cache(cache: &PersistedStatsCache) {
     let Some(parent) = path.parent() else {
         return;
     };
-    if let Err(error) = std::fs::create_dir_all(parent) {
-        tracing::debug!(path = %parent.display(), %error, "failed to create stats cache directory");
-        return;
-    }
+    let fs = crate::utils::fs_operations::get_fs_implementation();
+    let _ = futures::executor::block_on(fs.mkdir(parent, None));
     let temp = path.with_extension(format!("json.{}.tmp", uuid::Uuid::new_v4()));
     let content = match serde_json::to_vec_pretty(cache) {
         Ok(content) => content,
@@ -170,12 +173,14 @@ pub fn save_stats_cache(cache: &PersistedStatsCache) {
         let mut file = options.open(&temp)?;
         file.write_all(&content)?;
         file.sync_all()?;
-        std::fs::rename(&temp, &path)?;
+        // CC fs/promises FileHandle.close() completes before activeFs.rename.
+        drop(file);
+        futures::executor::block_on(fs.rename(&temp, &path))?;
         Ok(())
     })();
     if let Err(error) = write_result {
         tracing::debug!(path = %path.display(), %error, "failed to save stats cache");
-        let _ = std::fs::remove_file(temp);
+        let _ = futures::executor::block_on(fs.unlink(&temp));
     }
 }
 

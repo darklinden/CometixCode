@@ -20,7 +20,7 @@ pub fn validate_input_for_settings_file_edit(
     cwd: &Path,
 ) -> Option<String> {
     // Only validate Claude settings files.
-    if !crate::utils::permissions::filesystem::is_claude_settings_path_at_cwd(
+    if !crate::utils::permissions::filesystem::is_claude_settings_path(
         &file_path.display().to_string(),
         cwd,
     ) {

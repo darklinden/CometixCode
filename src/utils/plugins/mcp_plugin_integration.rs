@@ -403,9 +403,15 @@ async fn load_mcp_servers_from_file(
     relative_path: &str,
 ) -> Option<indexmap::IndexMap<String, McpServerConfig>> {
     let file_path = super::plugin_loader::node_path_join(plugin_path, relative_path);
-    let content = match tokio::fs::read(&file_path).await {
+    let content = match crate::utils::fs_operations::get_fs_implementation()
+        .read_file(
+            &file_path,
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        )
+        .await
+    {
         // Node fs.readFile(..., {encoding:'utf-8'}) replaces malformed UTF-8.
-        Ok(content) => String::from_utf8_lossy(&content).into_owned(),
+        Ok(content) => content.to_string_lossy(),
         Err(error) => {
             if error.kind() != std::io::ErrorKind::NotFound {
                 crate::utils::debug::log_for_debugging_with_level(
@@ -924,7 +930,11 @@ mod tests {
             &root.join(".claude-plugin/plugin.json"),
             r#"{"name":"toolbox","mcpServers":"./server.mcpb"}"#,
         );
-        fs::write(root.join("server.mcpb"), include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/invalid.mcpb")).unwrap();
+        fs::write(
+            root.join("server.mcpb"),
+            include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/invalid.mcpb"),
+        )
+        .unwrap();
         let (plugin, plugin_errors) =
             create_plugin_from_path(&root, "toolbox@inline", true, "toolbox");
         assert!(plugin_errors.is_empty(), "errors={plugin_errors:?}");
@@ -944,8 +954,16 @@ mod tests {
         let root = temp_dir("mcpb-pipeline");
         let config_home = temp_dir("mcpb-pipeline-settings");
         let _config_home_guard = ConfigHomeGuard::pin(&config_home);
-        fs::write(root.join("valid.mcpb"), include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/valid.mcpb")).unwrap();
-        fs::write(root.join("needs.mcpb"), include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/needs-config.mcpb")).unwrap();
+        fs::write(
+            root.join("valid.mcpb"),
+            include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/valid.mcpb"),
+        )
+        .unwrap();
+        fs::write(
+            root.join("needs.mcpb"),
+            include_bytes!("../../../tests/fixtures/oracles/mcpb-schema-0915/needs-config.mcpb"),
+        )
+        .unwrap();
         write_file(
             &root.join(".claude-plugin/plugin.json"),
             r#"{"name":"toolbox","mcpServers":"./valid.mcpb"}"#,
@@ -996,7 +1014,8 @@ mod tests {
         let cases: Value = serde_json::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/tests/fixtures/oracles/mcpb-schema-0915/file-source-oracle.json"
-        ))).unwrap();
+        )))
+        .unwrap();
         let root = temp_dir("file-object-entries");
         for case in cases.as_array().unwrap() {
             if let Some(hex) = case["input_hex"].as_str() {
@@ -1165,7 +1184,8 @@ mod tests {
     async fn plugin_activation_and_extraction_match_bun_cache_semantics() {
         let oracle: Value = serde_json::from_str(include_str!(
             "../../../tests/fixtures/oracles/mcp-lifecycle-0915/plugin-oracle.json"
-        )).unwrap();
+        ))
+        .unwrap();
         let root = temp_dir("activation-cache");
         fs::write(
             root.join(".mcp.json"),

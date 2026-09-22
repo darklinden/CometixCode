@@ -86,11 +86,11 @@ pub fn resize_shell_image_output(
         if output_file_size.is_some_and(|size| size > MAX_IMAGE_FILE_SIZE) {
             return None;
         }
-        let result = crate::utils::fs_operations::read_file_range(
+        let result = futures::executor::block_on(crate::utils::fs_operations::read_file_range(
             std::path::Path::new(path),
             0,
             (MAX_IMAGE_FILE_SIZE + 1) as usize,
-        )
+        ))
         .ok()??;
         if result.bytes_total > MAX_IMAGE_FILE_SIZE {
             return None;
@@ -329,7 +329,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn resize_shell_image_output_rejects_swapped_artifact_symlink() {
+    fn resize_shell_image_output_follows_artifact_symlink_like_official() {
         use std::os::unix::fs::symlink;
 
         let root = std::env::temp_dir().join(format!(
@@ -347,7 +347,7 @@ mod tests {
                 Some(&output.display().to_string()),
                 Some(26),
             )
-            .is_none()
+            .is_some()
         );
         let _ = std::fs::remove_dir_all(root);
     }

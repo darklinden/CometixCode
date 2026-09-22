@@ -135,7 +135,15 @@ pub async fn get_plugin_data_dir_size(
 /// Maps to: CC pluginDirectories.ts#deletePluginDataDir.
 pub async fn delete_plugin_data_dir(plugin_id: &str) {
     let dir = plugin_data_dir_path(plugin_id);
-    if let Err(error) = crate::utils::fs_operations::rm(&dir, true, true).await {
+    if let Err(error) = crate::utils::fs_operations::native::rm(
+        &dir,
+        crate::utils::fs_operations::RmOptions {
+            recursive: true,
+            force: true,
+        },
+    )
+    .await
+    {
         crate::utils::debug::log_for_debugging(&format!(
             "Failed to delete plugin data dir {}: {error}",
             dir.display()

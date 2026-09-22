@@ -50,7 +50,9 @@ pub fn get_plan_slug(session_id: Option<&str>) -> String {
     let plans_dir = get_plans_directory();
     for _ in 0..MAX_SLUG_RETRIES {
         slug = crate::utils::words::generate_word_slug();
-        if !plans_dir.join(format!("{slug}.md")).exists() {
+        if !crate::utils::fs_operations::get_fs_implementation()
+            .exists_sync(&plans_dir.join(format!("{slug}.md")))
+        {
             break;
         }
     }
@@ -134,7 +136,8 @@ pub fn get_plans_directory_with_settings(settings: &SettingsJson) -> PathBuf {
 /// Maps to: CC `plans.ts:103-108` — `getPlansDirectory` itself owns the
 /// `mkdirSync` (errors logged and swallowed), under the memoized resolver.
 fn ensure_plans_directory(path: std::path::PathBuf) -> std::path::PathBuf {
-    if let Err(error) = std::fs::create_dir_all(&path) {
+    if let Err(error) = crate::utils::fs_operations::get_fs_implementation().mkdir_sync(&path, None)
+    {
         crate::utils::log::log_error(crate::utils::log::LogError::new(error.to_string()));
     }
     path
@@ -153,7 +156,13 @@ pub fn get_plan_file_path(agent_id: Option<&str>) -> PathBuf {
 /// Maps to CC `utils/plans.ts` `getPlan(agentId?)`.
 pub fn get_plan(agent_id: Option<&str>) -> Option<String> {
     let file_path = get_plan_file_path(agent_id);
-    match std::fs::read_to_string(&file_path) {
+    match crate::utils::fs_operations::get_fs_implementation()
+        .read_file_sync(
+            &file_path,
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        )
+        .map(|text| text.to_string_lossy())
+    {
         Ok(content) => Some(content),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => None,
         Err(err) => {
@@ -185,16 +194,20 @@ pub fn copy_plan_for_resume(
             .map(String::from)
             .unwrap_or_else(crate::bootstrap::state::get_session_id);
         set_plan_slug(session_id, slug);
-        (
-            get_plans_directory().join(format!("{slug}.md")),
-            messages.to_vec(),
-        )
+        let plan_path = get_plans_directory().join(format!("{slug}.md"));
+        // CC calls readFile before the first await: capture and start it now,
+        // so a later setFsImplementation cannot change this request's backend.
+        let read = crate::utils::fs_operations::get_fs_implementation().read_file(
+            &plan_path,
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        );
+        (plan_path, messages.to_vec(), read)
     });
     async move {
-        let Some((plan_path, messages)) = preparation else {
+        let Some((plan_path, messages, read)) = preparation else {
             return false;
         };
-        match tokio::fs::read(&plan_path).await {
+        match read.await {
             Ok(_) => true,
             Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
                 crate::utils::log::log_error(crate::utils::log::LogError::new(error.to_string()));

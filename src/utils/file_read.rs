@@ -4,7 +4,7 @@
 //! This leaf owner intentionally depends only on filesystem/debug primitives;
 //! Write/Edit consume it without reimplementing encoding detection.
 
-use std::io::Read as _;
+use crate::utils::fs_operations::{BufferEncoding, get_fs_implementation, safe_resolve_path};
 use std::path::Path;
 
 /// Maps to CC `BufferEncoding` values observable in file-tool paths.
@@ -12,6 +12,15 @@ use std::path::Path;
 pub enum FileEncoding {
     Utf8,
     Utf16Le,
+}
+
+impl From<FileEncoding> for BufferEncoding {
+    fn from(encoding: FileEncoding) -> Self {
+        match encoding {
+            FileEncoding::Utf8 => Self::Utf8,
+            FileEncoding::Utf16Le => Self::Utf16Le,
+        }
+    }
 }
 
 /// Maps to CC `LineEndingType`.
@@ -31,9 +40,9 @@ pub struct FileReadMetadata {
 
 /// Maps to CC `detectEncodingForResolvedPath(resolvedPath)`.
 pub fn detect_encoding_for_resolved_path(path: &Path) -> std::io::Result<FileEncoding> {
-    let mut file = std::fs::File::open(path)?;
-    let mut buffer = [0u8; 4096];
-    let bytes_read = file.read(&mut buffer)?;
+    let result = get_fs_implementation().read_sync(path, 4096)?;
+    let buffer = result.buffer;
+    let bytes_read = result.bytes_read;
     if bytes_read >= 2 && buffer[..2] == [0xff, 0xfe] {
         Ok(FileEncoding::Utf16Le)
     } else {
@@ -79,22 +88,10 @@ fn first_utf16_code_units(value: &str, maximum_units: usize) -> String {
         .collect()
 }
 
-fn decode_text(bytes: &[u8], encoding: FileEncoding) -> String {
-    match encoding {
-        FileEncoding::Utf8 => String::from_utf8_lossy(bytes).into_owned(),
-        FileEncoding::Utf16Le => {
-            let units = bytes
-                .chunks_exact(2)
-                .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
-                .collect::<Vec<_>>();
-            String::from_utf16_lossy(&units)
-        }
-    }
-}
-
 /// Maps to CC `readFileSyncWithMetadata(filePath)`.
 pub fn read_file_sync_with_metadata(file_path: &Path) -> std::io::Result<FileReadMetadata> {
-    let resolved = crate::utils::fs_operations::safe_resolve_path(file_path);
+    let fs = get_fs_implementation();
+    let resolved = safe_resolve_path(fs.as_ref(), file_path);
     if resolved.is_symlink {
         crate::utils::debug::log_for_debugging(&format!(
             "Reading through symlink: {} -> {}",
@@ -104,9 +101,10 @@ pub fn read_file_sync_with_metadata(file_path: &Path) -> std::io::Result<FileRea
     }
 
     let encoding = detect_encoding_for_resolved_path(&resolved.resolved_path)?;
-    let raw = decode_text(&std::fs::read(&resolved.resolved_path)?, encoding);
+    let raw = fs.read_file_sync(&resolved.resolved_path, encoding.into())?;
     // JS `raw.slice(0, 4096)` counts UTF-16 code units, not Unicode scalar
     // values. Preserve that boundary before line-ending detection.
+    let raw = raw.to_string_lossy();
     let sample = first_utf16_code_units(&raw, 4096);
     let line_endings = detect_line_endings_for_string(&sample);
     Ok(FileReadMetadata {

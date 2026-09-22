@@ -5,9 +5,8 @@
 //! compute the previewed substitution via `sedEditParser`, render it through
 //! `FilePermissionDialog`, and attach the internal `_simulatedSedEdit` payload
 //! to approved input so Bash execution writes exactly the previewed content.
-//! Runtime-only IDE diff editing and async Suspense file loading remain outside
-//! this retained-mode component; the current port performs a small synchronous
-//! read during render like other file permission preview slices.
+//! Async file snapshots use the retained UI future hook; the pending state
+//! renders no dialog, matching the source Suspense fallback.
 
 use super::file_permission_dialog::{
     FileOperationType, FilePermissionDialog, FilePermissionOptionValue, file_permission_basename,
@@ -61,21 +60,40 @@ fn default_request() -> PermissionRequestData {
 }
 
 /// Maps to: CC `contentPromise` file-read branch.
-pub fn read_sed_file_content(file_path: &str) -> SedFileReadResult {
-    match std::fs::read_to_string(file_path) {
-        Ok(raw) => SedFileReadResult {
-            old_content: raw.replace("\r\n", "\n"),
-            file_exists: true,
-        },
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => SedFileReadResult {
-            old_content: String::new(),
-            file_exists: false,
-        },
-        Err(_) => SedFileReadResult {
-            old_content: String::new(),
-            file_exists: false,
-        },
-    }
+pub fn read_sed_file_content(
+    file_path: &str,
+) -> futures::future::BoxFuture<'static, std::io::Result<SedFileReadResult>> {
+    let path = std::path::Path::new(file_path);
+    // CC runs the small encoding probe before starting its readFile promise;
+    // the path is already resolved and must not pass through safeResolve again.
+    let read = crate::utils::file_read::detect_encoding_for_resolved_path(path).map(|encoding| {
+        let encoding = match encoding {
+            crate::utils::file_read::FileEncoding::Utf8 => {
+                crate::utils::fs_operations::BufferEncoding::Utf8
+            }
+            crate::utils::file_read::FileEncoding::Utf16Le => {
+                crate::utils::fs_operations::BufferEncoding::Utf16Le
+            }
+        };
+        crate::utils::fs_operations::get_fs_implementation().read_file(path, encoding)
+    });
+    Box::pin(async move {
+        let result = match read {
+            Ok(read) => read.await,
+            Err(error) => Err(error),
+        };
+        match result {
+            Ok(raw) => Ok(SedFileReadResult {
+                old_content: raw.to_string_lossy().replace("\r\n", "\n"),
+                file_exists: true,
+            }),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(SedFileReadResult {
+                old_content: String::new(),
+                file_exists: false,
+            }),
+            Err(error) => Err(error),
+        }
+    })
 }
 
 /// Maps to: CC `noChangesMessage`.
@@ -140,7 +158,7 @@ fn response_for_file_option(
 #[component]
 pub fn SedEditPermissionRequest(
     props: &mut SedEditPermissionRequestProps,
-    _hooks: Hooks,
+    mut hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
     let request = props.request.clone().unwrap_or_else(default_request);
     let sed_info = props.sed_info.clone().unwrap_or_else(|| SedEditInfo {
@@ -151,7 +169,50 @@ pub fn SedEditPermissionRequest(
         extended_regex: false,
     });
     let file_path = sed_info.file_path.clone();
-    let read_result = read_sed_file_content(&file_path);
+    use futures::StreamExt;
+    type ReadFuture =
+        futures::future::BoxFuture<'static, (u64, std::io::Result<SedFileReadResult>)>;
+    let mut requested = hooks.use_state(|| (None::<String>, 0u64));
+    let mut snapshot =
+        hooks.use_state(|| None::<Result<SedFileReadResult, std::sync::Arc<std::io::Error>>>);
+    let channel = hooks.use_const(|| std::sync::Arc::new(async_channel::unbounded::<ReadFuture>()));
+    if requested.read().0.as_deref() != Some(file_path.as_str()) {
+        let generation = requested.read().1 + 1;
+        requested.set((Some(file_path.clone()), generation));
+        snapshot.set(None);
+        let pending = read_sed_file_content(&file_path);
+        let _ = channel
+            .0
+            .try_send(Box::pin(async move { (generation, pending.await) }));
+    }
+    let receiver = channel.1.clone();
+    hooks.use_future(async move {
+        let mut pending = futures::stream::FuturesUnordered::<ReadFuture>::new();
+        loop {
+            tokio::select! {
+                incoming = receiver.recv() => match incoming {
+                    Ok(read) => pending.push(read),
+                    Err(_) => break,
+                },
+                completed = pending.next(), if !pending.is_empty() => {
+                    if let Some((generation, result)) = completed {
+                        if requested.read().1 == generation {
+                            snapshot.set(Some(result.map_err(std::sync::Arc::new)));
+                        }
+                    }
+                }
+            }
+        }
+    });
+    let read_result = match snapshot.read().clone() {
+        None => return element! { View }.into_any(),
+        Some(Ok(result)) => result,
+        // Like Write's preview owner, propagate non-ENOENT errors rather than
+        // converting permission/I/O failures into a nonexistent empty file.
+        Some(Err(error)) => {
+            panic!("failed to read Sed permission preview for {file_path}: {error}")
+        }
+    };
     let new_content = apply_sed_substitution(&read_result.old_content, &sed_info);
     let content = sed_edit_preview_content(
         &read_result.old_content,
@@ -199,6 +260,7 @@ pub fn SedEditPermissionRequest(
             },
         )
     }
+    .into_any()
 }
 
 #[cfg(test)]
@@ -256,8 +318,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn sed_edit_permission_request_renders_file_edit_dialog_preview() {
+    #[tokio::test]
+    async fn sed_edit_permission_request_renders_file_edit_dialog_preview() {
         let path = std::env::temp_dir().join(format!(
             "cometix-sed-preview-{}.txt",
             uuid::Uuid::new_v4().simple()
@@ -265,16 +327,29 @@ mod tests {
         std::fs::write(&path, "hello old\n").unwrap();
         let command = format!("sed -i 's/old/new/' {}", path.display());
         let sed_info = parse_sed_edit_command(&command).unwrap();
-        let text = element! {
+        let mut app = element! {
             ContextProvider(value: Context::owned(*theme::current())) {
                 SedEditPermissionRequest(
                     request: Some(sed_request(&command)),
                     sed_info: Some(sed_info),
                 )
             }
-        }
-        .render(Some(140))
-        .to_string();
+        };
+        use futures::StreamExt;
+        let mut frames = Box::pin(app.mock_terminal_render_loop(
+            MockTerminalConfig::with_events(futures::stream::pending()).with_size(140, 40),
+        ));
+        let text = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while let Some(frame) = frames.next().await {
+                let text = frame.to_string();
+                if text.contains("hello new") {
+                    return text;
+                }
+            }
+            panic!("Sed preview renderer ended before the async read completed");
+        })
+        .await
+        .expect("Sed preview must complete");
         let _ = std::fs::remove_file(&path);
 
         assert!(text.contains("Edit file"), "canvas=\n{text}");

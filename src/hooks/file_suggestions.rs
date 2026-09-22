@@ -385,7 +385,6 @@ async fn top_level_paths() -> Vec<String> {
         let name = entry.file_name().to_string_lossy().into_owned();
         let is_directory = entry
             .file_type()
-            .await
             .map(|file_type| file_type.is_dir())
             .unwrap_or(false);
         paths.push(if is_directory {

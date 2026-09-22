@@ -13,7 +13,7 @@
 //! (:284-286), an MDM registry/plist poll (:381-418), and ConfigChange hook
 //! gating (:292-301). Cometix keeps the pre-existing 1s mtime poll as the
 //! source; the difference is coarser detection latency and no
-//! internal-write/hook gating. Ported deliberately as a subset — the
+//! ConfigChange-hook gating. Ported deliberately as a subset — the
 //! ownership shape (single fan-out, cache reset at the producer,
 //! subscribe/unsubscribe) is what Contract B clause 3 needs.
 
@@ -99,7 +99,13 @@ pub fn initialize() {
                 let current = mtime(*source);
                 if current != last[index] {
                     last[index] = current;
-                    fan_out(*source);
+                    let internal = current.is_some()
+                        && super::get_settings_file_path_for_source(*source).is_some_and(|path| {
+                            super::internal_writes::consume_internal_write(&path, 5_000)
+                        });
+                    if !internal {
+                        fan_out(*source);
+                    }
                 }
             }
         }
@@ -176,6 +182,7 @@ pub fn notify_change(source: SettingSource) {
 /// Maps to: CC `dispose()` (:154-168).
 pub fn dispose() {
     let mut state = detector();
+    super::internal_writes::clear_internal_writes();
     state.disposed = true;
     state.listeners.clear();
 }
@@ -183,6 +190,7 @@ pub fn dispose() {
 /// Maps to: CC `resetForTesting` (:461-480).
 #[cfg(test)]
 pub fn reset_for_testing() {
+    super::internal_writes::clear_internal_writes();
     let mut state = detector();
     state.listeners.clear();
     state.initialized = false;

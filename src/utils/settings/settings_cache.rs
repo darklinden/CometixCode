@@ -24,6 +24,8 @@ use super::validation::{SettingsWithErrors, ValidationError};
 #[derive(Clone, Debug, Default)]
 pub struct ParsedSettings {
     pub settings: Option<SettingsJson>,
+    /// Complete Zod output, including unknown keys and absence of optional keys.
+    pub(crate) value: Option<serde_json::Value>,
     pub errors: Vec<ValidationError>,
 }
 

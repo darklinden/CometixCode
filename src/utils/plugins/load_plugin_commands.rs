@@ -103,19 +103,13 @@ fn get_command_name_from_file(file_path: &Path, base_dir: &Path, plugin_name: &s
     }
 }
 
-// L1 fs.readFile(..., {encoding:'utf-8'}): decoding replaces malformed bytes.
-// std/tokio read_to_string is stricter and would drop the entire source command.
-async fn read_plugin_utf8(path: &Path) -> std::io::Result<String> {
-    let bytes = tokio::fs::read(path).await?;
-    Ok(String::from_utf8_lossy(&bytes).into_owned())
-}
-
 /// Maps to CC `collectMarkdownFiles`.
 async fn collect_markdown_files(
     dir_path: &Path,
     base_dir: &Path,
     loaded_paths: LoadedPaths,
 ) -> Vec<PluginMarkdownFile> {
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let files = Arc::new(Mutex::new(Vec::new()));
     let sink = files.clone();
     let base_dir = base_dir.to_path_buf();
@@ -123,16 +117,24 @@ async fn collect_markdown_files(
         dir_path,
         move |full_path, _namespace| {
             let files = sink.clone();
+            let fs = fs.clone();
             let loaded_paths = loaded_paths.clone();
             let base_dir = base_dir.clone();
             async move {
                 if crate::utils::fs_operations::is_duplicate_path(
+                    fs.as_ref(),
                     &full_path,
                     &mut loaded_paths.lock().unwrap(),
                 ) {
                     return Ok(());
                 }
-                let content = read_plugin_utf8(&full_path).await?;
+                let content = fs
+                    .read_file(
+                        &full_path,
+                        crate::utils::fs_operations::BufferEncoding::Utf8,
+                    )
+                    .await
+                    .map(|text| text.to_string_lossy())?;
                 let parsed = parse_frontmatter(&content);
                 files.lock().unwrap().push(PluginMarkdownFile {
                     file_path: full_path,
@@ -509,7 +511,8 @@ async fn load_command_path(
     loaded_paths: LoadedPaths,
 ) -> Vec<Command> {
     let result: anyhow::Result<Vec<Command>> = async {
-        let stats = tokio::fs::metadata(&path).await?;
+        let fs = crate::utils::fs_operations::get_fs_implementation();
+        let stats = fs.stat(&path).await?;
         if stats.is_dir() {
             return Ok(load_commands_from_directory(
                 &path,
@@ -522,11 +525,18 @@ async fn load_command_path(
         if !stats.is_file() || !path.to_string_lossy().ends_with(".md") {
             return Ok(Vec::new());
         }
-        if crate::utils::fs_operations::is_duplicate_path(&path, &mut loaded_paths.lock().unwrap())
-        {
+        if crate::utils::fs_operations::is_duplicate_path(
+            fs.as_ref(),
+            &path,
+            &mut loaded_paths.lock().unwrap(),
+        ) {
             return Ok(Vec::new());
         }
-        let parsed = parse_frontmatter(&read_plugin_utf8(&path).await?);
+        let parsed = parse_frontmatter(
+            &fs.read_file(&path, crate::utils::fs_operations::BufferEncoding::Utf8)
+                .await
+                .map(|text| text.to_string_lossy())?,
+        );
         let matching = plugin
             .commands_metadata
             .as_ref()
@@ -589,10 +599,19 @@ async fn load_skills_from_directory(
     plugin: &LoadedPlugin,
     loaded_paths: LoadedPaths,
 ) -> Vec<Command> {
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let direct_path = skills_path.join("SKILL.md");
-    match read_plugin_utf8(&direct_path).await {
+    match fs
+        .read_file(
+            &direct_path,
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        )
+        .await
+        .map(|text| text.to_string_lossy())
+    {
         Ok(content) => {
             if crate::utils::fs_operations::is_duplicate_path(
+                fs.as_ref(),
                 &direct_path,
                 &mut loaded_paths.lock().unwrap(),
             ) {
@@ -633,7 +652,7 @@ async fn load_skills_from_directory(
             return Vec::new();
         }
     }
-    let entries = match crate::utils::fs_operations::readdir(skills_path).await {
+    let entries = match fs.readdir(skills_path).await {
         Ok(entries) => entries,
         Err(err) => {
             if err.kind() != std::io::ErrorKind::NotFound {
@@ -650,7 +669,7 @@ async fn load_skills_from_directory(
     let runtime = crate::utils::process_runtime::runtime_handle_for_detached_work()
         .expect("plugin loading requires process lifetime runtime");
     for entry in entries {
-        let Ok(kind) = entry.file_type().await else {
+        let Ok(kind) = entry.file_type() else {
             continue;
         };
         if !kind.is_dir() && !kind.is_symlink() {
@@ -661,8 +680,13 @@ async fn load_skills_from_directory(
         let loaded_paths = loaded_paths.clone();
         let skills = skills.clone();
         let plugin = plugin.clone();
+        let fs = fs.clone();
         workers.push(runtime.spawn(async move {
-            let content = match read_plugin_utf8(&path).await {
+            let content = match fs
+                .read_file(&path, crate::utils::fs_operations::BufferEncoding::Utf8)
+                .await
+                .map(|text| text.to_string_lossy())
+            {
                 Ok(content) => content,
                 Err(err) => {
                     if err.kind() != std::io::ErrorKind::NotFound {
@@ -675,6 +699,7 @@ async fn load_skills_from_directory(
                 }
             };
             if crate::utils::fs_operations::is_duplicate_path(
+                fs.as_ref(),
                 &path,
                 &mut loaded_paths.lock().unwrap(),
             ) {
@@ -964,7 +989,10 @@ mod tests {
 
     #[test]
     fn plugin_names_match_actual_bun_oracle() {
-        let oracle: Value = serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-commands-0916/source-oracle.json")).unwrap();
+        let oracle: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-commands-0916/source-oracle.json"
+        ))
+        .unwrap();
         for case in oracle["naming"].as_array().unwrap() {
             assert_eq!(
                 get_command_name_from_file(
@@ -1221,7 +1249,10 @@ mod tests {
             },
         )
         .unwrap();
-        let oracle:Value = serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-commands-0916/replacement-oracle.json")).unwrap();
+        let oracle: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-commands-0916/replacement-oracle.json"
+        ))
+        .unwrap();
         assert_eq!(text(&command, ""), oracle[0]["text"].as_str().unwrap());
     }
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

@@ -136,6 +136,12 @@ pub fn get_errno_code(error: &anyhow::Error) -> Option<&'static str> {
 }
 
 pub(crate) fn io_errno_code(error: &std::io::Error) -> Option<&'static str> {
+    if let Some(fs_error) = error
+        .get_ref()
+        .and_then(|error| error.downcast_ref::<crate::utils::fs_operations::FsError>())
+    {
+        return Some(fs_error.code);
+    }
     #[cfg(unix)]
     if let Some(raw) = error.raw_os_error() {
         return Some(match raw {
@@ -186,6 +192,7 @@ pub(crate) fn format_native_file_error(
         .unwrap_or_default();
     let code = io_errno_code(error).unwrap_or("EIO");
     let message = match code {
+        "EPERM" => "operation not permitted",
         "ENAMETOOLONG" => "name too long",
         "ENOSPC" => "no space left on device",
         "EROFS" => "read-only file system",

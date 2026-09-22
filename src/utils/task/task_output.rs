@@ -211,8 +211,10 @@ impl TaskOutput {
             );
         }
 
-        let Ok(result) = crate::utils::fs_operations::tail_file(self.path(), PROGRESS_TAIL_BYTES)
-        else {
+        let Ok(result) = futures::executor::block_on(crate::utils::fs_operations::tail_file(
+            self.path(),
+            PROGRESS_TAIL_BYTES,
+        )) else {
             return TaskOutputProgress::default();
         };
         let crate::utils::fs_operations::ReadFileRangeResult {
@@ -295,7 +297,11 @@ impl TaskOutput {
 
     fn read_stdout_from_file(&self) -> String {
         let max = crate::utils::shell::output_limits::get_max_output_length();
-        match crate::utils::fs_operations::read_file_range(self.path(), 0, max) {
+        match futures::executor::block_on(crate::utils::fs_operations::read_file_range(
+            self.path(),
+            0,
+            max,
+        )) {
             Ok(Some(crate::utils::fs_operations::ReadFileRangeResult {
                 content,
                 bytes_read,
@@ -431,7 +437,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn file_mode_read_and_progress_reject_swapped_output_symlink() {
+    fn file_mode_read_and_progress_matches_official_symlink_following() {
         use std::os::unix::fs::symlink;
 
         let task_id = format!("task-symlink-{}", uuid::Uuid::new_v4().simple());
@@ -445,9 +451,9 @@ mod tests {
         symlink(&victim, output.path()).unwrap();
 
         let content = output.get_stdout();
-        assert!(content.starts_with("<bash output unavailable:"));
-        assert!(!content.contains("secret-must-not"));
-        assert_eq!(output.poll_progress(), TaskOutputProgress::default());
+        // CC TaskOutput.ts:114/300 use raw tailFile/readFileRange, which follow links.
+        assert_eq!(content, "secret-must-not-be-read-or-changed");
+        assert_eq!(output.poll_progress().total_bytes, content.len() as u64);
         assert_eq!(
             std::fs::read_to_string(&victim).unwrap(),
             "secret-must-not-be-read-or-changed"

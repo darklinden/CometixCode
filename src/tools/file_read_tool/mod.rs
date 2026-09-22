@@ -1233,7 +1233,7 @@ impl FileReadTool {
                         .and_then(serde_json::Value::as_str)
                         .ok_or_else(|| anyhow::anyhow!("pages.trim is not a function"))?;
                     let range = parse_pdf_page_range(pages);
-                    let extract = extract_pdf_pages(resolved_file_path, range)
+                    let extract = futures::executor::block_on(extract_pdf_pages(resolved_file_path, range))
                         .map_err(|error| anyhow::anyhow!(error.message))?;
                     let entries = std::fs::read_dir(&extract.output_dir)?
                         .collect::<std::io::Result<Vec<_>>>()?;
@@ -1266,9 +1266,11 @@ impl FileReadTool {
                         ));
                     }
                 }
-                let opened_metadata = std::fs::metadata(resolved_file_path)?;
+                let opened_metadata = futures::executor::block_on(
+                    crate::utils::fs_operations::get_fs_implementation().stat(resolved_file_path),
+                )?;
                 if !is_pdf_supported() || opened_metadata.len() > PDF_EXTRACT_SIZE_THRESHOLD {
-                    let _ = extract_pdf_pages(resolved_file_path, None);
+                    let _ = futures::executor::block_on(extract_pdf_pages(resolved_file_path, None));
                 }
                 if !is_pdf_supported() {
                     return Err(anyhow::anyhow!(
@@ -1276,7 +1278,7 @@ impl FileReadTool {
                     ));
                 }
                 let pdf =
-                    read_pdf(resolved_file_path).map_err(|error| anyhow::anyhow!(error.message))?;
+                    futures::executor::block_on(read_pdf(resolved_file_path)).map_err(|error| anyhow::anyhow!(error.message))?;
                 return Ok(PreparedReadOutput::Pdf {
                     output: ReadPdfOutput {
                         file_path: resolved_file_path.display().to_string(),
@@ -1775,7 +1777,7 @@ impl crate::tool::ToolCall for FileReadTool {
         use crate::types::permissions::PermissionBehavior;
         use crate::utils::pdf_utils::parse_pdf_page_range;
         use crate::utils::permissions::filesystem::{
-            FilePermissionType, matching_rule_for_input_at_cwd,
+            FilePermissionType, matching_rule_for_input,
         };
 
         let Ok(input) = FileReadInput::from_args(args) else {
@@ -1812,7 +1814,7 @@ impl crate::tool::ToolCall for FileReadTool {
             Err(message) => return crate::tool::ValidationResult::fatal(message),
         };
         let full_file_path_str = full_file_path.display().to_string();
-        if matching_rule_for_input_at_cwd(
+        if matching_rule_for_input(
             &full_file_path_str,
             &context.tool_permission_context,
             FilePermissionType::Read,
@@ -1874,7 +1876,7 @@ impl crate::tool::ToolCall for FileReadTool {
             .filter(|path| !path.is_empty())
             .map(str::to_string)
             .unwrap_or_else(|| cwd.display().to_string());
-        crate::utils::permissions::filesystem::check_read_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_read_permission_for_tool(
             &file_path,
             &parsed,
             &context.tool_permission_context,

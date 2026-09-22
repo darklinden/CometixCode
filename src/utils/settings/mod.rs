@@ -10,6 +10,10 @@
 pub mod apply_settings_change;
 pub mod change_detector;
 pub mod constants;
+mod file_io;
+#[cfg(test)]
+mod fs_io_tests;
+pub(crate) mod internal_writes;
 pub mod managed_path;
 pub mod permission_validation;
 pub mod plugin_only_policy;
@@ -103,35 +107,7 @@ pub fn update_settings_for_source(
     source: SettingSource,
     updates: &serde_json::Map<String, serde_json::Value>,
 ) -> anyhow::Result<()> {
-    if !matches!(
-        source,
-        SettingSource::User | SettingSource::Project | SettingSource::Local
-    ) {
-        anyhow::bail!("settings source is not editable");
-    }
-    let path = get_settings_file_path_for_source(source)
-        .ok_or_else(|| anyhow::anyhow!("settings path is unavailable"))?;
-    let mut value = match std::fs::read_to_string(&path) {
-        Ok(content) => serde_json::from_str::<serde_json::Value>(&content)?,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => serde_json::json!({}),
-        Err(error) => return Err(error.into()),
-    };
-    if !value.is_object() {
-        value = serde_json::json!({});
-    }
-    let object = value.as_object_mut().expect("object normalized above");
-    apply_settings_update(object, updates);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(path, serde_json::to_string_pretty(&value)?)?;
-    // Maps to: CC `settings.ts:505-506` — invalidate the session cache right
-    // after the write lands, so the next read sees the new values. (This read
-    // path deliberately parses the file directly rather than through
-    // `get_settings_for_source`, matching CC's uncached read at :436-440: the
-    // cached object must not be mutated before the write succeeds.)
-    settings_cache::reset_settings_cache();
-    Ok(())
+    file_io::update_settings_for_source(source, updates)
 }
 
 /// Maps to: CC `utils/settings/settings.ts:473-495` — the inline `mergeWith`
@@ -244,15 +220,17 @@ pub fn get_managed_file_settings_presence() -> ManagedFileSettingsPresence {
     let has_base = settings_file_has_fields(&get_managed_settings_file_path());
     let mut has_drop_ins = false;
 
-    if let Ok(entries) = std::fs::read_dir(get_managed_settings_drop_in_dir()) {
-        has_drop_ins = entries.filter_map(|entry| entry.ok()).any(|entry| {
-            let path = entry.path();
+    if let Ok(entries) = crate::utils::fs_operations::get_fs_implementation()
+        .readdir_sync(&get_managed_settings_drop_in_dir())
+    {
+        has_drop_ins = entries.into_iter().any(|entry| {
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            path.is_file()
+            entry
+                .file_type()
+                .is_ok_and(|kind| kind.is_file() || kind.is_symlink())
                 && name.ends_with(".json")
                 && !name.starts_with('.')
-                && settings_file_has_fields(&path)
         });
     }
 
@@ -484,14 +462,18 @@ fn load_managed_file_settings() -> (Option<SettingsJson>, Vec<ValidationError>) 
     }
 
     let drop_in_dir = get_managed_settings_drop_in_dir();
-    if let Ok(entries) = std::fs::read_dir(&drop_in_dir) {
+    if let Ok(entries) =
+        crate::utils::fs_operations::get_fs_implementation().readdir_sync(&drop_in_dir)
+    {
         let mut json_files: Vec<PathBuf> = entries
-            .filter_map(|e| e.ok())
+            .into_iter()
             .filter(|e| {
-                let path = e.path();
                 let name = e.file_name();
                 let name_str = name.to_string_lossy();
-                path.is_file() && name_str.ends_with(".json") && !name_str.starts_with('.')
+                e.file_type()
+                    .is_ok_and(|kind| kind.is_file() || kind.is_symlink())
+                    && name_str.ends_with(".json")
+                    && !name_str.starts_with('.')
             })
             .map(|e| e.path())
             .collect();
@@ -526,36 +508,10 @@ pub(crate) fn parse_settings_file(path: &Path) -> (Option<SettingsJson>, Vec<Val
     if let Some(cached) = settings_cache::get_cached_parsed_file(path) {
         return (cached.settings, cached.errors);
     }
-    let (settings, errors) = parse_settings_file_uncached(path);
-    settings_cache::set_cached_parsed_file(
-        path,
-        settings_cache::ParsedSettings {
-            settings: settings.clone(),
-            errors: errors.clone(),
-        },
-    );
-    (settings, errors)
-}
-
-fn parse_settings_file_uncached(path: &Path) -> (Option<SettingsJson>, Vec<ValidationError>) {
-    let content = match std::fs::read_to_string(path) {
-        Ok(c) => c,
-        Err(_) => return (None, Vec::new()),
-    };
-
-    if content.trim().is_empty() {
-        return (Some(SettingsJson::default()), Vec::new());
-    }
-
-    let file_str = path.to_string_lossy();
-
-    match validation::validate_settings(&content, Some(&file_str)) {
-        Ok(result) => result,
-        Err(e) => {
-            tracing::warn!("Failed to parse {}: {}", path.display(), e);
-            (None, Vec::new())
-        }
-    }
+    let parsed = file_io::parse_settings_file_uncached(path);
+    let result = (parsed.settings.clone(), parsed.errors.clone());
+    settings_cache::set_cached_parsed_file(path, parsed);
+    result
 }
 
 // ════════════════════════════════════════════════════════════
@@ -897,7 +853,10 @@ mod tests {
         fs::write(drop_ins.join("10-empty.json"), "{}").expect("write empty drop-in");
         assert_eq!(
             get_managed_file_settings_presence(),
-            ManagedFileSettingsPresence::default()
+            ManagedFileSettingsPresence {
+                has_base: false,
+                has_drop_ins: true
+            }
         );
         assert!(load_managed_file_settings().0.is_none());
 
@@ -910,7 +869,7 @@ mod tests {
             get_managed_file_settings_presence(),
             ManagedFileSettingsPresence {
                 has_base: true,
-                has_drop_ins: false,
+                has_drop_ins: true,
             }
         );
 

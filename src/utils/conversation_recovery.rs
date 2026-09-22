@@ -3007,6 +3007,17 @@ mod tests {
 
     #[test]
     fn write_create_success_uses_created_summary() {
+        // CC FileWriteTool/UI.tsx:59 resolves the relative wire filePath using
+        // process cwd, then displays it relative to session cwd. Pin both for
+        // this fixture's intentionally bare filename expectation.
+        struct RestoreCwd(std::path::PathBuf);
+        impl Drop for RestoreCwd {
+            fn drop(&mut self) {
+                crate::bootstrap::state::set_original_cwd(self.0.clone());
+            }
+        }
+        let _cwd = RestoreCwd(crate::bootstrap::state::get_original_cwd());
+        crate::bootstrap::state::set_original_cwd(std::env::current_dir().unwrap());
         let entries = vec![
             json!({
                 "type": "assistant",

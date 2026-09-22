@@ -165,7 +165,7 @@ fn validate_write_input(input: &FileWriteInput, context: &ToolUseContext) -> Val
         return validation_error(error, 0);
     }
 
-    if crate::utils::permissions::filesystem::matching_rule_for_input_at_cwd(
+    if crate::utils::permissions::filesystem::matching_rule_for_input(
         &full_path.display().to_string(),
         &context.tool_permission_context,
         crate::utils::permissions::filesystem::FilePermissionType::Edit,
@@ -186,7 +186,9 @@ fn validate_write_input(input: &FileWriteInput, context: &ToolUseContext) -> Val
         return ValidationResult::Ok;
     }
 
-    let metadata = match std::fs::metadata(&full_path) {
+    let metadata = match futures::executor::block_on(
+        crate::utils::fs_operations::get_fs_implementation().stat(&full_path),
+    ) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             return ValidationResult::Ok;
@@ -404,7 +406,7 @@ impl ToolCall for FileWriteTool {
                     .unwrap_or_default()
                     .to_string()
             });
-        crate::utils::permissions::filesystem::check_write_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_write_permission_for_tool(
             &path,
             args,
             &context.tool_permission_context,
@@ -514,11 +516,11 @@ impl ToolCall for FileWriteTool {
                     dynamic_skill_dirs,
                 );
             }
-            if let Err(error) = std::fs::create_dir_all(
+            if let Err(error) = crate::utils::fs_operations::get_fs_implementation().mkdir(
                 write_target
                     .parent()
-                    .unwrap_or_else(|| std::path::Path::new(".")),
-            ) {
+                    .unwrap_or_else(|| std::path::Path::new(".")), None,
+            ).await {
                 return make_error_after_discovery(error.to_string(), dynamic_skill_dirs);
             }
 

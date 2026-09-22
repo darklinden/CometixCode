@@ -1340,8 +1340,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn permission_request_delegates_bash_sed_to_official_sed_edit_dialog() {
+    #[tokio::test]
+    async fn permission_request_delegates_bash_sed_to_official_sed_edit_dialog() {
         let path = std::env::temp_dir().join(format!(
             "cometix-permission-sed-{}.txt",
             uuid::Uuid::new_v4().simple()
@@ -1368,7 +1368,7 @@ mod tests {
             mode: PermissionMode::Default,
         };
         let current_theme = *theme::current();
-        let text = element! {
+        let mut app = element! {
             ContextProvider(value: Context::owned(current_theme)) {
                 PermissionRequest(
                     request: Some(request),
@@ -1376,9 +1376,24 @@ mod tests {
                     on_cancel: move |_| {},
                 )
             }
-        }
-        .render(Some(140))
-        .to_string();
+        };
+        // The Sed child matches CC Suspense: its initial frame is empty while
+        // readFile is pending. Mount and await the actual completed preview.
+        use futures::StreamExt;
+        let mut frames = Box::pin(app.mock_terminal_render_loop(
+            MockTerminalConfig::with_events(futures::stream::pending()).with_size(140, 40),
+        ));
+        let text = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while let Some(frame) = frames.next().await {
+                let text = frame.to_string();
+                if text.contains("hello new") {
+                    return text;
+                }
+            }
+            panic!("Sed permission delegation ended before the async preview completed");
+        })
+        .await
+        .expect("delegated Sed preview must complete");
         let _ = std::fs::remove_file(&path);
 
         assert!(text.contains("Edit file"), "canvas=\n{text}");

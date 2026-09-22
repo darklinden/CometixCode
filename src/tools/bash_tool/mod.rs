@@ -504,9 +504,10 @@ async fn apply_simulated_sed_edit(
         &simulated.file_path,
         Some(context.effective_cwd().as_path()),
     )?;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let encoding = crate::utils::file::detect_file_encoding(&path);
-    let original = match crate::utils::file::read_text_with_encoding(&path, encoding) {
-        Ok(content) => content,
+    let original = match fs.read_file(&path, encoding.into()).await {
+        Ok(content) => content.to_string_lossy(),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             return Ok(BashOutput {
                 stderr: format!(
@@ -1095,7 +1096,12 @@ impl crate::tool::ToolCall for BashTool {
     fn is_read_only(&self, args: &serde_json::Value) -> bool {
         args.get("command")
             .and_then(|value| value.as_str())
-            .is_some_and(read_only_validation::check_read_only_constraints)
+            .is_some_and(|command| {
+                read_only_validation::check_read_only_constraints(
+                    command,
+                    &std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")),
+                )
+            })
     }
 
     fn search_hint(&self) -> Option<&'static str> {
@@ -1229,11 +1235,7 @@ impl crate::tool::ToolCall for BashTool {
                 &cwd,
             );
         }
-        bash_permissions::bash_tool_has_permission_at_cwd(
-            command,
-            &context.tool_permission_context,
-            &cwd,
-        )
+        bash_permissions::bash_tool_has_permission(command, &context.tool_permission_context, &cwd)
     }
 
     fn call<'a>(

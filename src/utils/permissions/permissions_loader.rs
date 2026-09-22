@@ -10,6 +10,7 @@ use super::permission_rule_parser::{
 use crate::types::permissions::{
     PermissionBehavior, PermissionRule, PermissionRuleSource, PermissionRuleValue,
 };
+use crate::utils::fs_operations::{get_fs_implementation, safe_resolve_path};
 use crate::utils::settings::{SettingSource, SettingsJson, get_settings_for_source};
 
 pub const SUPPORTED_RULE_BEHAVIORS: &[PermissionBehavior] = &[
@@ -92,7 +93,7 @@ fn get_settings_for_source_lenient_for_editing_only_not_for_reading(
     source: SettingSource,
 ) -> Option<serde_json::Value> {
     let path = crate::utils::settings::get_settings_file_path_for_source(source)?;
-    let resolved = crate::utils::fs_operations::safe_resolve_path(&path);
+    let resolved = safe_resolve_path(get_fs_implementation().as_ref(), &path);
     let content = crate::utils::file_read::read_file_sync(&resolved.resolved_path).ok()?;
     if content.trim().is_empty() {
         return Some(serde_json::json!({}));
@@ -588,9 +589,12 @@ mod persistence_tests {
         );
     }
 
-    /// CC permissionsLoader.ts:193-205 / :278-285 spreads the earlier cached
-    /// snapshot over the writer's newer disk read. Absent typed fields are omitted,
-    /// so a newly added disk key absent from that snapshot is not deleted.
+    /// CC permissionsLoader.ts:193-205 / :278-285 passes the cached snapshot
+    /// to updateSettingsForSource. Its settings.ts:440 call bypasses only the
+    /// per-source cache: getSettingsForSourceUncached (:349-352) still invokes
+    /// parseSettingsFile, whose file-cache hit (:182-190) returns the old JSON.
+    /// A raw external edit without resetSettingsCache therefore gets overwritten,
+    /// including keys absent from both cached snapshots; there is no newer read.
     #[test]
     fn add_and_delete_rules_match_official_full_cached_snapshot_overlay() {
         let _lock = TEST_ENV_LOCK.lock().unwrap();
@@ -622,9 +626,9 @@ mod persistence_tests {
             }
             let value = fixture.read();
             assert_eq!(value["model"], "old");
-            assert_eq!(
-                value["language"], "zh",
-                "absent Option fields must not delete newer keys"
+            assert!(
+                !value.as_object().unwrap().contains_key("language"),
+                "source bypasses per-source cache but retains the earlier parsed-file snapshot"
             );
             assert_eq!(value["permissions"]["deny"], json!(["Bash"]));
             assert_eq!(

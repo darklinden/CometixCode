@@ -18,6 +18,7 @@ use crate::types::permissions::{
     PermissionBehavior, PermissionMode, PermissionRule, PermissionUpdate,
     PermissionUpdateDestination,
 };
+use crate::utils::fs_operations::{get_fs_implementation, safe_resolve_path};
 use crate::utils::permissions::filesystem::{
     FilePermissionType, all_working_directories, matching_rule_for_input,
 };
@@ -858,7 +859,7 @@ fn absolute_path(path: &str, cwd: &str) -> String {
 
 /// Maps to: CC `safeResolvePath(getFsImplementation(), absolutePath)`.
 fn resolve_path(path: &str) -> (String, bool) {
-    let resolved = crate::utils::fs_operations::safe_resolve_path(Path::new(path));
+    let resolved = safe_resolve_path(get_fs_implementation().as_ref(), Path::new(path));
     (
         resolved.resolved_path.display().to_string(),
         resolved.is_canonical,
@@ -916,6 +917,7 @@ fn check_deny_rule_for_guessed_path(
         tool_permission_context,
         permission_type,
         PermissionBehavior::Deny,
+        Path::new(cwd),
     )
     .map(|rule| (resolved_path, rule))
 }
@@ -1071,6 +1073,7 @@ fn validate_path(
             tool_permission_context,
             permission_type,
             PermissionBehavior::Deny,
+            Path::new(cwd),
         ) {
             return ResolvedPathCheck {
                 allowed: false,

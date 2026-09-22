@@ -112,7 +112,7 @@ pub async fn scan_directory(dir_path: &Path) -> Vec<DirectoryEntry> {
         let mut directories = Vec::new();
         for entry in entries {
             let name = entry.file_name().to_string_lossy().into_owned();
-            if entry.file_type().await?.is_dir() && !name.starts_with('.') {
+            if entry.file_type()?.is_dir() && !name.starts_with('.') {
                 directories.push(DirectoryEntry {
                     path: dir_path.join(&name),
                     name,
@@ -198,7 +198,7 @@ pub async fn scan_directory_for_paths(dir_path: &Path, include_hidden: bool) -> 
         if !include_hidden && name.starts_with('.') {
             continue;
         }
-        let Ok(file_type) = entry.file_type().await else {
+        let Ok(file_type) = entry.file_type() else {
             continue;
         };
         let kind = if file_type.is_dir() {

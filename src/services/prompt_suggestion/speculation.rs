@@ -418,6 +418,7 @@ where
                         || crate::tools::bash_tool::bash_permissions::command_has_any_cd(&command)
                         || !crate::tools::bash_tool::read_only_validation::check_read_only_constraints(
                             &command,
+                            &std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")),
                         )
                     {
                         update_active(&context, &id, |active| {

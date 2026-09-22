@@ -141,7 +141,11 @@ pub fn DiscoverPlugins(
                 #[cfg(test)] let counts=if load_test_imports.is_some(){None}else{get_install_counts().await};
                 #[cfg(not(test))] let counts=get_install_counts().await;
                 let sort_failed=std::cell::Cell::new(false);
-                uninstalled.sort_by(|a,b| {
+                // NaN reaches `partial_cmp().unwrap_or(Equal)` when to_number
+                // fails mid-sort (the Cell mimics the source's try/catch), so
+                // the comparator is not a total order; sorted through the
+                // non-validating JS-sort primitive (utils/js_sort.rs; PR #7).
+                crate::utils::js_sort::sort_by(&mut uninstalled,|a,b| {
                     let a_raw=counts.as_ref().and_then(|c|c.get(&a.plugin_id)).filter(|v|!v.is_null());
                     let b_raw=counts.as_ref().and_then(|c|c.get(&b.plugin_id)).filter(|v|!v.is_null());
                     let equal=match (a_raw,b_raw){
@@ -913,7 +917,10 @@ pub(super) mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn mounted_discover_paste_entry_and_width_match_official_bun() {
         crate::utils::process_runtime::initialize_test_process_runtime();
-        let oracle: Value = serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-ui-complete-0914/discover-entry-oracle.json")).unwrap();
+        let oracle: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-ui-complete-0914/discover-entry-oracle.json"
+        ))
+        .unwrap();
         for case in oracle.as_array().unwrap() {
             for pasted in [false, true] {
                 let input_text = case["input"].as_str().unwrap();
@@ -1016,7 +1023,10 @@ pub(super) mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn mounted_discover_plugins_matches_official_bun_frames_and_install_callbacks() {
         crate::utils::process_runtime::initialize_test_process_runtime();
-        let oracle:Value=serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-ui-complete-0914/panel-oracle.json")).unwrap();
+        let oracle: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-ui-complete-0914/panel-oracle.json"
+        ))
+        .unwrap();
         for name in [
             "discover-list",
             "discover-target",

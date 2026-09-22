@@ -356,7 +356,13 @@ fn command_matches_for_query<'a>(
             .partial_cmp(&right.score)
             .unwrap_or(Ordering::Equal)
     });
-    matches.sort_by(|left, right| compare_command_matches(left, right, query));
+    // The comparator's `|scoreDiff| > 0.1` gate (:467-469) is not a total
+    // order — kept verbatim per source, so the sort must go through the
+    // non-validating JS-sort primitive instead of `slice::sort_by`, which
+    // panics on it (see `utils/js_sort.rs`; mirror PR #7).
+    crate::utils::js_sort::sort_by(&mut matches, |left, right| {
+        compare_command_matches(left, right, query)
+    });
     matches
 }
 
@@ -700,6 +706,59 @@ mod tests {
 
     fn commands() -> Vec<Command> {
         crate::commands::declared_commands_for_tests()
+    }
+
+    /// Regression for the release SIGABRT (mirror PR #7): the verbatim
+    /// `|scoreDiff| > 0.1` gate of `compare_command_matches` admits ordering
+    /// cycles (a<b<c<a), which `slice::sort_by` rejects with "user-provided
+    /// comparison function does not correctly implement a total order". The
+    /// suggestion path therefore sorts through `js_sort::sort_by`; this test
+    /// pins that routing by driving the exact former-cycle values plus a
+    /// pseudo-random sweep through the real comparator.
+    #[test]
+    fn near_tie_scores_sort_without_panicking_like_a_js_engine() {
+        let all = commands();
+        let command = all.first().expect("at least one declared command");
+        let entry = CommandSearchEntry {
+            command_index: 0,
+            command_name: "alpha".to_string(),
+            parts: Vec::new(),
+            aliases: Vec::new(),
+            description_words: Vec::new(),
+        };
+        let matched = |score: f64, usage: f64| CommandSuggestionMatch {
+            command,
+            entry: &entry,
+            matched_alias: None,
+            score,
+            usage,
+        };
+
+        // The documented former cycle: 0.12/10.0 < 0.06/5.0 < 0.00/0.0 < 0.12/10.0.
+        let mut cycle = vec![matched(0.12, 10.0), matched(0.06, 5.0), matched(0.0, 0.0)];
+        crate::utils::js_sort::sort_by(&mut cycle, |left, right| {
+            compare_command_matches(left, right, "zz")
+        });
+        assert_eq!(cycle.len(), 3);
+
+        // Pseudo-random near-tie sweep (xorshift32), the load that crashed
+        // `sort_by` on most seeds. Output must always be a permutation.
+        let mut state = 42u32;
+        let mut next = move || {
+            state ^= state << 13;
+            state ^= state >> 17;
+            state ^= state << 5;
+            state
+        };
+        for _ in 0..50 {
+            let mut rows: Vec<CommandSuggestionMatch<'_>> = (0..64)
+                .map(|_| matched((next() % 40) as f64 * 0.01, (next() % 11) as f64))
+                .collect();
+            crate::utils::js_sort::sort_by(&mut rows, |left, right| {
+                compare_command_matches(left, right, "zz")
+            });
+            assert_eq!(rows.len(), 64);
+        }
     }
 
     #[test]

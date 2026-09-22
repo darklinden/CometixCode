@@ -99,7 +99,9 @@ pub fn get_session_plugin_cache_path()
                             std::env::temp_dir(),
                             format!("claude-plugin-session-{suffix}")
                         );
-                        tokio::fs::create_dir_all(&dir).await?;
+                        crate::utils::fs_operations::get_fs_implementation()
+                            .mkdir(&(&dir), None)
+                            .await?;
                         *SESSION_PLUGIN_CACHE_PATH.lock().unwrap() = Some(dir.clone());
                         crate::utils::debug::log_for_debugging(&format!(
                             "Created session plugin cache at {}",
@@ -133,7 +135,15 @@ pub async fn cleanup_session_plugin_cache() {
     let Some(path) = SESSION_PLUGIN_CACHE_PATH.lock().unwrap().clone() else {
         return;
     };
-    match crate::utils::fs_operations::rm(&path, true, true).await {
+    match crate::utils::fs_operations::native::rm(
+        &path,
+        crate::utils::fs_operations::RmOptions {
+            recursive: true,
+            force: true,
+        },
+    )
+    .await
+    {
         Ok(()) => crate::utils::debug::log_for_debugging(&format!(
             "Cleaned up session plugin cache at {}",
             path.display()
@@ -154,7 +164,9 @@ pub fn reset_session_plugin_cache() {
 /// UTF-8 text and Uint8Array share the source writeFile byte contract.
 pub async fn atomic_write_to_zip_cache(target: &Path, data: &[u8]) -> anyhow::Result<()> {
     let dir = zip_path!(target, "..");
-    tokio::fs::create_dir_all(&dir).await?;
+    crate::utils::fs_operations::get_fs_implementation()
+        .mkdir(&(&dir), None)
+        .await?;
     let mut random = [0u8; 4];
     getrandom::fill(&mut random).map_err(|e| anyhow::anyhow!(e.to_string()))?;
     let suffix = random
@@ -173,7 +185,14 @@ pub async fn atomic_write_to_zip_cache(target: &Path, data: &[u8]) -> anyhow::Re
     }
     .await;
     if result.is_err() {
-        let _ = crate::utils::fs_operations::rm(&temp, false, true).await;
+        let _ = crate::utils::fs_operations::native::rm(
+            &temp,
+            crate::utils::fs_operations::RmOptions {
+                recursive: false,
+                force: true,
+            },
+        )
+        .await;
     }
     result
 }
@@ -440,17 +459,25 @@ fn collect_files_for_zip<'a>(
 }
 /// Maps to: CC `utils/plugins/zipCache.ts:331-364#extractZipToDirectory`.
 pub async fn extract_zip_to_directory(zip_path: &Path, target_dir: &Path) -> anyhow::Result<()> {
-    let bytes = tokio::fs::read(zip_path).await?;
+    let bytes = crate::utils::fs_operations::get_fs_implementation()
+        .read_file_bytes(zip_path, None)
+        .await?;
     let files = crate::utils::dxt::zip::unzip_file(&bytes).await?;
     let modes = crate::utils::dxt::zip::parse_zip_modes(&bytes);
-    tokio::fs::create_dir_all(target_dir).await?;
+    crate::utils::fs_operations::get_fs_implementation()
+        .mkdir(&(target_dir), None)
+        .await?;
     for (relative, data) in &files {
         if relative.ends_with('/') {
-            tokio::fs::create_dir_all(zip_path!(target_dir, relative)).await?;
+            crate::utils::fs_operations::get_fs_implementation()
+                .mkdir(&(zip_path!(target_dir, relative)), None)
+                .await?;
             continue;
         }
         let full = zip_path!(target_dir, relative);
-        tokio::fs::create_dir_all(zip_path!(&full, "..")).await?;
+        crate::utils::fs_operations::get_fs_implementation()
+            .mkdir(&(zip_path!(&full, "..")), None)
+            .await?;
         tokio::fs::write(&full, data).await?;
         if let Some(&mode) = modes.get(relative).filter(|&&m| m & 0o111 != 0) {
             #[cfg(unix)]
@@ -482,7 +509,14 @@ pub async fn convert_directory_to_zip_in_place(
 ) -> anyhow::Result<()> {
     let data = create_zip_from_directory(dir_path).await?;
     atomic_write_to_zip_cache(zip_path, &data).await?;
-    crate::utils::fs_operations::rm(dir_path, true, true).await?;
+    crate::utils::fs_operations::native::rm(
+        dir_path,
+        crate::utils::fs_operations::RmOptions {
+            recursive: true,
+            force: true,
+        },
+    )
+    .await?;
     Ok(())
 }
 /// Maps to: CC `utils/plugins/zipCache.ts:384-389#getMarketplaceJsonRelativePath`.

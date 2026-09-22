@@ -10,6 +10,7 @@ use crate::types::permissions::{
     PermissionBehavior, PermissionMode, PermissionRule, PermissionRuleSource, PermissionRuleValue,
     PermissionUpdate, PermissionUpdateDestination,
 };
+use crate::utils::fs_operations::{get_fs_implementation, safe_resolve_path};
 use crate::utils::settings::types::SettingsJson;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -936,7 +937,7 @@ pub fn prepare_context_for_plan_mode(context: &ToolPermissionContext) -> ToolPer
 
 /// Maps to: CC `utils/permissions/permissionSetup.ts:670-687` `isSymlinkTo`.
 fn is_symlink_to(process_pwd: &std::path::Path, original_cwd: &std::path::Path) -> bool {
-    let resolved = crate::utils::fs_operations::safe_resolve_path(process_pwd);
+    let resolved = safe_resolve_path(get_fs_implementation().as_ref(), process_pwd);
     // Node path.resolve(originalCwd) is lexical: do not resolve its symlinks.
     let absolute_cwd =
         std::path::absolute(original_cwd).unwrap_or_else(|_| original_cwd.to_path_buf());

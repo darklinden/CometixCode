@@ -33,8 +33,19 @@ pub fn is_wsl() -> bool {
     }
     #[cfg(target_os = "linux")]
     {
-        return std::fs::read_to_string("/proc/version")
-            .is_ok_and(|version| version.to_ascii_lowercase().contains("microsoft"));
+        return match crate::utils::fs_operations::get_fs_implementation().read_file_sync(
+            std::path::Path::new("/proc/version"),
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        ) {
+            Ok(version) => {
+                let version = version.to_string_lossy().to_lowercase();
+                version.contains("microsoft") || version.contains("wsl")
+            }
+            Err(error) => {
+                crate::utils::log::log_error(crate::utils::log::LogError::new(error.to_string()));
+                false
+            }
+        };
     }
     #[cfg(not(target_os = "linux"))]
     false

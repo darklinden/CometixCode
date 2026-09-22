@@ -43,128 +43,134 @@ fn get_known_marketplaces_file() -> PathBuf {
 pub type KnownMarketplacesConfig = serde_json::Map<String, serde_json::Value>;
 
 /// Maps to: CC `marketplaceManager.ts:264-299#loadKnownMarketplacesConfig`.
-/// The original throwing reader, with native async I/O and Result carriers.
+/// The original throwing reader, with activeFs async I/O and Result carriers.
 /// Partial shared value domain: JSON parser diagnostics retain native wording;
 /// `.to_json()` projects nonfinite numbers to null and lone UTF-16 to replacement
 /// characters, so diagnostics/default_config for those values still differ.
-pub async fn load_known_marketplaces_config() -> anyhow::Result<KnownMarketplacesConfig> {
+pub fn load_known_marketplaces_config()
+-> impl std::future::Future<Output = anyhow::Result<KnownMarketplacesConfig>> {
     use crate::utils::debug::{DebugLogLevel, log_for_debugging_with_level};
-    use crate::utils::errors::{ConfigParseError, format_native_file_error};
+    use crate::utils::errors::ConfigParseError;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let config_file = get_known_marketplaces_file();
-    let loaded: anyhow::Result<KnownMarketplacesConfig> = async {
-        let bytes = tokio::fs::read(&config_file).await.map_err(|error| {
-            // Keep the original errno for the outer ENOENT branch. readFile's
-            // utf-8 decoder replaces malformed byte sequences, like from_utf8_lossy.
-            let message = if error.kind() == std::io::ErrorKind::IsADirectory {
-                format_native_file_error(&error, "read", None)
-            } else {
-                format_native_file_error(&error, "open", Some(&config_file))
-            };
-            anyhow::Error::new(error).context(message)
-        })?;
-        let content = String::from_utf8_lossy(&bytes);
-        let data = crate::utils::slow_operations::json_parse(&content)?.to_json();
-        let parsed =
-            crate::utils::zod::safe_parse(super::schemas::known_marketplaces_file_schema(), &data)
-                .map_err(|error| {
-                    let issues = error
-                        .issues
-                        .iter()
-                        .map(|issue| {
-                            let path = issue
-                                .path
-                                .iter()
-                                .map(|part| match part {
-                                    crate::utils::zod::PathSegment::Key(key) => key.clone(),
-                                    crate::utils::zod::PathSegment::Index(index) => {
-                                        index.to_string()
-                                    }
-                                })
-                                .collect::<Vec<_>>()
-                                .join(".");
-                            format!("{path}: {}", issue.message)
-                        })
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    let message = format!("Marketplace configuration file is corrupted: {issues}");
-                    log_for_debugging_with_level(&message, DebugLogLevel::Error);
-                    ConfigParseError::new(message, config_file.to_string_lossy(), data)
-                })?;
-        Ok(parsed
-            .as_object()
-            .expect("KnownMarketplacesFileSchema returns a record")
-            .clone())
-    }
-    .await;
-    match loaded {
-        Ok(config) => Ok(config),
-        Err(error) if crate::utils::errors::is_enoent(&error) => Ok(KnownMarketplacesConfig::new()),
-        Err(error) if error.is::<ConfigParseError>() => Err(error),
-        Err(error) => {
-            let message = format!("Failed to load marketplace configuration: {error}");
-            log_for_debugging_with_level(&message, DebugLogLevel::Error);
-            Err(anyhow::anyhow!(message))
+    let pending = fs.read_file(
+        &config_file,
+        crate::utils::fs_operations::BufferEncoding::Utf8,
+    );
+    async move {
+        let loaded: anyhow::Result<KnownMarketplacesConfig> = async {
+            let bytes = pending
+                .await
+                .map(|text| text.to_string_lossy().into_bytes())
+                .map_err(anyhow::Error::new)?;
+            let content = String::from_utf8_lossy(&bytes);
+            let data = crate::utils::slow_operations::json_parse(&content)?.to_json();
+            let parsed = crate::utils::zod::safe_parse(
+                super::schemas::known_marketplaces_file_schema(),
+                &data,
+            )
+            .map_err(|error| {
+                let issues = error
+                    .issues
+                    .iter()
+                    .map(|issue| {
+                        let path = issue
+                            .path
+                            .iter()
+                            .map(|part| match part {
+                                crate::utils::zod::PathSegment::Key(key) => key.clone(),
+                                crate::utils::zod::PathSegment::Index(index) => index.to_string(),
+                            })
+                            .collect::<Vec<_>>()
+                            .join(".");
+                        format!("{path}: {}", issue.message)
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let message = format!("Marketplace configuration file is corrupted: {issues}");
+                log_for_debugging_with_level(&message, DebugLogLevel::Error);
+                ConfigParseError::new(message, config_file.to_string_lossy(), data)
+            })?;
+            Ok(parsed
+                .as_object()
+                .expect("KnownMarketplacesFileSchema returns a record")
+                .clone())
+        }
+        .await;
+        match loaded {
+            Ok(config) => Ok(config),
+            Err(error) if crate::utils::errors::is_enoent(&error) => {
+                Ok(KnownMarketplacesConfig::new())
+            }
+            Err(error) if error.is::<ConfigParseError>() => Err(error),
+            Err(error) => {
+                let message = format!("Failed to load marketplace configuration: {error}");
+                log_for_debugging_with_level(&message, DebugLogLevel::Error);
+                Err(anyhow::anyhow!(message))
+            }
         }
     }
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:309-317#loadKnownMarketplacesConfigSafe`.
-pub async fn load_known_marketplaces_config_safe() -> KnownMarketplacesConfig {
-    load_known_marketplaces_config().await.unwrap_or_default()
+pub fn load_known_marketplaces_config_safe()
+-> impl std::future::Future<Output = KnownMarketplacesConfig> {
+    let pending = load_known_marketplaces_config();
+    async move { pending.await.unwrap_or_default() }
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:1372-1405#parseFileWithSchema`.
 /// CC safeParse schema argument ≙ the established Zod v4 runtime carrier.
 /// JSON parser wording/nonfinite/UTF-16 projections retain the shared parser
 /// boundary documented on load_known_marketplaces_config.
-async fn parse_file_with_schema(
+fn parse_file_with_schema(
     file_path: &Path,
     schema: &crate::utils::zod::Schema,
-) -> anyhow::Result<serde_json::Value> {
-    use crate::utils::errors::{ConfigParseError, format_native_file_error};
-    let bytes = tokio::fs::read(file_path).await.map_err(|error| {
-        let message = if error.kind() == std::io::ErrorKind::IsADirectory {
-            format_native_file_error(&error, "read", None)
-        } else {
-            format_native_file_error(&error, "open", Some(file_path))
-        };
-        anyhow::Error::new(error).context(message)
-    })?;
-    let content = String::from_utf8_lossy(&bytes);
-    let data = crate::utils::slow_operations::json_parse(&content)
-        .map_err(|error| {
+) -> impl std::future::Future<Output = anyhow::Result<serde_json::Value>> {
+    use crate::utils::errors::ConfigParseError;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
+    let pending = fs.read_file(file_path, crate::utils::fs_operations::BufferEncoding::Utf8);
+    async move {
+        let bytes = pending
+            .await
+            .map(|text| text.to_string_lossy().into_bytes())
+            .map_err(anyhow::Error::new)?;
+        let content = String::from_utf8_lossy(&bytes);
+        let data = crate::utils::slow_operations::json_parse(&content)
+            .map_err(|error| {
+                ConfigParseError::new(
+                    format!("Invalid JSON in {}: {error}", file_path.display()),
+                    file_path.to_string_lossy(),
+                    serde_json::Value::String(content.to_string()),
+                )
+            })?
+            .to_json();
+        crate::utils::zod::safe_parse(schema, &data).map_err(|error| {
+            let issues = error
+                .issues
+                .iter()
+                .map(|issue| {
+                    let path = issue
+                        .path
+                        .iter()
+                        .map(|part| match part {
+                            crate::utils::zod::PathSegment::Key(key) => key.clone(),
+                            crate::utils::zod::PathSegment::Index(index) => index.to_string(),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(".");
+                    format!("{path}: {}", issue.message)
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
             ConfigParseError::new(
-                format!("Invalid JSON in {}: {error}", file_path.display()),
+                format!("Invalid schema: {} {issues}", file_path.display()),
                 file_path.to_string_lossy(),
-                serde_json::Value::String(content.to_string()),
+                data,
             )
-        })?
-        .to_json();
-    crate::utils::zod::safe_parse(schema, &data).map_err(|error| {
-        let issues = error
-            .issues
-            .iter()
-            .map(|issue| {
-                let path = issue
-                    .path
-                    .iter()
-                    .map(|part| match part {
-                        crate::utils::zod::PathSegment::Key(key) => key.clone(),
-                        crate::utils::zod::PathSegment::Index(index) => index.to_string(),
-                    })
-                    .collect::<Vec<_>>()
-                    .join(".");
-                format!("{path}: {}", issue.message)
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
-        ConfigParseError::new(
-            format!("Invalid schema: {} {issues}", file_path.display()),
-            file_path.to_string_lossy(),
-            data,
-        )
-        .into()
-    })
+            .into()
+        })
+    }
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:2058-2074#readCachedMarketplace`.
@@ -208,69 +214,76 @@ pub(crate) async fn read_cached_marketplace(
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:2081-2107#getMarketplaceCacheOnly`.
 /// Configuration is intentionally unchecked here; only the catalog is validated.
-pub async fn get_marketplace_cache_only(name: &str) -> Option<serde_json::Value> {
+pub fn get_marketplace_cache_only(
+    name: &str,
+) -> impl std::future::Future<Output = Option<serde_json::Value>> {
     use crate::utils::debug::{DebugLogLevel, log_for_debugging_with_level};
-    use crate::utils::errors::format_native_file_error;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let config_file = get_known_marketplaces_file();
-    let loaded: anyhow::Result<Option<serde_json::Value>> = async {
-        let bytes = tokio::fs::read(&config_file).await.map_err(|error| {
-            let message = if error.kind() == std::io::ErrorKind::IsADirectory {
-                format_native_file_error(&error, "read", None)
-            } else {
-                format_native_file_error(&error, "open", Some(&config_file))
+    let pending = fs.read_file(
+        &config_file,
+        crate::utils::fs_operations::BufferEncoding::Utf8,
+    );
+    async move {
+        let loaded: anyhow::Result<Option<serde_json::Value>> = async {
+            let bytes = pending
+                .await
+                .map(|text| text.to_string_lossy().into_bytes())
+                .map_err(anyhow::Error::new)?;
+            #[cfg(test)]
+            let bytes = tests::CONFIG_READS
+                .try_with(|reads| reads.borrow_mut().pop_front())
+                .ok()
+                .flatten()
+                .unwrap_or(bytes);
+            let config =
+                crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes))?;
+            if config.is_null() {
+                anyhow::bail!("null is not an object (evaluating 'config[name]')");
+            }
+            let Some(entry) = config.get_property(name) else {
+                return Ok(None);
             };
-            anyhow::Error::new(error).context(message)
-        })?;
-        #[cfg(test)]
-        let bytes = tests::CONFIG_READS
-            .try_with(|reads| reads.borrow_mut().pop_front())
-            .ok()
-            .flatten()
-            .unwrap_or(bytes);
-        let config = crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes))?;
-        if config.is_null() {
-            anyhow::bail!("null is not an object (evaluating 'config[name]')");
+            // The JSON carrier retains JS numeric values before projection. These
+            // are the source's !entry check, not a KnownMarketplaceSchema gate.
+            if matches!(entry.kind, 7 | 9)
+                || (entry.kind == 10 && entry.string_units.is_empty())
+                || (entry.kind == 11 && entry.number.is_some_and(|n| n == 0.0 || n.is_nan()))
+            {
+                return Ok(None);
+            }
+            let location = entry.get_property("installLocation");
+            let install_location =
+                location
+                    .and_then(|location| location.as_str())
+                    .ok_or_else(|| {
+                        // Node path.join's type check happens before filesystem access.
+                        let kind = match location.map(|location| location.kind) {
+                            None => "undefined",
+                            Some(3) => "array",
+                            Some(8 | 9) => "boolean",
+                            Some(11) => "number",
+                            _ => "object",
+                        };
+                        anyhow::anyhow!(
+                            "The \"paths[0]\" property must be of type string, got {kind}"
+                        )
+                    })?;
+            Ok(Some(
+                read_cached_marketplace(Path::new(install_location)).await?,
+            ))
         }
-        let Some(entry) = config.get_property(name) else {
-            return Ok(None);
-        };
-        // The JSON carrier retains JS numeric values before projection. These
-        // are the source's !entry check, not a KnownMarketplaceSchema gate.
-        if matches!(entry.kind, 7 | 9)
-            || (entry.kind == 10 && entry.string_units.is_empty())
-            || (entry.kind == 11 && entry.number.is_some_and(|n| n == 0.0 || n.is_nan()))
-        {
-            return Ok(None);
-        }
-        let location = entry.get_property("installLocation");
-        let install_location =
-            location
-                .and_then(|location| location.as_str())
-                .ok_or_else(|| {
-                    // Node path.join's type check happens before filesystem access.
-                    let kind = match location.map(|location| location.kind) {
-                        None => "undefined",
-                        Some(3) => "array",
-                        Some(8 | 9) => "boolean",
-                        Some(11) => "number",
-                        _ => "object",
-                    };
-                    anyhow::anyhow!("The \"paths[0]\" property must be of type string, got {kind}")
-                })?;
-        Ok(Some(
-            read_cached_marketplace(Path::new(install_location)).await?,
-        ))
-    }
-    .await;
-    match loaded {
-        Ok(marketplace) => marketplace,
-        Err(error) if crate::utils::errors::is_enoent(&error) => None,
-        Err(error) => {
-            log_for_debugging_with_level(
-                &format!("Failed to read cached marketplace {name}: {error}"),
-                DebugLogLevel::Warn,
-            );
-            None
+        .await;
+        match loaded {
+            Ok(marketplace) => marketplace,
+            Err(error) if crate::utils::errors::is_enoent(&error) => None,
+            Err(error) => {
+                log_for_debugging_with_level(
+                    &format!("Failed to read cached marketplace {name}: {error}"),
+                    DebugLogLevel::Warn,
+                );
+                None
+            }
         }
     }
 }
@@ -278,46 +291,59 @@ pub async fn get_marketplace_cache_only(name: &str) -> Option<serde_json::Value>
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:2188-2227#getPluginByIdCacheOnly`.
 /// Keep both configuration reads: the returned installLocation belongs to the
 /// first read, while getMarketplaceCacheOnly resolves the catalog on the second.
-pub async fn get_plugin_by_id_cache_only(plugin_id: &str) -> Option<MarketplacePluginMetadata> {
-    let parsed = super::plugin_identifier::parse_plugin_identifier(plugin_id);
-    let marketplace_name = parsed.marketplace?;
-    if parsed.name.is_empty() || marketplace_name.is_empty() {
-        return None;
+pub fn get_plugin_by_id_cache_only(
+    plugin_id: &str,
+) -> impl std::future::Future<Output = Option<MarketplacePluginMetadata>> {
+    let pending = (|| {
+        let parsed = super::plugin_identifier::parse_plugin_identifier(plugin_id);
+        let marketplace_name = parsed.marketplace.clone()?;
+        if parsed.name.is_empty() || marketplace_name.is_empty() {
+            return None;
+        }
+        let fs = crate::utils::fs_operations::get_fs_implementation();
+        let config_file = get_known_marketplaces_file();
+        let read = fs.read_file(
+            &config_file,
+            crate::utils::fs_operations::BufferEncoding::Utf8,
+        );
+        Some((parsed, marketplace_name, read))
+    })();
+    async move {
+        let (parsed, marketplace_name, read) = pending?;
+        let bytes = read.await.ok()?.to_string_lossy().into_bytes();
+        #[cfg(test)]
+        let bytes = tests::CONFIG_READS
+            .try_with(|reads| reads.borrow_mut().pop_front())
+            .ok()
+            .flatten()
+            .unwrap_or(bytes);
+        let config =
+            crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes)).ok()?;
+        let marketplace_config = config.get_property(&marketplace_name)?;
+        if matches!(marketplace_config.kind, 7 | 9)
+            || (marketplace_config.kind == 10 && marketplace_config.string_units.is_empty())
+            || (marketplace_config.kind == 11
+                && marketplace_config
+                    .number
+                    .is_some_and(|n| n == 0.0 || n.is_nan()))
+        {
+            return None;
+        }
+        let marketplace = get_marketplace_cache_only(&marketplace_name).await?;
+        let plugin = marketplace
+            .get("plugins")?
+            .as_array()?
+            .iter()
+            .find(|plugin| {
+                plugin.get("name").and_then(serde_json::Value::as_str) == Some(parsed.name.as_str())
+            })?;
+        Some(MarketplacePluginMetadata {
+            entry: plugin.clone(),
+            marketplace_install_location: marketplace_config
+                .get_property("installLocation")
+                .map(crate::utils::json::JsoncValue::to_json),
+        })
     }
-    let config_file = get_known_marketplaces_file();
-    let bytes = tokio::fs::read(config_file).await.ok()?;
-    #[cfg(test)]
-    let bytes = tests::CONFIG_READS
-        .try_with(|reads| reads.borrow_mut().pop_front())
-        .ok()
-        .flatten()
-        .unwrap_or(bytes);
-    let config =
-        crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes)).ok()?;
-    let marketplace_config = config.get_property(&marketplace_name)?;
-    if matches!(marketplace_config.kind, 7 | 9)
-        || (marketplace_config.kind == 10 && marketplace_config.string_units.is_empty())
-        || (marketplace_config.kind == 11
-            && marketplace_config
-                .number
-                .is_some_and(|n| n == 0.0 || n.is_nan()))
-    {
-        return None;
-    }
-    let marketplace = get_marketplace_cache_only(&marketplace_name).await?;
-    let plugin = marketplace
-        .get("plugins")?
-        .as_array()?
-        .iter()
-        .find(|plugin| {
-            plugin.get("name").and_then(serde_json::Value::as_str) == Some(parsed.name.as_str())
-        })?;
-    Some(MarketplacePluginMetadata {
-        entry: plugin.clone(),
-        marketplace_install_location: marketplace_config
-            .get_property("installLocation")
-            .map(crate::utils::json::JsoncValue::to_json),
-    })
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:510-513#GIT_NO_PROMPT_ENV`.
@@ -458,71 +484,65 @@ pub(crate) async fn git_pull(
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:609-644#gitSubmoduleUpdate`.
-async fn git_submodule_update(
+fn git_submodule_update(
     cwd: &Path,
     credential_args: &[&str],
     env: &[(std::ffi::OsString, Option<std::ffi::OsString>)],
     sparse_paths: Option<&[String]>,
-) {
+) -> impl std::future::Future<Output = ()> {
     use crate::utils::exec_file_no_throw::{
         ExecFileStdin, ExecFileWithCwdOptions, exec_file_no_throw_with_cwd_options,
     };
-    if sparse_paths.is_some_and(|s| !s.is_empty()) {
-        return;
-    }
-    // Node join normalizes the entire path before stat, exactly as the
-    // process adapter normalizes cwd. Resolving symlink/.. through the OS
-    // instead could inspect a different repository and skip its submodules.
-    let mut gitmodules = PathBuf::new();
-    for component in cwd.join(".gitmodules").components() {
-        match component {
-            std::path::Component::CurDir => {}
-            std::path::Component::ParentDir => {
-                if gitmodules.file_name().is_some_and(|name| name != "..") {
-                    gitmodules.pop();
-                } else if !gitmodules.has_root() {
-                    gitmodules.push("..");
-                }
-            }
-            component => gitmodules.push(component.as_os_str()),
+    let pending = if sparse_paths.is_some_and(|paths| !paths.is_empty()) {
+        None
+    } else {
+        let gitmodules =
+            crate::utils::fs_operations::native::join_path(cwd, Path::new(".gitmodules"));
+        Some(crate::utils::fs_operations::get_fs_implementation().stat(&gitmodules))
+    };
+    async move {
+        let Some(pending) = pending else {
+            return;
+        };
+        if pending.await.is_err() {
+            return;
         }
-    }
-    if tokio::fs::metadata(gitmodules).await.is_err() {
-        return;
-    }
-    let result = exec_file_no_throw_with_cwd_options(
-        &crate::utils::git::git_exe().to_string_lossy(),
-        &[
+        let result = exec_file_no_throw_with_cwd_options(
+            &crate::utils::git::git_exe().to_string_lossy(),
             &[
-                "-c",
-                "core.sshCommand=ssh -o BatchMode=yes -o StrictHostKeyChecking=yes",
-            ][..],
-            credential_args,
-            &[
-                "submodule",
-                "update",
-                "--init",
-                "--recursive",
-                "--depth",
-                "1",
-            ],
-        ]
-        .concat(),
-        ExecFileWithCwdOptions {
-            cwd: Some(cwd),
-            timeout: std::time::Duration::try_from_secs_f64(get_plugin_git_timeout_ms() / 1000.0)
+                &[
+                    "-c",
+                    "core.sshCommand=ssh -o BatchMode=yes -o StrictHostKeyChecking=yes",
+                ][..],
+                credential_args,
+                &[
+                    "submodule",
+                    "update",
+                    "--init",
+                    "--recursive",
+                    "--depth",
+                    "1",
+                ],
+            ]
+            .concat(),
+            ExecFileWithCwdOptions {
+                cwd: Some(cwd),
+                timeout: std::time::Duration::try_from_secs_f64(
+                    get_plugin_git_timeout_ms() / 1000.0,
+                )
                 .unwrap_or(std::time::Duration::MAX),
-            stdin: ExecFileStdin::Ignore,
-            env,
-            ..Default::default()
-        },
-    )
-    .await;
-    if result.code != 0 {
-        crate::utils::debug::log_for_debugging_with_level(
-            &format!("git submodule update failed (non-fatal): {}", result.stderr),
-            crate::utils::debug::DebugLogLevel::Warn,
-        );
+                stdin: ExecFileStdin::Ignore,
+                env,
+                ..Default::default()
+            },
+        )
+        .await;
+        if result.code != 0 {
+            crate::utils::debug::log_for_debugging_with_level(
+                &format!("git submodule update failed (non-fatal): {}", result.stderr),
+                crate::utils::debug::DebugLogLevel::Warn,
+            );
+        }
     }
 }
 
@@ -933,6 +953,7 @@ pub(crate) async fn cache_marketplace_from_git(
         PluginFetchOutcome, PluginFetchSource, classify_fetch_error, log_plugin_fetch,
     };
     use crate::utils::debug::{DebugLogLevel, log_for_debugging, log_for_debugging_with_level};
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let timeout_sec = ryu_js::Buffer::new()
         .format((get_plugin_git_timeout_ms() / 1000.0).round())
         .to_owned();
@@ -976,7 +997,16 @@ pub(crate) async fn cache_marketplace_from_git(
             reconcile_result.stderr
         ));
     }
-    match crate::utils::fs_operations::rm(cache_path, true, false).await {
+    match fs
+        .rm(
+            cache_path,
+            crate::utils::fs_operations::RmOptions {
+                recursive: true,
+                force: false,
+            },
+        )
+        .await
+    {
         Ok(()) => {
             log_for_debugging_with_level(
                 &format!(
@@ -990,10 +1020,9 @@ pub(crate) async fn cache_marketplace_from_git(
                 "Found stale directory, cleaning up and re-cloning…",
             );
         }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) if crate::utils::errors::io_errno_code(&error) == Some("ENOENT") => {}
         Err(error) => {
-            let message =
-                crate::utils::errors::format_native_file_error(&error, "rm", Some(cache_path));
+            let message = error.to_string();
             anyhow::bail!(
                 "Failed to clean up existing marketplace directory. Please manually delete the directory at {} and try again.\n\nTechnical details: {message}",
                 cache_path.display()
@@ -1025,7 +1054,15 @@ pub(crate) async fn cache_marketplace_from_git(
         (result.code != 0).then(|| classify_fetch_error(&result.stderr)),
     );
     if result.code != 0 {
-        let _ = crate::utils::fs_operations::rm(cache_path, true, true).await;
+        let _ = fs
+            .rm(
+                cache_path,
+                crate::utils::fs_operations::RmOptions {
+                    recursive: true,
+                    force: true,
+                },
+            )
+            .await;
         anyhow::bail!("Failed to clone marketplace repository: {}", result.stderr);
     }
     safe_call_progress(on_progress, "Clone complete, validating marketplace…");
@@ -1163,25 +1200,35 @@ pub fn save_marketplace_to_settings(
     Ok(())
 }
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:327-350#saveKnownMarketplacesConfig`.
-pub async fn save_known_marketplaces_config(config: KnownMarketplacesConfig) -> anyhow::Result<()> {
-    let value = serde_json::Value::Object(config);
-    let config_file = get_known_marketplaces_file();
-    let parsed =
-        crate::utils::zod::safe_parse(super::schemas::known_marketplaces_file_schema(), &value)
-            .map_err(|error| {
-                crate::utils::errors::ConfigParseError::new(
-                    format!("Invalid marketplace config: {}", error.message()),
-                    config_file.to_string_lossy(),
-                    value,
-                )
-            })?;
-    tokio::fs::create_dir_all(marketplace_path!(&config_file, "..")).await?;
-    crate::utils::slow_operations::write_file_sync_deprecated(
-        &config_file,
-        &crate::utils::slow_operations::json_stringify(&parsed, 2),
-        true,
-    )?;
-    Ok(())
+pub fn save_known_marketplaces_config(
+    config: KnownMarketplacesConfig,
+) -> impl std::future::Future<Output = anyhow::Result<()>> {
+    let prepared = (|| -> anyhow::Result<_> {
+        let value = serde_json::Value::Object(config);
+        let config_file = get_known_marketplaces_file();
+        let parsed =
+            crate::utils::zod::safe_parse(super::schemas::known_marketplaces_file_schema(), &value)
+                .map_err(|error| {
+                    crate::utils::errors::ConfigParseError::new(
+                        format!("Invalid marketplace config: {}", error.message()),
+                        config_file.to_string_lossy(),
+                        value,
+                    )
+                })?;
+        let fs = crate::utils::fs_operations::get_fs_implementation();
+        let pending = fs.mkdir(&marketplace_path!(&config_file, ".."), None);
+        Ok((config_file, parsed, pending))
+    })();
+    async move {
+        let (config_file, parsed, pending) = prepared?;
+        pending.await?;
+        crate::utils::slow_operations::write_file_sync_deprecated(
+            &config_file,
+            &crate::utils::slow_operations::json_stringify(&parsed, 2),
+            true,
+        )?;
+        Ok(())
+    }
 }
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:380-434#registerSeedMarketplaces`.
 pub async fn register_seed_marketplaces() -> anyhow::Result<bool> {
@@ -1229,43 +1276,52 @@ pub async fn register_seed_marketplaces() -> anyhow::Result<bool> {
     Ok(false)
 }
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:436-462#readSeedKnownMarketplaces`.
-async fn read_seed_known_marketplaces(seed_dir: &Path) -> Option<KnownMarketplacesConfig> {
-    let read: anyhow::Result<Option<KnownMarketplacesConfig>> = async {
-        let bytes = tokio::fs::read(marketplace_path!(seed_dir, "known_marketplaces.json")).await?;
-        let value =
-            crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes))?.to_json();
-        match crate::utils::zod::safe_parse(
-            super::schemas::known_marketplaces_file_schema(),
-            &value,
-        ) {
-            Ok(value) => Ok(value.as_object().cloned()),
-            Err(error) => {
-                crate::utils::debug::log_for_debugging_with_level(
-                    &format!(
-                        "Seed known_marketplaces.json invalid at {}: {}",
-                        seed_dir.display(),
-                        error.message()
-                    ),
-                    crate::utils::debug::DebugLogLevel::Warn,
-                );
-                Ok(None)
+fn read_seed_known_marketplaces(
+    seed_dir: &Path,
+) -> impl std::future::Future<Output = Option<KnownMarketplacesConfig>> {
+    let pending = crate::utils::fs_operations::get_fs_implementation().read_file(
+        &marketplace_path!(seed_dir, "known_marketplaces.json"),
+        crate::utils::fs_operations::BufferEncoding::Utf8,
+    );
+    async move {
+        let read: anyhow::Result<Option<KnownMarketplacesConfig>> = async {
+            let bytes = pending.await?.to_string_lossy().into_bytes();
+            let value =
+                crate::utils::slow_operations::json_parse(&String::from_utf8_lossy(&bytes))?
+                    .to_json();
+            match crate::utils::zod::safe_parse(
+                super::schemas::known_marketplaces_file_schema(),
+                &value,
+            ) {
+                Ok(value) => Ok(value.as_object().cloned()),
+                Err(error) => {
+                    crate::utils::debug::log_for_debugging_with_level(
+                        &format!(
+                            "Seed known_marketplaces.json invalid at {}: {}",
+                            seed_dir.display(),
+                            error.message()
+                        ),
+                        crate::utils::debug::DebugLogLevel::Warn,
+                    );
+                    Ok(None)
+                }
             }
         }
-    }
-    .await;
-    match read {
-        Ok(v) => v,
-        Err(error) => {
-            if !crate::utils::errors::is_enoent(&error) {
-                crate::utils::debug::log_for_debugging_with_level(
-                    &format!(
-                        "Failed to read seed known_marketplaces.json at {}: {error}",
-                        seed_dir.display()
-                    ),
-                    crate::utils::debug::DebugLogLevel::Warn,
-                );
+        .await;
+        match read {
+            Ok(v) => v,
+            Err(error) => {
+                if !crate::utils::errors::is_enoent(&error) {
+                    crate::utils::debug::log_for_debugging_with_level(
+                        &format!(
+                            "Failed to read seed known_marketplaces.json at {}: {error}",
+                            seed_dir.display()
+                        ),
+                        crate::utils::debug::DebugLogLevel::Warn,
+                    );
+                }
+                None
             }
-            None
         }
     }
 }
@@ -1309,31 +1365,33 @@ fn redact_headers(headers: &serde_json::Map<String, serde_json::Value>) -> serde
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:1256-1350#cacheMarketplaceFromUrl`.
 /// Reqwest carries Axios I/O; native transport/proxy/TLS/error wording remains
 /// the explicit shared transport seam. HTTP/status/schema/order are source-owned.
-async fn cache_marketplace_from_url(
+fn cache_marketplace_from_url(
     url: &str,
     cache_path: &Path,
     custom_headers: Option<&serde_json::Map<String, serde_json::Value>>,
     on_progress: Option<&MarketplaceProgressCallback<'_>>,
-) -> anyhow::Result<()> {
+) -> impl std::future::Future<Output = anyhow::Result<()>> {
     use super::fetch_telemetry::{
         PluginFetchOutcome, PluginFetchSource, classify_fetch_error, log_plugin_fetch,
     };
-    let redacted = redact_url_credentials(url);
-    safe_call_progress(
-        on_progress,
-        &format!("Downloading marketplace from {redacted}"),
-    );
-    crate::utils::debug::log_for_debugging(&format!(
-        "Downloading marketplace from URL: {redacted}"
-    ));
-    if let Some(headers) = custom_headers.filter(|h| !h.is_empty()) {
+    let fs = crate::utils::fs_operations::get_fs_implementation();
+    async move {
+        let redacted = redact_url_credentials(url);
+        safe_call_progress(
+            on_progress,
+            &format!("Downloading marketplace from {redacted}"),
+        );
         crate::utils::debug::log_for_debugging(&format!(
-            "Using custom headers: {}",
-            crate::utils::slow_operations::json_stringify(&redact_headers(headers), 0)
+            "Downloading marketplace from URL: {redacted}"
         ));
-    }
-    let started = std::time::Instant::now();
-    let fetched:anyhow::Result<serde_json::Value>=async {
+        if let Some(headers) = custom_headers.filter(|h| !h.is_empty()) {
+            crate::utils::debug::log_for_debugging(&format!(
+                "Using custom headers: {}",
+                crate::utils::slow_operations::json_stringify(&redact_headers(headers), 0)
+            ));
+        }
+        let started = std::time::Instant::now();
+        let fetched:anyhow::Result<serde_json::Value>=async {
         let client=reqwest::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
         let mut headers=reqwest::header::HeaderMap::new();
         headers.insert(reqwest::header::ACCEPT,reqwest::header::HeaderValue::from_static("application/json, text/plain, */*"));
@@ -1344,69 +1402,71 @@ async fn cache_marketplace_from_url(
         let status=response.status();if !status.is_success(){anyhow::bail!("HTTP {} error while downloading marketplace from {redacted}. The marketplace file may not exist at this URL.\n\nTechnical details: Request failed with status code {}",status.as_u16(),status.as_u16());}
         let text=response.text().await?;Ok(crate::utils::slow_operations::json_parse(&text).map(|v|v.to_json()).unwrap_or(serde_json::Value::String(text)))
     }.await;
-    let data = match fetched {
-        Ok(v) => v,
-        Err(error) => {
-            log_plugin_fetch(
-                PluginFetchSource::MarketplaceUrl,
-                Some(url),
-                PluginFetchOutcome::Failure,
-                started.elapsed().as_secs_f64() * 1000.0,
-                Some(classify_fetch_error(&error)),
-            );
-            return Err(error);
-        }
-    };
-    safe_call_progress(on_progress, "Validating marketplace data");
-    let parsed = crate::utils::zod::safe_parse(super::schemas::plugin_marketplace_schema(), &data)
-        .map_err(|error| {
-            log_plugin_fetch(
-                PluginFetchSource::MarketplaceUrl,
-                Some(url),
-                PluginFetchOutcome::Failure,
-                started.elapsed().as_secs_f64() * 1000.0,
-                Some("invalid_schema"),
-            );
-            let issues = error
-                .issues
-                .iter()
-                .map(|e| {
-                    format!(
-                        "{}: {}",
-                        e.path
-                            .iter()
-                            .map(|p| match p {
-                                crate::utils::zod::PathSegment::Key(k) => k.clone(),
-                                crate::utils::zod::PathSegment::Index(i) => i.to_string(),
-                            })
-                            .collect::<Vec<_>>()
-                            .join("."),
-                        e.message
+        let data = match fetched {
+            Ok(v) => v,
+            Err(error) => {
+                log_plugin_fetch(
+                    PluginFetchSource::MarketplaceUrl,
+                    Some(url),
+                    PluginFetchOutcome::Failure,
+                    started.elapsed().as_secs_f64() * 1000.0,
+                    Some(classify_fetch_error(&error)),
+                );
+                return Err(error);
+            }
+        };
+        safe_call_progress(on_progress, "Validating marketplace data");
+        let parsed =
+            crate::utils::zod::safe_parse(super::schemas::plugin_marketplace_schema(), &data)
+                .map_err(|error| {
+                    log_plugin_fetch(
+                        PluginFetchSource::MarketplaceUrl,
+                        Some(url),
+                        PluginFetchOutcome::Failure,
+                        started.elapsed().as_secs_f64() * 1000.0,
+                        Some("invalid_schema"),
+                    );
+                    let issues = error
+                        .issues
+                        .iter()
+                        .map(|e| {
+                            format!(
+                                "{}: {}",
+                                e.path
+                                    .iter()
+                                    .map(|p| match p {
+                                        crate::utils::zod::PathSegment::Key(k) => k.clone(),
+                                        crate::utils::zod::PathSegment::Index(i) => i.to_string(),
+                                    })
+                                    .collect::<Vec<_>>()
+                                    .join("."),
+                                e.message
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    crate::utils::errors::ConfigParseError::new(
+                        format!("Invalid marketplace schema from URL: {issues}"),
+                        &redacted,
+                        data,
                     )
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            crate::utils::errors::ConfigParseError::new(
-                format!("Invalid marketplace schema from URL: {issues}"),
-                &redacted,
-                data,
-            )
-        })?;
-    log_plugin_fetch(
-        PluginFetchSource::MarketplaceUrl,
-        Some(url),
-        PluginFetchOutcome::Success,
-        started.elapsed().as_secs_f64() * 1000.0,
-        None,
-    );
-    safe_call_progress(on_progress, "Saving marketplace to cache");
-    tokio::fs::create_dir_all(marketplace_path!(cache_path, "..")).await?;
-    crate::utils::slow_operations::write_file_sync_deprecated(
-        cache_path,
-        &crate::utils::slow_operations::json_stringify(&parsed, 2),
-        true,
-    )?;
-    Ok(())
+                })?;
+        log_plugin_fetch(
+            PluginFetchSource::MarketplaceUrl,
+            Some(url),
+            PluginFetchOutcome::Success,
+            started.elapsed().as_secs_f64() * 1000.0,
+            None,
+        );
+        safe_call_progress(on_progress, "Saving marketplace to cache");
+        fs.mkdir(&marketplace_path!(cache_path, ".."), None).await?;
+        crate::utils::slow_operations::write_file_sync_deprecated(
+            cache_path,
+            &crate::utils::slow_operations::json_stringify(&parsed, 2),
+            true,
+        )?;
+        Ok(())
+    }
 }
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:1355-1367#getCachePathForSource`.
 fn get_cache_path_for_source(source: &serde_json::Value) -> String {
@@ -1436,17 +1496,20 @@ fn get_cache_path_for_source(source: &serde_json::Value) -> String {
     }
 }
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:1433-1768#loadAndCacheMarketplace`.
-pub async fn load_and_cache_marketplace(
+pub fn load_and_cache_marketplace(
     source: &serde_json::Value,
     on_progress: Option<&MarketplaceProgressCallback<'_>>,
-) -> anyhow::Result<LoadedPluginMarketplace> {
+) -> impl std::future::Future<Output = anyhow::Result<LoadedPluginMarketplace>> {
     use super::schemas::is_local_marketplace_source;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let cache_dir = get_marketplaces_cache_dir();
-    tokio::fs::create_dir_all(&cache_dir).await?;
-    let temp_name = get_cache_path_for_source(source);
-    let mut temporary_cache_path = PathBuf::new();
-    let mut cleanup_needed = false;
-    let loaded:anyhow::Result<LoadedPluginMarketplace>=async {
+    let pending = fs.mkdir(&cache_dir, None);
+    async move {
+        pending.await?;
+        let temp_name = get_cache_path_for_source(source);
+        let mut temporary_cache_path = PathBuf::new();
+        let mut cleanup_needed = false;
+        let loaded:anyhow::Result<LoadedPluginMarketplace>=async {
         let marketplace_path;
         match source["source"].as_str().unwrap_or("") {
             "url"=>{temporary_cache_path=marketplace_path!(&cache_dir,format!("{temp_name}.json"));cleanup_needed=true;cache_marketplace_from_url(source["url"].as_str().unwrap_or(""),&temporary_cache_path,source["headers"].as_object(),on_progress).await?;marketplace_path=temporary_cache_path.clone();}
@@ -1460,7 +1523,7 @@ pub async fn load_and_cache_marketplace(
                     crate::utils::log::log_error(crate::utils::log::LogError::new(error.to_string()));
                     safe_call_progress(on_progress,&if ssh{format!("SSH clone failed, retrying with HTTPS: {https_url}")}else{format!("HTTPS clone failed, retrying with SSH: {ssh_url}")});
                     crate::utils::debug::log_for_debugging_with_level(&if ssh{format!("SSH clone failed for {repo} despite SSH being configured, falling back to HTTPS")}else{format!("HTTPS clone failed for {repo} ({error}), falling back to SSH")},crate::utils::debug::DebugLogLevel::Info);
-                    crate::utils::fs_operations::rm(&temporary_cache_path,true,true).await?;
+                    fs.rm(&temporary_cache_path, crate::utils::fs_operations::RmOptions { recursive: true, force: true }).await?;
                     if let Err(error)=cache_marketplace_from_git(second,&temporary_cache_path,git_ref,sparse.as_deref(),on_progress,false).await{crate::utils::log::log_error(crate::utils::log::LogError::new(error.to_string()));return Err(error);}
                 }
                 marketplace_path=marketplace_path!(&temporary_cache_path,source["path"].as_str().filter(|s|!s.is_empty()).unwrap_or(".claude-plugin/marketplace.json"));
@@ -1473,7 +1536,7 @@ pub async fn load_and_cache_marketplace(
             "npm"=>anyhow::bail!("NPM marketplace sources not yet implemented"),
             "file"=>{marketplace_path=marketplace_resolve!(source["path"].as_str().unwrap_or(""));temporary_cache_path=marketplace_path!(marketplace_path!(marketplace_path.clone(),".."),"..");}
             "directory"=>{temporary_cache_path=marketplace_resolve!(source["path"].as_str().unwrap_or(""));marketplace_path=marketplace_path!(&temporary_cache_path,".claude-plugin","marketplace.json");}
-            "settings"=>{temporary_cache_path=marketplace_path!(&cache_dir,source["name"].as_str().unwrap_or(""));marketplace_path=marketplace_path!(&temporary_cache_path,".claude-plugin","marketplace.json");tokio::fs::create_dir_all(marketplace_path!(&marketplace_path,"..")).await?;let owner=source.get("owner").filter(|v|!v.is_null()).cloned().unwrap_or(serde_json::json!({"name":"settings"}));tokio::fs::write(&marketplace_path,crate::utils::slow_operations::json_stringify(&serde_json::json!({"name":source["name"],"owner":owner,"plugins":source["plugins"]}),2)).await?;}
+            "settings"=>{temporary_cache_path=marketplace_path!(&cache_dir,source["name"].as_str().unwrap_or(""));marketplace_path=marketplace_path!(&temporary_cache_path,".claude-plugin","marketplace.json");fs.mkdir(&marketplace_path!(&marketplace_path,".."), None).await?;let owner=source.get("owner").filter(|v|!v.is_null()).cloned().unwrap_or(serde_json::json!({"name":"settings"}));tokio::fs::write(&marketplace_path,crate::utils::slow_operations::json_stringify(&serde_json::json!({"name":source["name"],"owner":owner,"plugins":source["plugins"]}),2)).await?;}
             _=>anyhow::bail!("Unsupported marketplace source type"),
         }
         crate::utils::debug::log_for_debugging(&format!("Reading marketplace from {}",marketplace_path.display()));
@@ -1481,28 +1544,37 @@ pub async fn load_and_cache_marketplace(
         let name=marketplace["name"].as_str().unwrap();let final_path=marketplace_path!(&cache_dir,name);let resolved_final=marketplace_resolve!(&final_path);let resolved_dir=marketplace_resolve!(&cache_dir);
         if resolved_final==resolved_dir||!resolved_final.starts_with(&resolved_dir){anyhow::bail!("Marketplace name '{name}' resolves to a path outside the cache directory");}
         if temporary_cache_path!=final_path&&!is_local_marketplace_source(source){
-            let finalize:anyhow::Result<()>=async{safe_call_progress(on_progress,"Cleaning up old marketplace cache…");crate::utils::fs_operations::rm(&final_path,true,true).await?;tokio::fs::rename(&temporary_cache_path,&final_path).await?;Ok(())}.await;
+            let finalize:anyhow::Result<()>=async{safe_call_progress(on_progress,"Cleaning up old marketplace cache…");fs.rm(&final_path, crate::utils::fs_operations::RmOptions { recursive: true, force: true }).await?;fs.rename(&temporary_cache_path,&final_path).await?;Ok(())}.await;
             finalize.map_err(|e|anyhow::anyhow!("Failed to finalize marketplace cache. Please manually delete the directory at {} if it exists and try again.\n\nTechnical details: {e}",final_path.display()))?;temporary_cache_path=final_path;cleanup_needed=false;
         }
         Ok(LoadedPluginMarketplace{marketplace,cache_path:temporary_cache_path.clone()})
     }.await;
-    if loaded.is_err()
-        && cleanup_needed
-        && !temporary_cache_path.as_os_str().is_empty()
-        && !is_local_marketplace_source(source)
-    {
-        if let Err(error) = crate::utils::fs_operations::rm(&temporary_cache_path, true, true).await
+        if loaded.is_err()
+            && cleanup_needed
+            && !temporary_cache_path.as_os_str().is_empty()
+            && !is_local_marketplace_source(source)
         {
-            crate::utils::debug::log_for_debugging_with_level(
-                &format!(
-                    "Warning: Failed to clean up temporary marketplace cache at {}: {error}",
-                    temporary_cache_path.display()
-                ),
-                crate::utils::debug::DebugLogLevel::Warn,
-            );
+            if let Err(error) = fs
+                .rm(
+                    &temporary_cache_path,
+                    crate::utils::fs_operations::RmOptions {
+                        recursive: true,
+                        force: true,
+                    },
+                )
+                .await
+            {
+                crate::utils::debug::log_for_debugging_with_level(
+                    &format!(
+                        "Warning: Failed to clean up temporary marketplace cache at {}: {error}",
+                        temporary_cache_path.display()
+                    ),
+                    crate::utils::debug::DebugLogLevel::Warn,
+                );
+            }
         }
+        loaded
     }
-    loaded
 }
 
 /// Maps to: CC `utils/plugins/marketplaceManager.ts:1787-1791` add result.
@@ -1629,12 +1701,22 @@ pub async fn remove_marketplace_source(name: &str) -> anyhow::Result<()> {
     }
     config.shift_remove(name);
     save_known_marketplaces_config(config).await?;
+    let fs = crate::utils::fs_operations::get_fs_implementation();
     let dir = get_marketplaces_cache_dir();
-    crate::utils::fs_operations::rm(&marketplace_path!(&dir, name), true, true).await?;
-    crate::utils::fs_operations::rm(
+    fs.rm(
+        &marketplace_path!(&dir, name),
+        crate::utils::fs_operations::RmOptions {
+            recursive: true,
+            force: true,
+        },
+    )
+    .await?;
+    fs.rm(
         &marketplace_path!(&dir, format!("{name}.json")),
-        false,
-        true,
+        crate::utils::fs_operations::RmOptions {
+            recursive: false,
+            force: true,
+        },
     )
     .await?;
     use crate::utils::settings::constants::SettingSource;
