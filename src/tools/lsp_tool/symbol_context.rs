@@ -1,7 +1,5 @@
 //! Port of official `tools/LSPTool/symbolContext.ts`.
 
-use std::io::Read as _;
-
 const MAX_READ_BYTES: usize = 64 * 1024;
 
 /// Character classes of CC's `/[\w$'!]+|[+\-*/%&|^~<>=]+/g`. Both alternatives
@@ -26,17 +24,10 @@ fn symbol_class(unit: u16) -> Option<SymbolClass> {
 }
 
 fn read_head(path: &std::path::Path) -> std::io::Result<Vec<u8>> {
-    let mut file = std::fs::File::open(path)?;
-    let mut buffer = vec![0u8; MAX_READ_BYTES];
-    let mut bytes_read = 0usize;
-    while bytes_read < MAX_READ_BYTES {
-        let read = file.read(&mut buffer[bytes_read..])?;
-        if read == 0 {
-            break;
-        }
-        bytes_read += read;
-    }
-    buffer.truncate(bytes_read);
+    let result = crate::utils::fs_operations::get_fs_implementation()
+        .read_sync(path, MAX_READ_BYTES)?;
+    let mut buffer = result.buffer;
+    buffer.truncate(result.bytes_read);
     Ok(buffer)
 }
 

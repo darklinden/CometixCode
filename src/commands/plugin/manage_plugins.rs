@@ -776,7 +776,11 @@ pub fn ManagePlugins(
                                     groups.entry(marketplace).or_default().push(plugin);
                                 }
                                 let mut groups = groups.into_iter().collect::<Vec<_>>();
-                                groups.sort_by(|(a, _), (b, _)| {
+                                // First-match pinning verbatim per source; not
+                                // antisymmetric, so it sorts through the
+                                // non-validating JS-sort primitive
+                                // (utils/js_sort.rs; mirror PR #7).
+                                crate::utils::js_sort::sort_by(&mut groups, |(a, _), (b, _)| {
                                     if a == "claude-plugin-directory" {
                                         std::cmp::Ordering::Less
                                     } else if b == "claude-plugin-directory" {

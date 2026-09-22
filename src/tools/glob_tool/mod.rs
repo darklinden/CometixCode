@@ -279,7 +279,9 @@ impl crate::tool::ToolCall for GlobTool {
         {
             return crate::tool::ValidationResult::Ok;
         }
-        match std::fs::metadata(&absolute_path) {
+        match futures::executor::block_on(
+            crate::utils::fs_operations::get_fs_implementation().stat(&absolute_path),
+        ) {
             Ok(metadata) if metadata.is_dir() => crate::tool::ValidationResult::Ok,
             Ok(_) => crate::tool::ValidationResult::Error {
                 message: format!("Path is not a directory: {path}"),
@@ -323,7 +325,7 @@ impl crate::tool::ToolCall for GlobTool {
             .and_then(serde_json::Value::as_str)
             .unwrap_or_default();
         let requested_permission =
-            crate::utils::permissions::filesystem::check_read_permission_for_tool_at_cwd(
+            crate::utils::permissions::filesystem::check_read_permission_for_tool(
                 &requested_root.display().to_string(),
                 args,
                 &context.tool_permission_context,
@@ -340,7 +342,7 @@ impl crate::tool::ToolCall for GlobTool {
             return requested_permission;
         }
         let traversal_permission =
-            crate::utils::permissions::filesystem::check_read_permission_for_tool_at_cwd(
+            crate::utils::permissions::filesystem::check_read_permission_for_tool(
                 &permission_root.display().to_string(),
                 args,
                 &context.tool_permission_context,

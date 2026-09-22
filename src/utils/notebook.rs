@@ -330,7 +330,9 @@ pub fn read_notebook(
     notebook_path: &std::path::Path,
     cell_id: Option<&str>,
 ) -> anyhow::Result<Vec<NotebookCellSource>> {
-    let bytes = std::fs::read(notebook_path)?;
+    let bytes = futures::executor::block_on(
+        crate::utils::fs_operations::get_fs_implementation().read_file_bytes(notebook_path, None),
+    )?;
     let content = String::from_utf8_lossy(&bytes);
     let notebook: Value = serde_json::from_str(&content)?;
     if notebook.is_null() {

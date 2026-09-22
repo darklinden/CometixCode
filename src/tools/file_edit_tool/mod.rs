@@ -172,7 +172,7 @@ pub(crate) fn validate_edit_input(
         ));
     }
 
-    if crate::utils::permissions::filesystem::matching_rule_for_input_at_cwd(
+    if crate::utils::permissions::filesystem::matching_rule_for_input(
         &full_path_string,
         &context.tool_permission_context,
         crate::utils::permissions::filesystem::FilePermissionType::Edit,
@@ -193,7 +193,8 @@ pub(crate) fn validate_edit_input(
         return Ok(EditValidationOk::default());
     }
 
-    match std::fs::metadata(&full_path) {
+    let fs = crate::utils::fs_operations::get_fs_implementation();
+    match futures::executor::block_on(fs.stat(&full_path)) {
         Ok(metadata) => {
             if !metadata.is_file() {
                 // DEVIATION(SECURITY): CC reaches a later read failure for
@@ -215,8 +216,20 @@ pub(crate) fn validate_edit_input(
         Err(error) => return Err(validation_error(error.to_string(), 2)),
     }
 
-    let file_content = match crate::utils::file_read::read_file_sync_with_metadata(&full_path) {
-        Ok(metadata) => Some(metadata.content),
+    let file_content = match futures::executor::block_on(fs.read_file_bytes(&full_path, None)) {
+        Ok(bytes) => {
+            let decoded = if bytes.starts_with(&[0xff, 0xfe]) {
+                String::from_utf16_lossy(
+                    &bytes
+                        .chunks_exact(2)
+                        .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+                        .collect::<Vec<_>>(),
+                )
+            } else {
+                String::from_utf8_lossy(&bytes).into_owned()
+            };
+            Some(decoded.replace("\r\n", "\n"))
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(validation_error(error.to_string(), 2)),
     };
@@ -542,7 +555,7 @@ impl crate::tool::ToolCall for FileEditTool {
                     .unwrap_or_default()
                     .to_string()
             });
-        crate::utils::permissions::filesystem::check_write_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_write_permission_for_tool(
             &path,
             args,
             &context.tool_permission_context,
@@ -649,11 +662,15 @@ impl crate::tool::ToolCall for FileEditTool {
             if is_non_regular_existing_path(&write_target) {
                 return edit_error("Cannot edit a non-regular file.", dynamic_skill_dirs);
             }
-            if let Err(error) = std::fs::create_dir_all(
-                write_target
-                    .parent()
-                    .unwrap_or_else(|| std::path::Path::new(".")),
-            ) {
+            if let Err(error) = crate::utils::fs_operations::get_fs_implementation()
+                .mkdir(
+                    write_target
+                        .parent()
+                        .unwrap_or_else(|| std::path::Path::new(".")),
+                    None,
+                )
+                .await
+            {
                 return edit_error(error.to_string(), dynamic_skill_dirs);
             }
 

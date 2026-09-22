@@ -162,7 +162,8 @@ pub fn BrowseMarketplace(
                     let installed_count=entries.iter().filter(|entry|is_plugin_installed(&create_plugin_id(entry["name"].as_str().unwrap_or(""),&marketplace.name))).count();
                     infos.push(MarketplaceInfo{name:marketplace.name.clone(),total_plugins:entries.len(),installed_count,source:get_marketplace_source_display(&marketplace.config["source"])});
                 }}
-                infos.sort_by(|a,b|{if a.name=="claude-plugin-directory"{std::cmp::Ordering::Less}else if b.name=="claude-plugin-directory"{std::cmp::Ordering::Greater}else{std::cmp::Ordering::Equal}});
+                // First-match pinning is not antisymmetric (not a total order); kept verbatim per source, sorted through the non-validating JS-sort primitive (utils/js_sort.rs; mirror PR #7).
+                crate::utils::js_sort::sort_by(&mut infos,|a,b|{if a.name=="claude-plugin-directory"{std::cmp::Ordering::Less}else if b.name=="claude-plugin-directory"{std::cmp::Ordering::Greater}else{std::cmp::Ordering::Equal}});
                 marketplaces.set(infos.clone());
                 if let Some(problem)=format_marketplace_loading_errors(&loaded.failures,loaded.marketplaces.iter().filter(|m|m.data.is_some()).count()){
                     match problem.r#type{MarketplaceLoadingErrorType::Warning=>warning.set(Some(format!("{}. Showing available marketplaces.",problem.message))),MarketplaceLoadingErrorType::Error=>anyhow::bail!(problem.message)}
@@ -242,7 +243,11 @@ pub fn BrowseMarketplace(
                             return Ok(());
                         }
                         let sort_failed=std::cell::Cell::new(false);
-                plugins.sort_by(|a,b| {
+                // NaN reaches `partial_cmp().unwrap_or(Equal)` when to_number
+                // fails mid-sort (the Cell mimics the source's try/catch), so
+                // the comparator is not a total order; sorted through the
+                // non-validating JS-sort primitive (utils/js_sort.rs; PR #7).
+                crate::utils::js_sort::sort_by(&mut plugins,|a,b| {
                     let a_raw=counts.as_ref().and_then(|c|c.get(&a.plugin_id)).filter(|v|!v.is_null());
                     let b_raw=counts.as_ref().and_then(|c|c.get(&b.plugin_id)).filter(|v|!v.is_null());
                     let equal=match (a_raw,b_raw){
@@ -763,7 +768,10 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn mounted_browse_marketplace_matches_official_bun_frames_and_install_callbacks() {
         crate::utils::process_runtime::initialize_test_process_runtime();
-        let oracle:Value=serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-ui-complete-0914/panel-oracle.json")).unwrap();
+        let oracle: Value = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-ui-complete-0914/panel-oracle.json"
+        ))
+        .unwrap();
         for name in ["browse-details"] {
             let case = oracle
                 .as_array()

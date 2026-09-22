@@ -727,7 +727,10 @@ pub fn parse_mcp_config_from_file_path_readonly(
     expand_vars: bool,
     scope: ConfigScope,
 ) -> McpConfigsByScope {
-    let content = match std::fs::read_to_string(file_path) {
+    let content = match crate::utils::fs_operations::get_fs_implementation()
+        .read_file_sync(file_path, crate::utils::fs_operations::BufferEncoding::Utf8)
+        .map(|text| text.to_string_lossy())
+    {
         Ok(content) => content,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             return McpConfigsByScope {
@@ -1950,7 +1953,8 @@ mod tests {
         // both outputs; the old alphabetical expectation came from BTreeMap.
         let oracle: Value = serde_json::from_str(include_str!(
             "../../../tests/fixtures/oracles/mcp-risk-fixes-0915/policy-order-oracle.json"
-        )).unwrap();
+        ))
+        .unwrap();
         assert_eq!(
             serde_json::json!(
                 result
@@ -2432,7 +2436,8 @@ mod tests {
         // Source oracle also checks numeric own keys and the retained env value.
         let cases: Value = serde_json::from_str(include_str!(
             "../../../tests/fixtures/oracles/mcp-risk-fixes-0915/order-oracle.json"
-        )).unwrap();
+        ))
+        .unwrap();
         for case in cases.as_array().unwrap() {
             let entries = |values: &Value| -> indexmap::IndexMap<String, ScopedMcpServerConfig> {
                 values
@@ -2640,7 +2645,8 @@ mod tests {
             .collect();
         let oracle: Value = serde_json::from_str(include_str!(
             "../../../tests/fixtures/oracles/mcp-lifecycle-0915/startup-errors-oracle.json"
-        )).unwrap();
+        ))
+        .unwrap();
         assert_eq!(serde_json::json!(projected), oracle);
         std::fs::remove_dir_all(root).unwrap();
     }

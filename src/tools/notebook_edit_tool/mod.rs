@@ -961,7 +961,7 @@ impl crate::tool::ToolCall for NotebookEditTool {
     ) -> crate::utils::permissions::permission_result::PermissionResult {
         let raw_path = self.get_path(args).unwrap_or_default();
         let full_path = resolve_notebook_path(&raw_path, &context.effective_cwd());
-        crate::utils::permissions::filesystem::check_write_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_write_permission_for_tool(
             &full_path.display().to_string(),
             args,
             &context.tool_permission_context,

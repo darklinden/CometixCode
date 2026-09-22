@@ -688,7 +688,11 @@ fn fuse_like_score(text: &str, query_lower: &str) -> Option<f64> {
 }
 
 fn sort_deep_search_matches(matches: &mut [DeepSearchMatch]) {
-    matches.sort_by(|a, b| {
+    // CC `LogSelector.tsx:439-447` — the `> DATE_TIE_THRESHOLD_MS` gate is not
+    // a total order (a≈b, b≈c but a̸≈c across the window). Kept verbatim, so
+    // the sort goes through the non-validating JS-sort primitive; `sort_by`
+    // panics on comparators like this (see `utils/js_sort.rs`; mirror PR #7).
+    crate::utils::js_sort::sort_by(matches, |a, b| {
         let date_diff_ms = if a.modified >= b.modified {
             a.modified
                 .duration_since(b.modified)
@@ -2175,6 +2179,46 @@ mod tests {
         ];
         sort_deep_search_matches(&mut same_minute);
         assert_eq!(same_minute[0].log_key, "older-exact");
+    }
+
+    /// Regression for the release SIGABRT (mirror PR #7): the verbatim
+    /// `> DATE_TIE_THRESHOLD_MS` gate admits ordering cycles when scores rise
+    /// while timestamps cross the window (x≈y, y≈z within 60s, x̸≈z beyond),
+    /// which `slice::sort_by` rejects as not a total order. The sort routes
+    /// through `js_sort::sort_by`; this test drives the former-cycle triple
+    /// through it. The asserted order is the deterministic merge outcome of
+    /// the OFFICIAL comparator: x/y are within the window (score decides,
+    /// x first), z is over the window against both (newest first).
+    #[test]
+    fn deep_search_ranking_survives_a_cycle_across_the_date_tie_window() {
+        let mut matches = vec![
+            DeepSearchMatch {
+                log_key: "x".to_string(),
+                score: 0.0,
+                modified: SystemTime::UNIX_EPOCH + Duration::from_secs(0),
+                snippet: None,
+            },
+            DeepSearchMatch {
+                log_key: "y".to_string(),
+                score: 0.1,
+                modified: SystemTime::UNIX_EPOCH + Duration::from_secs(50),
+                snippet: None,
+            },
+            DeepSearchMatch {
+                log_key: "z".to_string(),
+                score: 0.2,
+                modified: SystemTime::UNIX_EPOCH + Duration::from_secs(110),
+                snippet: None,
+            },
+        ];
+        sort_deep_search_matches(&mut matches);
+        assert_eq!(
+            matches
+                .iter()
+                .map(|entry| entry.log_key.as_str())
+                .collect::<Vec<_>>(),
+            ["z", "x", "y"]
+        );
     }
 
     #[test]

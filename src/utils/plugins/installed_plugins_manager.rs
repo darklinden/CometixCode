@@ -90,7 +90,10 @@ pub fn clear_installed_plugins_cache() {
 fn read_installed_plugins_file_raw() -> Result<Option<(f64, Value)>, LogError> {
     let _turn = InstalledPluginsTurn::enter();
     let path = get_installed_plugins_file_path();
-    let content = match std::fs::read(&path) {
+    let content = match crate::utils::fs_operations::get_fs_implementation()
+        .read_file_sync(&path, crate::utils::fs_operations::BufferEncoding::Utf8)
+        .map(|text| text.to_string_lossy().into_bytes())
+    {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(error) => {
@@ -214,7 +217,8 @@ fn save_installed_plugins_v2(data: InstalledPluginsReference) -> anyhow::Result<
     let path = get_installed_plugins_file_path();
     let result = (|| -> anyhow::Result<()> {
         // NodeFsOperations.mkdirSync is recursive (fsOperations.ts).
-        std::fs::create_dir_all(super::plugin_directories::get_plugins_directory())?;
+        crate::utils::fs_operations::get_fs_implementation()
+            .mkdir_sync(&super::plugin_directories::get_plugins_directory(), None)?;
         let json = data.lock().unwrap().clone();
         crate::utils::slow_operations::write_file_sync_deprecated(
             &path,
@@ -567,7 +571,10 @@ mod tests {
     use serde_json::json;
 
     fn oracle() -> Value {
-        serde_json::from_str(include_str!("../../../tests/fixtures/oracles/plugin-installed-0914/bun-oracle.json")).unwrap()
+        serde_json::from_str(include_str!(
+            "../../../tests/fixtures/oracles/plugin-installed-0914/bun-oracle.json"
+        ))
+        .unwrap()
     }
     fn root(name: &str) -> PathBuf {
         let root =

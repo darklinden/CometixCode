@@ -1675,6 +1675,17 @@ mod tests {
 
     #[test]
     fn user_tool_result_dispatches_read_edit_write_search_summaries() {
+        // CC FileWriteTool/UI.tsx:59 uses relative(getCwd(), filePath).
+        // These raw fixtures contain relative paths, so the session and process
+        // cwd must agree for the source to display the bare filename.
+        struct RestoreCwd(std::path::PathBuf);
+        impl Drop for RestoreCwd {
+            fn drop(&mut self) {
+                crate::bootstrap::state::set_original_cwd(self.0.clone());
+            }
+        }
+        let _cwd = RestoreCwd(crate::bootstrap::state::get_original_cwd());
+        crate::bootstrap::state::set_original_cwd(std::env::current_dir().unwrap());
         // Read renders from raw `toolUseResult`, dispatched by name.
         let read = |status: ToolResultStatus, content: &str, raw: Option<serde_json::Value>| {
             render_tool_result_lines_for_result(

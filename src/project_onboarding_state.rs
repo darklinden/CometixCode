@@ -31,14 +31,12 @@ impl Step {
 }
 
 pub fn is_dir_empty(path: &Path) -> bool {
-    match std::fs::read_dir(path) {
-        Ok(mut entries) => entries.next().is_none(),
-        Err(_) => false,
-    }
+    crate::utils::file::is_dir_empty(path)
 }
 
 pub fn get_steps_for_path(cwd: &Path) -> Vec<Step> {
-    let has_claude_md = cwd.join("CLAUDE.md").exists();
+    let has_claude_md =
+        crate::utils::fs_operations::get_fs_implementation().exists_sync(&cwd.join("CLAUDE.md"));
     let is_workspace_dir_empty = is_dir_empty(cwd);
 
     vec![

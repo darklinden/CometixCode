@@ -431,7 +431,10 @@ impl crate::tool::ToolCall for LspTool {
         if is_unc_path_for_lsp(&absolute_path) {
             return crate::tool::ValidationResult::ok();
         }
-        match std::fs::metadata(&absolute_path) {
+        match futures::executor::block_on(
+            crate::utils::fs_operations::get_fs_implementation()
+                .stat(std::path::Path::new(&absolute_path)),
+        ) {
             Ok(metadata) if metadata.is_file() => crate::tool::ValidationResult::ok(),
             Ok(_) => crate::tool::ValidationResult::error(
                 format!("Path is not a file: {}", parsed.file_path),
@@ -463,7 +466,7 @@ impl crate::tool::ToolCall for LspTool {
             .filter(|path| !path.is_empty())
             .map(str::to_string)
             .unwrap_or_else(|| cwd.display().to_string());
-        crate::utils::permissions::filesystem::check_read_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_read_permission_for_tool(
             &file_path,
             args,
             &context.tool_permission_context,

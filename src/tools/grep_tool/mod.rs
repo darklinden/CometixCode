@@ -286,7 +286,7 @@ fn read_deny_globs(
     search_root: &std::path::Path,
 ) -> Vec<String> {
     use crate::utils::permissions::filesystem::{
-        get_file_read_ignore_patterns, normalize_patterns_to_path, paths_to_check_at_cwd,
+        get_file_read_ignore_patterns, normalize_patterns_to_path, paths_to_check,
     };
 
     let patterns_by_root = get_file_read_ignore_patterns(permission_context);
@@ -296,7 +296,7 @@ fn read_deny_globs(
     // DEVIATION(SECURITY): CC normalizes against `getCwd()` only
     // (`GrepTool.ts:413`). Also anchor the logical and resolved traversal roots
     // so a directory symlink cannot expose Read-denied files.
-    roots.extend(paths_to_check_at_cwd(
+    roots.extend(paths_to_check(
         &search_root.display().to_string(),
         project_cwd,
     ));
@@ -320,26 +320,32 @@ fn read_deny_globs(
         .collect()
 }
 
-fn mtime_sort_key(path: &str) -> i128 {
-    let Ok(modified) = std::fs::metadata(path).and_then(|metadata| metadata.modified()) else {
-        return 0;
-    };
-    match modified.duration_since(std::time::UNIX_EPOCH) {
-        Ok(duration) => i128::try_from(duration.as_nanos()).unwrap_or(i128::MAX),
-        Err(error) => -i128::try_from(error.duration().as_nanos()).unwrap_or(i128::MAX),
-    }
+/// Maps to CC `GrepTool.ts:529-540`: start every async stat before awaiting
+/// settlement, including filename-only test mode. A failed stat contributes 0.
+pub(crate) async fn file_match_mtimes(results: &[String]) -> Vec<f64> {
+    let pending = results
+        .iter()
+        .map(|path| {
+            crate::utils::fs_operations::get_fs_implementation().stat(std::path::Path::new(path))
+        })
+        .collect::<Vec<_>>();
+    futures::future::join_all(pending)
+        .await
+        .into_iter()
+        .map(|result| result.map_or(0.0, |stats| stats.mtime_ms))
+        .collect()
 }
 
 fn sort_file_matches(
     results: Vec<String>,
     filename_only: bool,
-    mut modified_time: impl FnMut(&str) -> i128,
+    mut modified_time: impl FnMut(&str) -> f64,
 ) -> Vec<String> {
     let mut matches_with_mtime = results
         .into_iter()
         .map(|path| {
             let mtime = if filename_only {
-                0
+                0.0
             } else {
                 modified_time(&path)
             };
@@ -350,9 +356,16 @@ fn sort_file_matches(
         if filename_only {
             javascript_locale_compare(left, right)
         } else {
-            right_mtime
-                .cmp(left_mtime)
-                .then_with(|| javascript_locale_compare(left, right))
+            let difference = right_mtime - left_mtime;
+            if difference == 0.0 {
+                javascript_locale_compare(left, right)
+            } else {
+                // Array.sort treats NaN as equality; it does not take CC's
+                // zero-difference filename branch in that case.
+                difference
+                    .partial_cmp(&0.0)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }
         }
     });
     matches_with_mtime
@@ -648,7 +661,10 @@ fn grep_output_with_context(
             // filename tiebreaker; NODE_ENV=test uses filename-only ordering.
             let filename_only_sort =
                 cfg!(test) || std::env::var("NODE_ENV").is_ok_and(|value| value == "test");
-            let sorted = sort_file_matches(results, filename_only_sort, mtime_sort_key);
+            let mtimes = futures::executor::block_on(file_match_mtimes(&results));
+            let mut times = mtimes.into_iter();
+            let sorted =
+                sort_file_matches(results, filename_only_sort, |_| times.next().unwrap_or(0.0));
             let (limited, applied_limit) = apply_head_limit(&sorted, head_limit.as_ref(), &offset);
             let relative_matches = limited
                 .iter()
@@ -837,7 +853,9 @@ impl crate::tool::ToolCall for GrepTool {
         {
             return crate::tool::ValidationResult::Ok;
         }
-        match std::fs::metadata(&absolute_path) {
+        match futures::executor::block_on(
+            crate::utils::fs_operations::get_fs_implementation().stat(&absolute_path),
+        ) {
             Ok(_) => crate::tool::ValidationResult::Ok,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 let mut message = format!(
@@ -875,7 +893,7 @@ impl crate::tool::ToolCall for GrepTool {
             .filter(|path| !path.is_empty())
             .map(str::to_string)
             .unwrap_or_else(|| cwd.display().to_string());
-        crate::utils::permissions::filesystem::check_read_permission_for_tool_at_cwd(
+        crate::utils::permissions::filesystem::check_read_permission_for_tool(
             &path,
             &parsed,
             &context.tool_permission_context,
@@ -1435,9 +1453,9 @@ mod tests {
             ],
             false,
             |path| match path {
-                "new.rs" => 10,
-                "a.rs" | "B.rs" => 5,
-                _ => 1,
+                "new.rs" => 10.0,
+                "a.rs" | "B.rs" => 5.0,
+                _ => 1.0,
             },
         );
         assert_eq!(production, vec!["new.rs", "a.rs", "B.rs", "old.rs"]);

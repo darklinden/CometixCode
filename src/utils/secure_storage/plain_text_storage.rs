@@ -22,7 +22,12 @@ impl SecureStorageBackend for PlainTextStorage {
     fn read(&self) -> Option<SecureStorageData> {
         let (_, storage_path) = get_storage_path();
         crate::utils::auth::record_auth_io(crate::utils::auth::AuthIoOperation::TokenFileRead);
-        std::fs::read_to_string(storage_path)
+        crate::utils::fs_operations::get_fs_implementation()
+            .read_file_sync(
+                &storage_path,
+                crate::utils::fs_operations::BufferEncoding::Utf8,
+            )
+            .map(|text| text.to_string_lossy())
             .ok()
             .and_then(|data| serde_json::from_str(&data).ok())
     }
@@ -30,7 +35,7 @@ impl SecureStorageBackend for PlainTextStorage {
     /// Maps to: CC `utils/secureStorage/plainTextStorage.ts:44-68` `update`.
     fn update(&self, data: &SecureStorageData) -> anyhow::Result<SecureStorageUpdate> {
         let (storage_dir, storage_path) = get_storage_path();
-        let serialized = match serde_json::to_string_pretty(data) {
+        let serialized = match serde_json::to_string(data) {
             Ok(serialized) => serialized,
             Err(_) => return Ok(SecureStorageUpdate::default()),
         };
@@ -41,7 +46,13 @@ impl SecureStorageBackend for PlainTextStorage {
             return Err(crate::constants::oauth::OAuthCredentialSideEffectsUnavailable.into());
         }
         let updated = (|| -> std::io::Result<()> {
-            std::fs::create_dir_all(&storage_dir)?;
+            if let Err(error) =
+                crate::utils::fs_operations::get_fs_implementation().mkdir_sync(&storage_dir, None)
+            {
+                if crate::utils::errors::io_errno_code(&error) != Some("EEXIST") {
+                    return Err(error);
+                }
+            }
             std::fs::write(&storage_path, serialized)?;
             #[cfg(unix)]
             {
@@ -63,7 +74,7 @@ impl SecureStorageBackend for PlainTextStorage {
         if !crate::constants::oauth::OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED {
             return Err(crate::constants::oauth::OAuthCredentialSideEffectsUnavailable.into());
         }
-        match std::fs::remove_file(storage_path) {
+        match crate::utils::fs_operations::get_fs_implementation().unlink_sync(&storage_path) {
             Ok(()) => Ok(true),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(true),
             Err(_) => Ok(false),

@@ -1,0 +1,30 @@
+{
+  "version": "3.0.0",
+  "repository": "https://github.com/hyf0/sugar_path",
+  "files": {
+    "LICENSE": "9540b70e808d1a8ff7210fad6fcc4d78757added54969e5af3b5361b7e2a6254",
+    "src/impl_sugar_path.rs": "42990d4ed396df87dd58c8bc1d0752a961195a9539c3ece28183dee1e807b322",
+    "src/lib.rs": "316f8e90c2b12bf3e85a046bdce6c423c05bb1dfd09361081d04bcb8c2432d0a",
+    "src/sugar_path.rs": "a6a756bc58019f516d21ca14e52260b88aea1be4f5573777afc62bff33178612",
+    "src/sugar_path_buf.rs": "d69902292a8e69da15d1f137cd1f2810803dd90f9ec5a370007cf5b929c59ecc",
+    "src/utils.rs": "9a09b327e95f445ecf204b07af9cd2d9aa96a4e0599971ddf13fced7a72dd2a1",
+    "tests/absolutize.rs": "c413f09cabfc96f49bd78e0a63346a4e54d07948e612bd23d890e3b88157fcc5",
+    "tests/absolutize_with.rs": "9908f95c7cae36795c0c7756598cbb7bd160202314fb88af4ad74c605114e24a",
+    "tests/absolutize_without_cwd.rs": "6bb2b4dcf63fee59fee4746d8739ccec9e88455dd8934890608a0f30eea2b9be",
+    "tests/as_path.rs": "a31ce6d7ae4da502c4f4b547623c69315e2c2bd900a677bc280afa678a6ba15a",
+    "tests/cached_current_dir.rs": "75e39f896946d0fc4a8ff4a3ab3b1f2dd7dc0bf82429527f5146ff0e341e23c6",
+    "tests/deep_paths.rs": "b8825d6481dc5cdd8579d4c07bcb9d503d41320c362b64029524c892b3a59d8b",
+    "tests/invalid_encoding.rs": "4b3c4fce393759957767006baa4ce6804acc10901f877b99d4eb14110fa0efb3",
+    "tests/normalize.rs": "2721f2e222aad257cbcb70804335a7152f542eca01b37f56c05733178748c1d5",
+    "tests/owned_api.rs": "1ab5525f640588b67f1ad649e752a3e1cb8d22c1fa597c56d2758b6cc0b58837",
+    "tests/path_identity.rs": "1483f4bdd224a4565d45a19a3c188a9f902e1d81a00b985cb4cb546652fe664f",
+    "tests/relative.rs": "b867071ab59abecdbca89892a99a4fb3d1c9f35344b7f17faa11763f442608c7",
+    "tests/relative_borrowing.rs": "dd0dbe43453d09e14b1788615dddaf8b7c23ce0a6ca3a344e2faa4862503a7b3",
+    "tests/relative_lexical.rs": "10492e183aa92b30e8f0a35f69c0aaf899ecd21d04bd1f1cddbc5b6ec99513df",
+    "tests/relative_simd.rs": "2200622f4694990455791c99f228a836c56f3bc5ee80ca46b0bb25a1d0bade39",
+    "tests/relative_to_slash.rs": "d0e814e46a58ffdf58d40fd59e214ff54da7f41b003472aa3b3c0c9e34eb63a8",
+    "tests/relative_without_cwd.rs": "69e1f608597f9cfc0b35a0559509b0493c60f3baab3b55ba4fdb327f775257b3",
+    "tests/test_utils.rs": "d0af7d65c2ea7c1e94235926dd4b45b261c73fc6ad36de2c3589d3c7868b9f8a",
+    "tests/to_slash.rs": "1d53c8b9d0b12b647e618ac64c28afa9b54ad137c158cf8ca7b96c4beb248b80"
+  }
+}

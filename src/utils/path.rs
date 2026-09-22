@@ -3,23 +3,14 @@
 //! Maps to CC `utils/path.ts`. Permission-specific canonical/symlink checks
 //! remain in `utils/permissions/path_validation.rs`.
 
-use std::path::{Component, Path, PathBuf};
+use crate::utils::fs_operations::path::SugarPath;
+use std::path::{Path, PathBuf};
 
 use unicode_normalization::UnicodeNormalization;
 
 fn normalize_path(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                normalized.pop();
-            }
-            other => normalized.push(other.as_os_str()),
-        }
-    }
-    let normalized = normalized.display().to_string().nfc().collect::<String>();
-    PathBuf::from(normalized)
+    let normalized = path.normalize();
+    PathBuf::from(normalized.to_string_lossy().nfc().collect::<String>())
 }
 
 #[cfg(windows)]
@@ -40,51 +31,23 @@ fn native_path(path: &str) -> String {
     path.to_string()
 }
 
-/// Maps to: Node `path.relative(from, to)` (posix semantics), the primitive
-/// CC call sites import directly from `node:path`. Node resolves both sides
-/// before comparing; this narrowed projection resolves a relative `to`
-/// against `from` — the callers pass the session cwd as `from`, which is
-/// Node's resolve base in the source — and expects components to already be
-/// normalized (no `.`/`..` segments). The walk strips the common component
-/// prefix and turns each remaining `from` component into `..`. Equal paths
-/// yield `""`, matching Node. The std library has no equivalent
-/// (`Path::strip_prefix` cannot produce `..`); the community equivalent is
-/// `pathdiff::diff_paths`, not pulled in while this narrowed contract
-/// covers every caller.
-/// Distinct from `file::get_display_path`, which maps outside-cwd paths to
-/// `~/...` or the absolute form — some CC sites (FileWriteTool UI.tsx:59)
-/// deliberately use the bare `relative` instead.
+/// Maps to the native node:path.relative dependency used by CC FileWriteTool
+/// UI.tsx:59,307, fileSuggestions.ts:162,503,700 and pluginLoader.ts:338-340.
+/// Both inputs resolve against process cwd, not against `from`. The existing
+/// synchronous String carrier uses SugarPath's throwing/panicking form when
+/// native cwd resolution fails; filesystem effect callers must remain fallible.
 pub fn node_path_relative(from: &Path, to: &Path) -> String {
-    let resolved_to;
-    let to = if to.is_absolute() {
-        to
-    } else {
-        resolved_to = from.join(to);
-        &resolved_to
-    };
-    let from_components: Vec<_> = from.components().collect();
-    let to_components: Vec<_> = to.components().collect();
-    let common = from_components
-        .iter()
-        .zip(to_components.iter())
-        .take_while(|(a, b)| a == b)
-        .count();
-    let mut parts: Vec<String> = Vec::new();
-    for _ in common..from_components.len() {
-        parts.push("..".to_string());
-    }
-    for component in &to_components[common..] {
-        parts.push(component.as_os_str().to_string_lossy().into_owned());
-    }
-    parts.join("/")
+    to.relative(from).to_string_lossy().into_owned()
 }
 
 /// Maps to CC `utils/path.ts:32-83` `expandPath(...)`.
 pub fn expand_path(path: &str, base_dir: Option<&Path>) -> Result<PathBuf, String> {
+    // CC getCwd's async override is carried explicitly by base_dir (tool
+    // callers pass cwd_override); its default is the canonical session cwd.
+    // A virtual FsOperations.cwd must not override this source priority.
     let base = base_dir
         .map(Path::to_path_buf)
-        .or_else(|| std::env::current_dir().ok())
-        .unwrap_or_else(|| PathBuf::from("."));
+        .unwrap_or_else(crate::bootstrap::state::get_original_cwd);
     if path.contains('\0') || base.as_os_str().to_string_lossy().contains('\0') {
         return Err("Path contains null bytes".to_string());
     }
@@ -109,15 +72,21 @@ pub fn expand_path(path: &str, base_dir: Option<&Path>) -> Result<PathBuf, Strin
     }
     if let Some(suffix) = trimmed.strip_prefix("~/") {
         if let Some(home) = home {
-            return Ok(normalize_path(&home.join(suffix)));
+            return Ok(normalize_path(
+                &crate::utils::fs_operations::native::join_path(&home, Path::new(suffix)),
+            ));
         }
     }
 
     let processed = PathBuf::from(native_path(trimmed));
-    if processed.is_absolute() {
+    if crate::utils::fs_operations::native::is_absolute(&processed) {
         Ok(normalize_path(&processed))
     } else {
-        Ok(normalize_path(&base.join(processed)))
+        let resolved = crate::utils::fs_operations::native::resolve_path(&base, &processed)
+            .map_err(|error| error.to_string())?;
+        Ok(PathBuf::from(
+            resolved.to_string_lossy().nfc().collect::<String>(),
+        ))
     }
 }
 
@@ -126,15 +95,16 @@ pub fn get_directory_for_path(path: &str) -> String {
     let absolute = expand_path(path, None).unwrap_or_else(|_| PathBuf::from(path));
     let display = absolute.display().to_string();
     if !(display.starts_with("\\\\") || display.starts_with("//")) {
-        if std::fs::metadata(&absolute).is_ok_and(|metadata| metadata.is_dir()) {
+        if crate::utils::fs_operations::get_fs_implementation()
+            .stat_sync(&absolute)
+            .is_ok_and(|metadata| metadata.is_dir())
+        {
             return display;
         }
     }
-    absolute
-        .parent()
-        .map(|parent| parent.display().to_string())
-        .filter(|parent| !parent.is_empty())
-        .unwrap_or(display)
+    crate::utils::fs_operations::native::dirname(&absolute)
+        .display()
+        .to_string()
 }
 
 #[cfg(test)]
@@ -186,6 +156,34 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn expand_path_matches_official_normalize_and_resolve_branches() {
+        // CC utils/path.ts:55,77 preserve normalize's tail; :81 uses resolve.
+        assert_eq!(
+            expand_path("", Some(Path::new("/repo/")))
+                .unwrap()
+                .as_os_str(),
+            "/repo/"
+        );
+        assert_eq!(
+            expand_path("/repo/a/../", None).unwrap().as_os_str(),
+            "/repo/"
+        );
+        assert_eq!(
+            expand_path("a/", Some(Path::new("/repo")))
+                .unwrap()
+                .as_os_str(),
+            "/repo/a"
+        );
+        assert_eq!(
+            expand_path("", Some(Path::new("../../a")))
+                .unwrap()
+                .as_os_str(),
+            "../../a"
+        );
+    }
+
     #[test]
     fn expand_path_rejects_null_bytes() {
         assert_eq!(
@@ -196,8 +194,7 @@ mod tests {
 
     /// Maps to: Node `path.relative` oracles — inside cwd, outside cwd
     /// (`..` climb), equal paths (`""`), and a relative `to` resolved
-    /// against `from` (Node resolves both sides; wire data can carry the
-    /// model's raw relative file_path).
+    /// against process cwd (CC native path dependency).
     #[test]
     fn node_path_relative_matches_node_oracles() {
         let from = Path::new("/repo/project");
@@ -210,7 +207,14 @@ mod tests {
             "../elsewhere/out.txt"
         );
         assert_eq!(node_path_relative(from, Path::new("/repo/project")), "");
-        assert_eq!(node_path_relative(from, Path::new("a.txt")), "a.txt");
+        // Bun resolves relative `to` against process cwd, independently of from.
+        let cwd = std::env::current_dir().unwrap();
+        assert_eq!(node_path_relative(&cwd, Path::new("a.txt")), "a.txt");
+        assert_eq!(node_path_relative(Path::new("a"), Path::new("a")), "");
+        assert_eq!(
+            node_path_relative(Path::new("a"), Path::new("../a")),
+            "../../a"
+        );
     }
 }
 

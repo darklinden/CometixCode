@@ -30,21 +30,16 @@ async fn get_task_output(task_id: String) -> TaskOutputResult {
             return receiver.await.unwrap_or_default();
         }
     }
-    let (sender, receiver) = futures::channel::oneshot::channel();
-    std::thread::spawn(move || {
-        let _ = sender.send(
-            crate::utils::fs_operations::tail_file(
-                &crate::utils::task::disk_output::get_task_output_path(&task_id),
-                SHELL_DETAIL_TAIL_BYTES as usize,
-            )
-            .map(|result| TaskOutputResult {
-                content: result.content,
-                bytes_total: result.bytes_total,
-            })
-            .unwrap_or_default(),
-        );
-    });
-    receiver.await.unwrap_or_default()
+    crate::utils::fs_operations::tail_file(
+        &crate::utils::task::disk_output::get_task_output_path(&task_id),
+        SHELL_DETAIL_TAIL_BYTES as usize,
+    )
+    .await
+    .map(|result| TaskOutputResult {
+        content: result.content,
+        bytes_total: result.bytes_total,
+    })
+    .unwrap_or_default()
 }
 
 pub fn shell_output_lines(output: &TaskOutputResult) -> (Vec<String>, bool) {

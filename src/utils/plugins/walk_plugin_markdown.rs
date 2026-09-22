@@ -21,10 +21,18 @@ pub async fn walk_plugin_markdown<F, Fut>(
     F: Fn(PathBuf, Vec<String>) -> Fut + Clone + Send + Sync + 'static,
     Fut: Future<Output = anyhow::Result<()>> + Send + 'static,
 {
-    scan(root_dir.to_path_buf(), Vec::new(), on_file, opts).await;
+    scan(
+        crate::utils::fs_operations::get_fs_implementation(),
+        root_dir.to_path_buf(),
+        Vec::new(),
+        on_file,
+        opts,
+    )
+    .await;
 }
 
 fn scan<F, Fut>(
+    fs: std::sync::Arc<dyn crate::utils::fs_operations::FsOperations>,
     dir_path: PathBuf,
     namespace: Vec<String>,
     on_file: F,
@@ -36,12 +44,12 @@ where
 {
     Box::pin(async move {
         let result: anyhow::Result<()> = async {
-            let entries = crate::utils::fs_operations::readdir(&dir_path).await?;
+            let entries = fs.readdir(&dir_path).await?;
             // Node Dirent already carries the type returned by readdir. Read
             // each native entry type once; never stat/follow symbolic links.
             let mut typed_entries = Vec::with_capacity(entries.len());
             for entry in entries {
-                let file_type = entry.file_type().await?;
+                let file_type = entry.file_type()?;
                 typed_entries.push((entry, file_type));
             }
             let stop = opts.stop_at_skill_dir
@@ -63,8 +71,9 @@ where
                 if kind.is_dir() && !stop {
                     child_namespace.push(name);
                     let child_opts = opts.clone();
+                    let fs = fs.clone();
                     pending.push(runtime.spawn(async move {
-                        scan(path, child_namespace, callback, child_opts).await;
+                        scan(fs, path, child_namespace, callback, child_opts).await;
                         Ok::<_, anyhow::Error>(())
                     }));
                 } else if kind.is_file() && name.to_ascii_lowercase().ends_with(".md") {

@@ -762,21 +762,7 @@ pub(super) fn ast_security_result(
 }
 
 /// Maps to: CC `bashToolCheckPermission(...)` legacy-string path.
-pub fn bash_tool_check_permission(
-    command: &str,
-    tool_permission_context: &ToolPermissionContext,
-    compound_command_has_cd: bool,
-) -> PermissionResult {
-    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    bash_tool_check_permission_at_cwd(
-        command,
-        tool_permission_context,
-        compound_command_has_cd,
-        &cwd,
-    )
-}
-
-fn bash_tool_check_permission_at_cwd(
+fn bash_tool_check_permission(
     command: &str,
     tool_permission_context: &ToolPermissionContext,
     compound_command_has_cd: bool,
@@ -854,7 +840,7 @@ fn bash_tool_check_permission_at_cwd(
         return mode_result;
     }
 
-    if super::read_only_validation::check_read_only_constraints_at_cwd(command, cwd) {
+    if super::read_only_validation::check_read_only_constraints(command, cwd) {
         return PermissionResult::Allow {
             updated_input: Some(serde_json::json!({ "command": command })),
             user_modified: None,
@@ -880,23 +866,7 @@ fn bash_tool_check_permission_at_cwd(
 }
 
 /// Maps to: CC `checkCommandAndSuggestRules(...)`.
-pub fn check_command_and_suggest_rules(
-    command: &str,
-    tool_permission_context: &ToolPermissionContext,
-    command_prefix: Option<&str>,
-    compound_command_has_cd: bool,
-) -> PermissionResult {
-    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    check_command_and_suggest_rules_at_cwd(
-        command,
-        tool_permission_context,
-        command_prefix,
-        compound_command_has_cd,
-        &cwd,
-    )
-}
-
-fn check_command_and_suggest_rules_at_cwd(
+fn check_command_and_suggest_rules(
     command: &str,
     tool_permission_context: &ToolPermissionContext,
     command_prefix: Option<&str>,
@@ -911,7 +881,7 @@ fn check_command_and_suggest_rules_at_cwd(
         return exact_match;
     }
 
-    let permission_result = bash_tool_check_permission_at_cwd(
+    let permission_result = bash_tool_check_permission(
         command,
         tool_permission_context,
         compound_command_has_cd,
@@ -1191,7 +1161,7 @@ pub fn bash_tool_has_permission_from_ast(
 
     let mut decisions = Vec::with_capacity(commands.len());
     for extracted in commands {
-        let decision = bash_tool_check_permission_at_cwd(
+        let decision = bash_tool_check_permission(
             &extracted.text,
             tool_permission_context,
             compound_command_has_cd,
@@ -1316,14 +1286,6 @@ fn ask_without_suggestions(reason: &str) -> PermissionResult {
 pub fn bash_tool_has_permission(
     command: &str,
     tool_permission_context: &ToolPermissionContext,
-) -> PermissionResult {
-    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    bash_tool_has_permission_at_cwd(command, tool_permission_context, &cwd)
-}
-
-pub fn bash_tool_has_permission_at_cwd(
-    command: &str,
-    tool_permission_context: &ToolPermissionContext,
     cwd: &std::path::Path,
 ) -> PermissionResult {
     let command = command.trim();
@@ -1388,7 +1350,7 @@ pub fn bash_tool_has_permission_at_cwd(
             command,
             |subcommand| {
                 let prefix = get_simple_command_prefix(subcommand);
-                check_command_and_suggest_rules_at_cwd(
+                check_command_and_suggest_rules(
                     subcommand,
                     tool_permission_context,
                     prefix.as_deref(),
@@ -1410,7 +1372,7 @@ pub fn bash_tool_has_permission_at_cwd(
             &segments,
             |subcommand| {
                 let prefix = get_simple_command_prefix(subcommand);
-                check_command_and_suggest_rules_at_cwd(
+                check_command_and_suggest_rules(
                     subcommand,
                     tool_permission_context,
                     prefix.as_deref(),
@@ -1423,7 +1385,7 @@ pub fn bash_tool_has_permission_at_cwd(
     }
 
     let prefix = get_simple_command_prefix(command);
-    check_command_and_suggest_rules_at_cwd(
+    check_command_and_suggest_rules(
         command,
         tool_permission_context,
         prefix.as_deref(),
@@ -1760,12 +1722,12 @@ mod tests {
         );
 
         assert!(matches!(
-            bash_tool_check_permission("FOO=a=b rm -rf target", &context, false),
+            bash_tool_check_permission("FOO=a=b rm -rf target", &context, false, &std::env::current_dir().unwrap()),
             PermissionResult::Deny { decision_reason: PermissionDecisionReason::Rule { ref rule }, .. }
                 if rule.rule_behavior == PermissionBehavior::Deny
         ));
         assert!(matches!(
-            bash_tool_check_permission("NODE_ENV=test timeout 10 npm run build", &context, false),
+            bash_tool_check_permission("NODE_ENV=test timeout 10 npm run build", &context, false, &std::env::current_dir().unwrap()),
             PermissionResult::Allow { decision_reason: Some(PermissionDecisionReason::Rule { ref rule }), .. }
                 if rule.rule_behavior == PermissionBehavior::Allow
         ));
@@ -1840,11 +1802,11 @@ mod tests {
         );
 
         assert!(matches!(
-            bash_tool_has_permission_at_cwd("cat ../allowed/file", &context, &child),
+            bash_tool_has_permission("cat ../allowed/file", &context, &child),
             PermissionResult::Allow { .. }
         ));
         assert!(!matches!(
-            bash_tool_has_permission_at_cwd("cat ../allowed/file", &context, &unrelated),
+            bash_tool_has_permission("cat ../allowed/file", &context, &unrelated),
             PermissionResult::Allow { .. }
         ));
         let _ = std::fs::remove_dir_all(root);
@@ -1857,12 +1819,12 @@ mod tests {
         let _project_dir = crate::utils::env_utils::PinnedProjectDir::at_manifest_root();
         let default_context = ToolPermissionContext::default();
         assert!(matches!(
-            bash_tool_check_permission("git status", &default_context, false),
+            bash_tool_check_permission("git status", &default_context, false, &std::env::current_dir().unwrap()),
             PermissionResult::Allow { decision_reason: Some(PermissionDecisionReason::Other { ref reason }), .. }
                 if reason == "Read-only command is allowed"
         ));
         assert!(matches!(
-            bash_tool_check_permission("sed 's/a/b/w /tmp/out'", &default_context, false),
+            bash_tool_check_permission("sed 's/a/b/w /tmp/out'", &default_context, false, &std::env::current_dir().unwrap()),
             PermissionResult::Ask { ref message, .. }
                 if message == "sed command requires approval (contains potentially dangerous operations)"
         ));
@@ -1871,7 +1833,12 @@ mod tests {
             ..ToolPermissionContext::default()
         };
         assert!(matches!(
-            bash_tool_check_permission("mkdir target", &accept, false),
+            bash_tool_check_permission(
+                "mkdir target",
+                &accept,
+                false,
+                &std::env::current_dir().unwrap()
+            ),
             PermissionResult::Allow {
                 decision_reason: Some(PermissionDecisionReason::Mode { .. }),
                 ..
@@ -1954,14 +1921,18 @@ mod tests {
     fn bash_tool_has_permission_shapes_compound_and_security_results() {
         let context = ToolPermissionContext::default();
         assert!(matches!(
-            bash_tool_has_permission("echo hi && cargo test", &context),
+            bash_tool_has_permission(
+                "echo hi && cargo test",
+                &context,
+                &std::env::current_dir().unwrap()
+            ),
             PermissionResult::Ask {
                 decision_reason: Some(PermissionDecisionReason::SubcommandResults { .. }),
                 ..
             }
         ));
         assert!(matches!(
-            bash_tool_has_permission("echo $(id)", &context),
+            bash_tool_has_permission("echo $(id)", &context, &std::env::current_dir().unwrap()),
             PermissionResult::Ask { ref message, ref suggestions, .. }
                 if message == "Command contains $() command substitution" && suggestions.is_empty()
         ));
