@@ -139,7 +139,7 @@ pub fn input_schema() -> &'static crate::utils::zod::Schema {
         let fields = full_input_fields()
             .into_iter()
             .filter(|(name, _)| {
-                !(!kairos && *name == "cwd") && !(omit_background && *name == "run_in_background")
+                !(!kairos && *name == "cwd" || omit_background && *name == "run_in_background")
             })
             .collect();
         crate::utils::zod::object(fields)
@@ -2595,6 +2595,9 @@ impl crate::tool::ToolCall for AgentTool {
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
     use crate::utils::env_utils::EnvVarGuard;
 

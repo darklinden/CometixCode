@@ -38,6 +38,34 @@ mcp_runtime = [
     "dep:tokio-tungstenite",
 ]
 
+# Crate-level lint policy. This is the project-wide allow mechanism (Rust 1.74+;
+# `clippy.toml` cannot switch lints off — it only configures them). Everything
+# listed here is an artifact of the 1:1 port: the Rust shape mirrors CC's
+# TypeScript source on purpose, so "fixing" it would break the line-level
+# correspondence the port is audited against. Lints that flag genuine defects
+# are NOT allowed here — they are fixed, or annotated at the site with a
+# reason. Source-level attributes still override this table either way.
+[lints.clippy]
+# CC nests `if` statements and this port keeps that shape; Rust 2024 let-chains
+# made clippy start reporting all 1470 of them across 291 files. Collapsing
+# them would rewrite the control flow the port maps back to CC.
+collapsible_if = "allow"
+# CC builds state as `const x = {...}; x.y = ...` — Default::default() followed
+# by field assignment is the direct translation (84 files, mostly fixtures).
+field_reassign_with_default = "allow"
+# CC function signatures taken verbatim (40 files). The 18 pre-existing
+# site-level `#[allow(clippy::too_many_arguments)]` are the same decision.
+too_many_arguments = "allow"
+# `commands/foo/mod.rs` + `commands/foo/foo.rs` keeps every file name aligned
+# with its CC counterpart (mod.rs is the facade), which trips this by design.
+module_inception = "allow"
+# React props and callback tuples translated structurally; factoring them into
+# `type` aliases would diverge from the CC signature they document.
+type_complexity = "allow"
+# CC discriminated unions keep their variants inline; boxing one changes the
+# type's shape at every CC-mapped construction site.
+large_enum_variant = "allow"
+
 [dependencies]
 # Source strip-ansi import used by staticRender/exportRenderer.
 strip-ansi-escapes = "0.2.1"

@@ -3673,6 +3673,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     });
     hooks.use_interval(
         {
+            #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
             let hint_recommendation = hint_recommendation;
             let mut hint_is_checking = hint_is_checking;
             let tasks = hint_resolution_tasks.0.clone();
@@ -3755,6 +3756,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     // Maps to CC `const queuedCommands = useCommandQueue()`. The reactive
     // snapshot keeps showSpinner mounted between queued task notifications.
     let queued_commands = crate::hooks::use_command_queue::use_command_queue(&mut hooks);
+    #[allow(clippy::let_unit_value)] // `_name` names the effect; nothing reads it.
     let _apply_initial_launch_state = hooks.use_const({
         let app_store = app_store.clone();
         let initial_main_thread_agent_definition = initial_main_thread_agent_definition.clone();
@@ -4218,6 +4220,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     //   the strict connected gate exists here.
     let ide_selection_channel =
         hooks.use_const(|| std::sync::Arc::new(async_channel::unbounded::<IdeSelection>()));
+    #[allow(clippy::let_unit_value)] // `_name` names the effect; nothing reads it.
     let _ide_selection_sink_registration = hooks.use_const({
         let sink = ide_selection_channel.0.clone();
         move || crate::services::mcp::client::register_ide_selection_sink(sink)
@@ -4394,6 +4397,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     });
     // Seed AppState.showRemoteCallout once from the startup snapshot (CC
     // main/bridge sets the field; REPL only reads/dismisses via AppState).
+    #[allow(clippy::let_unit_value)] // `_name` names the effect; nothing reads it.
     let _seed_remote_callout = hooks.use_const({
         let app_store = app_store.clone();
         move || {
@@ -4458,6 +4462,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
     hooks.use_interval(
         {
             let mut is_prompt_input_active = is_prompt_input_active;
+            #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
             let prompt_input_last_change = prompt_input_last_change;
             move || {
                 if is_prompt_input_active.get()
@@ -6836,6 +6841,7 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
             let system_prompt_overrides = system_prompt_overrides.clone();
             let active_local_command_ui = active_local_command_ui;
             let show_desktop_upsell_startup = show_desktop_upsell_startup;
+            #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
             let hint_recommendation = hint_recommendation;
             let exit_flow_active = exit_flow_active;
             let channel_permission_callbacks_for_inbox = channel_permission_callbacks.clone();
@@ -9214,14 +9220,14 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
                             args: args.clone(),
                             has_conversation_messages: has_conversation_messages,
                             on_close: on_local_command_ui_close,
-                            on_cancel_args: on_local_command_ui_result.clone(),
+                            on_cancel_args: on_local_command_ui_result,
                             on_select: on_local_command_ui_result,
                         )
                     }.into_any()),
                     LocalCommandPanel::Fast => {
                         let initial_enabled = app_store.get().fast_mode;
-                        let mut on_result = on_local_command_ui_result.clone();
-                        let mut on_close = on_local_command_ui_close.clone();
+                        let mut on_result = on_local_command_ui_result;
+                        let mut on_close = on_local_command_ui_close;
                         let store_for_fast = app_store.clone();
                         // Maps to: CC fast.tsx:252-258 — read the real
                         // unavailable reason before mounting the picker. CC's
@@ -9495,14 +9501,14 @@ pub fn Repl(props: &ReplProps, mut hooks: Hooks) -> impl Into<AnyElement<'static
                             args: args.clone(),
                             has_conversation_messages: has_conversation_messages,
                             on_close: on_local_command_ui_close,
-                            on_cancel_args: on_local_command_ui_result.clone(),
+                            on_cancel_args: on_local_command_ui_result,
                             on_select: on_local_command_ui_result,
                         )
                     }.into_any()),
                     LocalCommandPanel::Fast => {
                         let initial_enabled = app_store.get().fast_mode;
-                        let mut on_result = on_local_command_ui_result.clone();
-                        let mut on_close = on_local_command_ui_close.clone();
+                        let mut on_result = on_local_command_ui_result;
+                        let mut on_close = on_local_command_ui_close;
                         let store_for_fast = app_store.clone();
                         // Maps to: CC fast.tsx:252-258 — read the real
                         // unavailable reason before mounting the picker. CC's
@@ -10205,8 +10211,8 @@ mod tests {
         // macOS exposes the temp root through `/var` -> `/private/var`.
         let root = std::fs::canonicalize(&root).unwrap();
         let _cwd = OriginalCwdGuard::set(&root);
-        let _config = EnvVarGuard::set("CLAUDE_CONFIG_DIR", &root.join("config"));
-        let _write = EnvVarGuard::set("COMETIX_WRITE_ENABLED", &PathBuf::from("1"));
+        let _config = EnvVarGuard::set("CLAUDE_CONFIG_DIR", root.join("config"));
+        let _write = EnvVarGuard::set("COMETIX_WRITE_ENABLED", PathBuf::from("1"));
 
         let store = crate::state::store::AppStore::new(
             crate::state::app_state_store::AppState::default(),
@@ -15408,7 +15414,7 @@ mod tests {
         std::fs::create_dir_all(&config_home).unwrap();
         let _cwd_guard = OriginalCwdGuard::set(&root);
         let _config_guard = EnvVarGuard::set("CLAUDE_CONFIG_DIR", &config_home);
-        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", &PathBuf::from("0"));
+        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", PathBuf::from("0"));
 
         let empty_text = last_repl_text(stream::empty::<TerminalEvent>(), 100, 3);
         let logo_title = "Cometix Code";
@@ -15879,7 +15885,7 @@ mod tests {
         // Mirror the process runtime published by the production entrypoint.
         crate::utils::process_runtime::initialize_test_process_runtime();
         let _lock = env_lock().lock().unwrap();
-        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", &PathBuf::from("0"));
+        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", PathBuf::from("0"));
         let events = timed_stream(vec![
             (key(KeyCode::Enter), 30),
             (TerminalEvent::Resize(100, 30), 100),
@@ -15952,7 +15958,7 @@ mod tests {
         std::fs::create_dir_all(&config_home).unwrap();
         let _cwd_guard = OriginalCwdGuard::set(&root);
         let _config_guard = EnvVarGuard::set("CLAUDE_CONFIG_DIR", &config_home);
-        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", &PathBuf::from("0"));
+        let _write_guard = EnvVarGuard::set("COMETIX_WRITE_ENABLED", PathBuf::from("0"));
 
         let mut events = text_input_events("/status")
             .into_iter()

@@ -1457,7 +1457,7 @@ pub fn Config<'a>(props: &mut ConfigProps<'a>, mut hooks: Hooks) -> impl Into<An
                             options: options,
                             focused_index: focused_index,
                             selected_value: selected_value,
-                            visible_from_index: visible_from_index(focused_index, count, count.min(10).max(1)),
+                            visible_from_index: visible_from_index(focused_index, count, count.clamp(1, 10)),
                             is_loading: false,
                             is_standalone_command: false,
                         )
@@ -1545,7 +1545,7 @@ pub fn Config<'a>(props: &mut ConfigProps<'a>, mut hooks: Hooks) -> impl Into<An
             let options = settings_submenu_options(active_submenu);
             let count = options.len();
             let focused_index = submenu_focused.get().min(count.saturating_sub(1));
-            let visible_option_count = count.min(10).max(1);
+            let visible_option_count = count.clamp(1, 10);
             let visible_from = visible_from_index(focused_index, count, visible_option_count);
             let selected_value = items
                 .read()

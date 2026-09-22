@@ -113,7 +113,7 @@ fn step_from_initial(
     initial_step_index.min(steps.len().saturating_sub(1))
 }
 
-#[derive(Props)]
+#[derive(Props, Default)]
 pub(crate) struct OnboardingProps<'a> {
     pub on_done: HandlerMut<'a, ()>,
     pub oauth_enabled: bool,
@@ -127,22 +127,6 @@ pub(crate) struct OnboardingProps<'a> {
     pub exit_key_name: Option<String>,
 }
 
-impl Default for OnboardingProps<'_> {
-    fn default() -> Self {
-        Self {
-            on_done: HandlerMut::default(),
-            oauth_enabled: false,
-            api_key_needing_approval: None,
-            offer_terminal_setup: false,
-            initial_step: None,
-            initial_step_index: 0,
-            theme_name: None,
-            terminal_name: None,
-            exit_pending: false,
-            exit_key_name: None,
-        }
-    }
-}
 
 /// Maps to: CC `components/Onboarding.tsx`:54-247 `Onboarding(...)`.
 #[component]

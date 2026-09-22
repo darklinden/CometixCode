@@ -420,6 +420,7 @@ pub fn FilePermissionDialog(
             }),
         ),
         ("select:next".to_string(), {
+            #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
             let option_count = option_count;
             Box::new(move || {
                 focused_index.set((focused_index.get() + 1).min(option_count - 1));
@@ -471,7 +472,7 @@ pub fn FilePermissionDialog(
         },
     );
 
-    let selected = { pending_select.read().clone() };
+    let selected = { *pending_select.read() };
     if let Some(value) = selected {
         pending_select.set(None);
         (props.on_select)(value);

@@ -143,7 +143,7 @@ impl CommandSuggestionIndex {
                     .collect::<Vec<_>>();
                 CommandSearchEntry {
                     command_index,
-                    parts: (parts.len() > 1).then_some(parts).unwrap_or_default(),
+                    parts: if parts.len() > 1 { parts } else { Default::default() },
                     command_name,
                     aliases: command
                         .aliases

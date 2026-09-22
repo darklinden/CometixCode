@@ -637,9 +637,11 @@ fn tool_response_for_hook(
     let Some(tool_result) = message.and_then(user_tool_result_block) else {
         return serde_json::Value::Null;
     };
-    let tool_use_id = (!tool_result.tool_use_id.0.is_empty())
-        .then(|| serde_json::Value::String(tool_result.tool_use_id.0.clone()))
-        .unwrap_or(serde_json::Value::Null);
+    let tool_use_id = if tool_result.tool_use_id.0.is_empty() {
+        serde_json::Value::Null
+    } else {
+        serde_json::Value::String(tool_result.tool_use_id.0.clone())
+    };
     serde_json::json!({
         "tool_use_id": tool_use_id,
         "tool_name": tool_name,

@@ -159,6 +159,7 @@ pub fn SelectMulti<'a>(
         let options = props.options.clone();
         let hide_indexes = props.hide_indexes;
         let is_disabled = props.is_disabled;
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let handle_escape = handle_escape;
         let has_down_handler = !props.on_down_from_last_item.is_default();
         let has_up_handler = !props.on_up_from_first_item.is_default();

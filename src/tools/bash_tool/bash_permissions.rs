@@ -61,6 +61,10 @@ static NOHUP_WRAPPER_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^nohup[ \t]+(?:--[ \t]+)?").expect("valid nohup regex"));
 static TIMEOUT_FLAG_VALUE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_.+-]+$").expect("valid timeout value regex"));
+static TIMEOUT_LONG_FLAG_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^--(?:kill-after|signal)=[A-Za-z0-9_.+-]+$")
+        .expect("valid timeout long regex")
+});
 static TIMEOUT_DURATION_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\d+(?:\.\d+)?[smhd]?$").expect("valid timeout duration regex"));
 static SHORT_TIMEOUT_FLAG_RE: LazyLock<Regex> =
@@ -436,9 +440,7 @@ fn skip_timeout_flags(args: &[String]) -> isize {
         if matches!(
             arg.as_str(),
             "--foreground" | "--preserve-status" | "--verbose"
-        ) || Regex::new(r"^--(?:kill-after|signal)=[A-Za-z0-9_.+-]+$")
-            .expect("valid timeout long regex")
-            .is_match(arg)
+        ) || TIMEOUT_LONG_FLAG_RE.is_match(arg)
         {
             index += 1;
         } else if matches!(arg.as_str(), "--kill-after" | "--signal")
@@ -592,7 +594,7 @@ fn bash_rule_matches_candidate(
                 }
                 candidate == prefix
                     || candidate.starts_with(&format!("{prefix} "))
-                    || candidate == &format!("xargs {prefix}")
+                    || candidate == format!("xargs {prefix}")
                     || candidate.starts_with(&format!("xargs {prefix} "))
             }
         },

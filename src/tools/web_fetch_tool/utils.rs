@@ -214,7 +214,7 @@ fn validate_url_parts(url: &str) -> Option<UrlParts> {
     #[cfg(feature = "mcp_runtime")]
     {
         let parsed = reqwest::Url::parse(url).ok()?;
-        return Some(UrlParts {
+        Some(UrlParts {
             protocol: parsed.scheme().to_string(),
             hostname: parsed
                 .host_str()?
@@ -222,7 +222,7 @@ fn validate_url_parts(url: &str) -> Option<UrlParts> {
                 .to_ascii_lowercase(),
             port: parsed.port().map(|port| port.to_string()),
             has_credentials: !parsed.username().is_empty() || parsed.password().is_some(),
-        });
+        })
     }
 
     #[cfg(not(feature = "mcp_runtime"))]

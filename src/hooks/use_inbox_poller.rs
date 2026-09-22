@@ -153,7 +153,7 @@ pub fn clear_pending_sandbox_request(store: &crate::state::store::AppStore) {
 
 /// Poller-local fields that are not AppState (permission confirm queue drains
 /// into REPL `permission_queue`; pane kills are fire-and-forget side effects).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct InboxPollerState {
     /// Maps to CC REPL `ToolUseConfirmQueue` populated from pane-worker
     /// permission requests in `useInboxPoller.ts`.
@@ -165,15 +165,6 @@ pub struct InboxPollerState {
     pub is_in_process_teammate: bool,
 }
 
-impl Default for InboxPollerState {
-    fn default() -> Self {
-        Self {
-            permission_queue: Vec::new(),
-            pending_pane_kills: Vec::new(),
-            is_in_process_teammate: false,
-        }
-    }
-}
 
 /// Working set for one poll / deliver cycle.
 ///

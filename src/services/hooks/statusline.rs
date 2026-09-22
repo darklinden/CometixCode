@@ -44,7 +44,7 @@ pub fn status_line_command_from_settings_with_policy(
     let managed_only = policy_settings
         .is_some_and(|policy| policy.allow_managed_hooks_only == Some(true))
         || (settings.disable_all_hooks == Some(true)
-            && !policy_settings.is_some_and(|policy| policy.disable_all_hooks == Some(true)));
+            && policy_settings.is_none_or(|policy| policy.disable_all_hooks != Some(true)));
     let status_line_source = if managed_only {
         policy_settings?
     } else {

@@ -510,7 +510,9 @@ pub fn BashPermissionRequest<'a>(
     hooks.use_propagated_terminal_events({
         let mut pending_cancel = pending_cancel;
         let mut feedback_state = feedback_state;
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let accept_feedback = accept_feedback;
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let reject_feedback = reject_feedback;
         let options = options.clone();
         move |event| {
@@ -550,7 +552,7 @@ pub fn BashPermissionRequest<'a>(
         }
     });
 
-    let selected = { pending_select.read().clone() };
+    let selected = { *pending_select.read() };
     if let Some(value) = selected {
         pending_select.set(None);
         let mut selection = BashPermissionSelection::new(value);
@@ -582,12 +584,10 @@ pub fn BashPermissionRequest<'a>(
     let description_to_show = if props.explainer_visible {
         None
     } else {
-        request
+        if request
             .description
             .trim()
-            .is_empty()
-            .then(|| input_description.clone())
-            .unwrap_or_else(|| Some(request.description.clone()))
+            .is_empty() { input_description.clone() } else { Some(request.description.clone()) }
             .filter(|description| !description.trim().is_empty())
     };
     let show_tab_to_amend = options
@@ -648,7 +648,7 @@ pub fn BashPermissionRequest<'a>(
             worker_badge: props.worker_badge.clone(),
         ) {
             View(flex_direction: FlexDirection::Column, padding_left: 2u32, padding_right: 2u32, padding_top: 1u32, padding_bottom: 1u32) {
-                Text(content: command_display, color: if props.explainer_visible { theme.inactive } else { theme.inactive }, wrap: TextWrap::Wrap)
+                Text(content: command_display, color: theme.inactive, wrap: TextWrap::Wrap)
                 #(description_to_show.map(|description| element! {
                     Text(content: description, color: theme.inactive, wrap: TextWrap::Wrap)
                 }))

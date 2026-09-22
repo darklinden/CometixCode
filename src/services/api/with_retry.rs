@@ -520,7 +520,7 @@ fn should_retry(error: &ApiError) -> bool {
         return true;
     }
     if should_retry_header == Some("false") {
-        let is_5xx = error.status.map_or(false, |s| s >= 500);
+        let is_5xx = error.status.is_some_and(|s| s >= 500);
         // Internal builds can ignore x-should-retry:false for 5xx only.
         if !crate::utils::build_profile::has_internal_capability(
             crate::utils::build_profile::InternalCapability::Api,
@@ -1277,22 +1277,22 @@ mod tests {
     fn get_retry_delay_exponential_backoff() {
         // Attempt 1: base = 500ms, with some jitter
         let d1 = get_retry_delay(1, None, DEFAULT_MAX_DELAY_MS);
-        assert!(d1 >= 500 && d1 < 700, "attempt 1 delay was {}", d1);
+        assert!((500..700).contains(&d1), "attempt 1 delay was {}", d1);
 
         // Attempt 2: base = 1000ms
         let d2 = get_retry_delay(2, None, DEFAULT_MAX_DELAY_MS);
-        assert!(d2 >= 1000 && d2 < 1300, "attempt 2 delay was {}", d2);
+        assert!((1000..1300).contains(&d2), "attempt 2 delay was {}", d2);
 
         // Attempt 3: base = 2000ms
         let d3 = get_retry_delay(3, None, DEFAULT_MAX_DELAY_MS);
-        assert!(d3 >= 2000 && d3 < 2600, "attempt 3 delay was {}", d3);
+        assert!((2000..2600).contains(&d3), "attempt 3 delay was {}", d3);
     }
 
     #[test]
     fn get_retry_delay_respects_max_delay() {
         // Very high attempt should cap at max_delay_ms + jitter
         let d = get_retry_delay(20, None, 5000);
-        assert!(d >= 5000 && d < 6300, "high attempt delay was {}", d);
+        assert!((5000..6300).contains(&d), "high attempt delay was {}", d);
     }
 
     #[test]
@@ -1306,7 +1306,7 @@ mod tests {
     fn get_retry_delay_invalid_retry_after_falls_back() {
         let d = get_retry_delay(1, Some("not-a-number"), DEFAULT_MAX_DELAY_MS);
         // Should fall back to normal backoff
-        assert!(d >= 500 && d < 700, "fallback delay was {}", d);
+        assert!((500..700).contains(&d), "fallback delay was {}", d);
     }
 
     // -- parse_max_tokens_context_overflow --

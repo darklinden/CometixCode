@@ -74,10 +74,7 @@ pub fn use_double_press(hooks: &mut Hooks) -> DoublePressState {
         let timeout_rx = timeout_channel.1.clone();
         async move {
             while timeout_rx.recv().await.is_ok() {
-                loop {
-                    let Some(prev) = last_press.get() else {
-                        break;
-                    };
+                while let Some(prev) = last_press.get() {
                     let elapsed = prev.elapsed().as_millis();
                     if elapsed >= DOUBLE_PRESS_TIMEOUT_MS {
                         pending.set(false);

@@ -570,12 +570,11 @@ mod tests {
                 processed.set(processed.get() + 1);
                 event.stop_propagation();
             }
-            TerminalEvent::Key(key) if key.kind != KeyEventKind::Release => {
-                if search.handle_edit_key(&key.code, &key.modifiers) {
+            TerminalEvent::Key(key) if key.kind != KeyEventKind::Release
+                && search.handle_edit_key(&key.code, &key.modifiers) => {
                     processed.set(processed.get() + 1);
                     event.stop_propagation();
                 }
-            }
             _ => {}
         });
         element! { View(focusable: true, auto_focus: true) {

@@ -1178,7 +1178,7 @@ async fn validate_plugin_paths(
                 source: source.into(),
                 plugin: Some(name.into()),
                 path: path.display().to_string(),
-                component: component.clone(),
+                component,
             });
         }
     }

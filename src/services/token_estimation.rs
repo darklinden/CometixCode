@@ -643,7 +643,7 @@ mod tests {
         let _foundry = EnvVarGuard::set("CLAUDE_CODE_USE_FOUNDRY", "1");
         let _base_url = EnvVarGuard::set(
             "ANTHROPIC_FOUNDRY_BASE_URL",
-            &format!("{endpoint}/anthropic/"),
+            format!("{endpoint}/anthropic/"),
         );
         let _api_key = EnvVarGuard::set("ANTHROPIC_FOUNDRY_API_KEY", "foundry-test-key");
         let _model = EnvVarGuard::set("ANTHROPIC_MODEL", "claude-sonnet-4-5");

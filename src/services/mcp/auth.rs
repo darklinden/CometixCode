@@ -1778,7 +1778,7 @@ mod runtime {
     fn html_response(status: &str, body: &str) -> String {
         format!(
             "HTTP/1.1 {status}\r\nContent-Type: text/html; charset=utf-8\r\nConnection: close\r\nContent-Length: {}\r\n\r\n{body}",
-            body.as_bytes().len()
+            body.len()
         )
     }
 

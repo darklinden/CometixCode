@@ -134,8 +134,8 @@ pub fn renderable_messages_from_entries(entries: &[serde_json::Value]) -> Vec<Re
 /// `content` stays the raw wire text and the API projection builds tool_result
 /// params from tool_use_id/content/is_error only (services/api/claude.rs).
 pub fn messages_from_entries(entries: &[serde_json::Value]) -> Vec<crate::types::message::Message> {
-    let messages = crate::utils::conversation::into_typed_messages(entries.to_vec());
-    messages
+    
+    crate::utils::conversation::into_typed_messages(entries.to_vec())
 }
 
 /// Model projection of a system entry — the wire→union adapter shared by the
@@ -531,10 +531,10 @@ mod tests {
             .tool_use_by_tool_use_id
             .get(result.tool_use_id.0.as_str());
         let tool_name = tool_use_row
-            .and_then(|row| crate::components::message_row::assistant_tool_use_name(row))
+            .and_then(crate::components::message_row::assistant_tool_use_name)
             .unwrap_or_default();
         let tool_input = tool_use_row
-            .and_then(|row| crate::components::message_row::assistant_tool_use_input(row));
+            .and_then(crate::components::message_row::assistant_tool_use_input);
         crate::components::messages::user_tool_result_message::render_tool_result_lines_for_result(
             &tool_name,
             result.derived_status(),
@@ -971,7 +971,7 @@ mod tests {
         ];
 
         let messages = renderable_messages_from_entries(&entries);
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,
@@ -1082,7 +1082,7 @@ mod tests {
         ];
 
         let messages = renderable_messages_from_entries(&entries);
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,
@@ -1143,7 +1143,7 @@ mod tests {
         let messages = renderable_messages_from_entries(
             &crate::utils::conversation::deserialize_messages(entries),
         );
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,
@@ -1328,7 +1328,7 @@ mod tests {
         ];
 
         let messages = renderable_messages_from_entries(&entries);
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,
@@ -1386,7 +1386,7 @@ mod tests {
         ];
 
         let messages = renderable_messages_from_entries(&entries);
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,
@@ -1449,7 +1449,7 @@ mod tests {
         let messages = renderable_messages_from_entries(
             &crate::utils::conversation::deserialize_messages(entries),
         );
-        let tool_uses = messages.iter().cloned().collect::<Vec<_>>();
+        let tool_uses = messages.to_vec();
         let tool_uses = recovered_tool_rows(&tool_uses);
         assert_eq!(
             tool_uses,

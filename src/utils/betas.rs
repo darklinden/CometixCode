@@ -94,9 +94,7 @@ pub fn model_supports_auto_mode(model: &str) -> bool {
     let auto_mode_config_enabled = crate::utils::feature_flags::feature_enabled(
         crate::utils::feature_flags::FeatureFlag::AutoModeConfig,
     );
-    let allow_models = (transcript_classifier_enabled && auto_mode_config_enabled)
-        .then(|| AutoModeConfig::default().allow_models)
-        .unwrap_or_default();
+    let allow_models = if transcript_classifier_enabled && auto_mode_config_enabled { AutoModeConfig::default().allow_models } else { Default::default() };
     model_supports_auto_mode_for(
         model,
         get_api_provider(),

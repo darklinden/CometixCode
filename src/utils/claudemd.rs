@@ -1685,12 +1685,12 @@ mod tests {
         let extra = temp_dir("additional-gate");
         std::fs::write(extra.join("CLAUDE.md"), "explicit memory").unwrap();
 
-        let disabled = discover_claude_md_files_with_options(false, &[extra.clone()]);
+        let disabled = discover_claude_md_files_with_options(false, std::slice::from_ref(&extra));
         assert!(disabled.is_empty());
 
         let enabled = {
             let _enabled = EnvVarGuard::set("CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD", "1");
-            discover_claude_md_files_with_options(false, &[extra.clone()])
+            discover_claude_md_files_with_options(false, std::slice::from_ref(&extra))
         };
 
         assert_eq!(enabled.len(), 1);
@@ -1713,7 +1713,7 @@ mod tests {
         std::fs::write(extra.join(".claude/rules/a.md"), "rule a").unwrap();
         std::fs::write(extra.join(".claude/rules/b.md"), "rule b").unwrap();
 
-        let files = discover_claude_md_files_with_options(false, &[extra.clone()]);
+        let files = discover_claude_md_files_with_options(false, std::slice::from_ref(&extra));
 
         let normalized_extra = normalize_for_dedup(&extra);
         let relative_paths = files

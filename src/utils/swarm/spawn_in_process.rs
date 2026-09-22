@@ -96,7 +96,7 @@ pub async fn spawn_in_process_teammate(
     let abort_controller = task_state
         .abort_controller
         .clone()
-        .unwrap_or_else(AbortController::default);
+        .unwrap_or_default();
     let teammate_context = create_teammate_context(CreateTeammateContextConfig {
         agent_id: agent_id.clone(),
         agent_name: config.name,
@@ -120,6 +120,9 @@ pub async fn spawn_in_process_teammate(
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
 
     #[test]

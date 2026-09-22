@@ -36,6 +36,8 @@ impl RememberDirectoryOption {
         }
     }
 
+    // Returns `Self`, not `Result`, so `FromStr` cannot be implemented; the name mirrors CC.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(value: &str) -> Self {
         match value {
             "yes-remember" => Self::YesRemember,

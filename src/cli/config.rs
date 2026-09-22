@@ -140,14 +140,7 @@ impl CliConfig {
     pub fn category_status(&self) -> Vec<(&'static str, ImplStatus)> {
         vec![
             ("version/help", ImplStatus::Live),
-            (
-                "debug/verbose",
-                if self.debug || self.debug_file.is_some() || self.verbose {
-                    ImplStatus::Live
-                } else {
-                    ImplStatus::Live
-                },
-            ),
+            ("debug/verbose", ImplStatus::Live),
             ("bare", ImplStatus::Live),
             ("print/headless", ImplStatus::Live),
             (
@@ -164,9 +157,7 @@ impl CliConfig {
                 "session",
                 if (self.session_id.is_some() || self.fork_session) && !self.print {
                     ImplStatus::Unimplemented
-                } else if self.from_pr.is_some() {
-                    ImplStatus::Partial
-                } else if self.resume.is_some() || self.continue_session {
+                } else if self.from_pr.is_some() || self.resume.is_some() || self.continue_session {
                     ImplStatus::Partial
                 } else {
                     ImplStatus::Live

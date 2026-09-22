@@ -22,16 +22,12 @@ pub struct RemoteToolUse {
     pub name: String,
     pub input: serde_json::Value,
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum RemoteDetailKind {
+    #[default]
     Generic,
     Ultraplan { phase: Option<String> },
     Review,
-}
-impl Default for RemoteDetailKind {
-    fn default() -> Self {
-        Self::Generic
-    }
 }
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RemoteSessionDetailData {

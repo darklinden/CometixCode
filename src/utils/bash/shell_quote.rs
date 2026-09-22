@@ -269,7 +269,7 @@ pub fn has_malformed_tokens(command: &str, parsed: &[ParseEntry]) -> bool {
         }
         index += 1;
     }
-    if double_count % 2 != 0 || single_count % 2 != 0 {
+    if !double_count.is_multiple_of(2) || !single_count.is_multiple_of(2) {
         return true;
     }
 

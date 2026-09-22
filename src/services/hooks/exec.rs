@@ -214,6 +214,8 @@ pub async fn exec_command_hook(
             futures::future::Either::Right((_, run_fut)) => {
                 // Timeout: the child is inside the still-pending run future.
                 // Dropping run_fut drops the child, which sends SIGKILL on Unix.
+                // Ends the reborrow; the pinned future below still owns the child.
+                #[allow(clippy::drop_non_drop)]
                 drop(run_fut);
                 CommandExecResult {
                     stdout: String::new(),
@@ -240,6 +242,8 @@ pub async fn exec_command_hook(
         futures::future::Either::Right(((), execution)) => {
             // The pending execution owns the child. Dropping it preserves the
             // existing kill-on-drop cancellation behavior.
+            // Ends the reborrow; the pinned future below still owns the child.
+            #[allow(clippy::drop_non_drop)]
             drop(execution);
             CommandExecResult {
                 stdout: String::new(),

@@ -40,8 +40,9 @@ pub(crate) fn forced_method_message(method: Option<ForceLoginMethod>) -> Option<
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub(crate) enum OAuthStatus {
+    #[default]
     Idle,
     #[allow(dead_code)]
     PlatformSetup,
@@ -67,11 +68,6 @@ pub(crate) enum OAuthStatus {
     },
 }
 
-impl Default for OAuthStatus {
-    fn default() -> Self {
-        Self::Idle
-    }
-}
 
 #[derive(Default, Props)]
 pub(crate) struct ConsoleOAuthFlowProps {

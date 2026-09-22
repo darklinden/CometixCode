@@ -34,68 +34,6 @@ pub fn is_team_memory_write_or_edit(
         .is_some_and(|path| is_team_mem_file(std::path::Path::new(path)))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct GlobalConfigGuard(Option<crate::utils::config::GlobalConfig>);
-
-    impl Drop for GlobalConfigGuard {
-        fn drop(&mut self) {
-            crate::utils::config::replace_test_global_config(self.0.take());
-        }
-    }
-
-    #[test]
-    fn team_memory_predicates_ignore_growthbook_delivery() {
-        let _lock = crate::utils::env_utils::TEST_ENV_LOCK.lock().unwrap();
-        let root = std::env::temp_dir().join(format!(
-            "cometix-team-memory-ops-{}",
-            uuid::Uuid::new_v4().simple()
-        ));
-        let _memory_env = [
-            crate::utils::env_utils::EnvVarGuard::set("CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", &root),
-            crate::utils::env_utils::EnvVarGuard::set("CLAUDE_CODE_DISABLE_AUTO_MEMORY", "false"),
-        ];
-
-        let mut config = crate::utils::config::GlobalConfig::default();
-        config.cached_growth_book_features = Some(std::collections::HashMap::from([(
-            "tengu_herring_clock".to_string(),
-            serde_json::json!(true),
-        )]));
-        config.growth_book_overrides = Some(std::collections::HashMap::from([(
-            "tengu_herring_clock".to_string(),
-            serde_json::json!(true),
-        )]));
-        let _config = GlobalConfigGuard(crate::utils::config::replace_test_global_config(Some(
-            config,
-        )));
-
-        let team_file = root.join("team/MEMORY.md").display().to_string();
-        // Field extraction and path matching are unchanged; the cohort gate now
-        // comes from the source-controlled switch table, so the injected cache
-        // cannot turn team-memory collapse on.
-        assert!(crate::memdir::team_mem_paths::is_team_mem_path(
-            std::path::Path::new(&team_file)
-        ));
-        assert!(!crate::memdir::team_mem_paths::is_team_memory_enabled());
-        assert!(!is_team_memory_search(Some(
-            &serde_json::json!({"path": team_file.clone()})
-        )));
-        assert!(!is_team_memory_search(Some(
-            &serde_json::json!({"glob": "team/*.md"})
-        )));
-        assert!(!is_team_memory_write_or_edit(
-            "Write",
-            Some(&serde_json::json!({"file_path": team_file.clone()}))
-        ));
-        assert!(!is_team_memory_write_or_edit(
-            "MultiEdit",
-            Some(&serde_json::json!({"file_path": team_file}))
-        ));
-    }
-}
-
 /// Maps to: CC `utils/teamMemoryOps.ts:42-88#appendTeamMemorySummaryParts`.
 ///
 /// CC's sole caller is `collapseReadSearch.ts:1018`, reached only under
@@ -165,5 +103,67 @@ pub fn append_team_memory_summary_parts(
         let count = counts.team_memory_write_count;
         let noun = if count == 1 { "memory" } else { "memories" };
         parts.push(format!("{verb} {count} team {noun}"));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct GlobalConfigGuard(Option<crate::utils::config::GlobalConfig>);
+
+    impl Drop for GlobalConfigGuard {
+        fn drop(&mut self) {
+            crate::utils::config::replace_test_global_config(self.0.take());
+        }
+    }
+
+    #[test]
+    fn team_memory_predicates_ignore_growthbook_delivery() {
+        let _lock = crate::utils::env_utils::TEST_ENV_LOCK.lock().unwrap();
+        let root = std::env::temp_dir().join(format!(
+            "cometix-team-memory-ops-{}",
+            uuid::Uuid::new_v4().simple()
+        ));
+        let _memory_env = [
+            crate::utils::env_utils::EnvVarGuard::set("CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", &root),
+            crate::utils::env_utils::EnvVarGuard::set("CLAUDE_CODE_DISABLE_AUTO_MEMORY", "false"),
+        ];
+
+        let mut config = crate::utils::config::GlobalConfig::default();
+        config.cached_growth_book_features = Some(std::collections::HashMap::from([(
+            "tengu_herring_clock".to_string(),
+            serde_json::json!(true),
+        )]));
+        config.growth_book_overrides = Some(std::collections::HashMap::from([(
+            "tengu_herring_clock".to_string(),
+            serde_json::json!(true),
+        )]));
+        let _config = GlobalConfigGuard(crate::utils::config::replace_test_global_config(Some(
+            config,
+        )));
+
+        let team_file = root.join("team/MEMORY.md").display().to_string();
+        // Field extraction and path matching are unchanged; the cohort gate now
+        // comes from the source-controlled switch table, so the injected cache
+        // cannot turn team-memory collapse on.
+        assert!(crate::memdir::team_mem_paths::is_team_mem_path(
+            std::path::Path::new(&team_file)
+        ));
+        assert!(!crate::memdir::team_mem_paths::is_team_memory_enabled());
+        assert!(!is_team_memory_search(Some(
+            &serde_json::json!({"path": team_file.clone()})
+        )));
+        assert!(!is_team_memory_search(Some(
+            &serde_json::json!({"glob": "team/*.md"})
+        )));
+        assert!(!is_team_memory_write_or_edit(
+            "Write",
+            Some(&serde_json::json!({"file_path": team_file.clone()}))
+        ));
+        assert!(!is_team_memory_write_or_edit(
+            "MultiEdit",
+            Some(&serde_json::json!({"file_path": team_file}))
+        ));
     }
 }

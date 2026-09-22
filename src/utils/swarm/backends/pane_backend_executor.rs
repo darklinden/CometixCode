@@ -75,12 +75,12 @@ impl PaneBackendExecutor {
             return;
         }
         let backend_type = self.backend_type;
-        let tmux_backend = self.tmux_backend.clone();
-        let iterm_backend = self.iterm_backend.clone();
+        let tmux_backend = self.tmux_backend;
+        let iterm_backend = self.iterm_backend;
         let spawned_teammates = Arc::clone(&self.spawned_teammates);
         crate::utils::cleanup_registry::register_cleanup(move || {
-            let tmux_backend = tmux_backend.clone();
-            let iterm_backend = iterm_backend.clone();
+            let tmux_backend = tmux_backend;
+            let iterm_backend = iterm_backend;
             let spawned_teammates = Arc::clone(&spawned_teammates);
             async move {
                 // CC `:167` iterates the live map, `:173` clears it afterwards.

@@ -138,6 +138,8 @@ pub fn get_directory_for_path(path: &str) -> String {
 }
 
 #[cfg(test)]
+// Further ported items follow the test module in this file.
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
 

@@ -353,9 +353,7 @@ pub fn modal_pager_action(input: &str, key: ScrollKey) -> Option<ModalPagerActio
             _ => None,
         };
     }
-    let Some(c) = input.chars().next() else {
-        return None;
-    };
+    let c = input.chars().next()?;
     if input.chars().any(|ch| ch != c) {
         return None;
     }
@@ -776,7 +774,7 @@ mod tests {
         assert_eq!(compute_wheel_step(&mut state, 1, 100.0), 1);
         assert_eq!(compute_wheel_step(&mut state, 1, 120.0), 1);
         assert_eq!(compute_wheel_step(&mut state, -1, 130.0), 0);
-        assert_eq!(state.pending_flip, true);
+        assert!(state.pending_flip);
         let bounce_step = compute_wheel_step(&mut state, 1, 140.0);
         assert!(state.wheel_mode);
         assert!(

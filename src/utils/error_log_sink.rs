@@ -179,7 +179,7 @@ fn log_error_impl(error: LogError) -> io::Result<()> {
 /// Maps to: CC `utils/errorLogSink.ts:179-195` `logMCPErrorImpl`.
 fn log_mcp_error_impl(server_name: &str, error: McpLogError) -> io::Result<()> {
     log_for_debugging_with_level(
-        &format!("MCP server \"{server_name}\" {}", error.to_string()),
+        &format!("MCP server \"{server_name}\" {}", error),
         DebugLogLevel::Error,
     );
     let path = get_mcp_logs_path(server_name)?;

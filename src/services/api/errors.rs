@@ -268,7 +268,7 @@ pub fn is_media_size_error_message(msg: &ApiAssistantMessage) -> bool {
         && msg
             .error_details
             .as_deref()
-            .map_or(false, is_media_size_error)
+            .is_some_and(is_media_size_error)
 }
 
 // ---------------------------------------------------------------------------
@@ -370,9 +370,9 @@ fn is_ccr_mode() -> bool {
 /// Maps to: CC services/api/errors.ts:387-398
 pub fn is_valid_api_message(value: &serde_json::Value) -> bool {
     value.is_object()
-        && value.get("content").map_or(false, |c| c.is_array())
-        && value.get("model").map_or(false, |m| m.is_string())
-        && value.get("usage").map_or(false, |u| u.is_object())
+        && value.get("content").is_some_and(|c| c.is_array())
+        && value.get("model").is_some_and(|m| m.is_string())
+        && value.get("usage").is_some_and(|u| u.is_object())
 }
 
 /// Given a response that doesn't look quite right, see if it contains any
@@ -681,7 +681,7 @@ pub fn classify_api_error(error: &ApiErrorInfo) -> ApiErrorClass {
 
     // Connection errors
     if let ApiErrorInfo::Connection { details, .. } = error {
-        if details.as_ref().map_or(false, |d| d.is_ssl_error) {
+        if details.as_ref().is_some_and(|d| d.is_ssl_error) {
             return ApiErrorClass::SslCertError;
         }
         return ApiErrorClass::ConnectionError;

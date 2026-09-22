@@ -53,7 +53,7 @@ fn private_command_config(
     crate::utils::shell::read_only_command_validation::CommandConfig,
 )> {
     use crate::utils::shell::read_only_command_validation::{CommandConfig, FlagArgType};
-    if words.get(0).map(String::as_str) == Some("xargs") {
+    if words.first().map(String::as_str) == Some("xargs") {
         return Some((
             "xargs",
             1,
@@ -75,7 +75,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("file") {
+    if words.first().map(String::as_str) == Some("file") {
         return Some((
             "file",
             1,
@@ -125,7 +125,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("sed") {
+    if words.first().map(String::as_str) == Some("sed") {
         return Some((
             "sed",
             1,
@@ -156,7 +156,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("sort") {
+    if words.first().map(String::as_str) == Some("sort") {
         return Some((
             "sort",
             1,
@@ -212,7 +212,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("man") {
+    if words.first().map(String::as_str) == Some("man") {
         return Some((
             "man",
             1,
@@ -235,7 +235,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("help") {
+    if words.first().map(String::as_str) == Some("help") {
         return Some((
             "help",
             1,
@@ -249,7 +249,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("netstat") {
+    if words.first().map(String::as_str) == Some("netstat") {
         return Some((
             "netstat",
             1,
@@ -272,7 +272,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("ps") {
+    if words.first().map(String::as_str) == Some("ps") {
         return Some((
             "ps",
             1,
@@ -325,7 +325,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("base64") {
+    if words.first().map(String::as_str) == Some("base64") {
         return Some((
             "base64",
             1,
@@ -349,7 +349,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("grep") {
+    if words.first().map(String::as_str) == Some("grep") {
         return Some((
             "grep",
             1,
@@ -444,7 +444,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("sha256sum") {
+    if words.first().map(String::as_str) == Some("sha256sum") {
         return Some((
             "sha256sum",
             1,
@@ -472,7 +472,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("sha1sum") {
+    if words.first().map(String::as_str) == Some("sha1sum") {
         return Some((
             "sha1sum",
             1,
@@ -500,7 +500,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("md5sum") {
+    if words.first().map(String::as_str) == Some("md5sum") {
         return Some((
             "md5sum",
             1,
@@ -528,7 +528,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("tree") {
+    if words.first().map(String::as_str) == Some("tree") {
         return Some((
             "tree",
             1,
@@ -601,7 +601,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("date") {
+    if words.first().map(String::as_str) == Some("date") {
         return Some((
             "date",
             1,
@@ -627,7 +627,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("hostname") {
+    if words.first().map(String::as_str) == Some("hostname") {
         return Some((
             "hostname",
             1,
@@ -659,7 +659,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("info") {
+    if words.first().map(String::as_str) == Some("info") {
         return Some((
             "info",
             1,
@@ -690,7 +690,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("lsof") {
+    if words.first().map(String::as_str) == Some("lsof") {
         return Some((
             "lsof",
             1,
@@ -738,7 +738,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("pgrep") {
+    if words.first().map(String::as_str) == Some("pgrep") {
         return Some((
             "pgrep",
             1,
@@ -798,7 +798,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("tput") {
+    if words.first().map(String::as_str) == Some("tput") {
         return Some((
             "tput",
             1,
@@ -812,7 +812,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("ss") {
+    if words.first().map(String::as_str) == Some("ss") {
         return Some((
             "ss",
             1,
@@ -890,7 +890,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("fd") {
+    if words.first().map(String::as_str) == Some("fd") {
         return Some((
             "fd",
             1,
@@ -966,7 +966,7 @@ fn private_command_config(
             },
         ));
     }
-    if words.get(0).map(String::as_str) == Some("fdfind") {
+    if words.first().map(String::as_str) == Some("fdfind") {
         return Some((
             "fdfind",
             1,
@@ -1042,7 +1042,7 @@ fn private_command_config(
             },
         ));
     }
-    if cfg!(feature = "anthropic_internal") && words.get(0).map(String::as_str) == Some("aki") {
+    if cfg!(feature = "anthropic_internal") && words.first().map(String::as_str) == Some("aki") {
         return Some((
             "aki",
             1,

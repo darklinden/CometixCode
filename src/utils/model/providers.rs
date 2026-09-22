@@ -75,9 +75,7 @@ fn parse_url_host(url: &str) -> Option<String> {
     if trimmed.is_empty() {
         return None;
     }
-    let Some((scheme, after_scheme)) = trimmed.split_once("://") else {
-        return None;
-    };
+    let (scheme, after_scheme) = trimmed.split_once("://")?;
     if scheme.is_empty() {
         return None;
     }

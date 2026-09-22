@@ -21,6 +21,7 @@
 //!     (CC state/onChangeAppState.ts)
 //!   - `app_state` — AppStateProvider + the useAppState family
 //!     (CC state/AppState.tsx)
+//!
 //! Component-local transient state stays in per-component `use_state`, same
 //! boundary as CC's REPL local useState vs AppState split.
 //!
@@ -42,6 +43,7 @@
 //! `load_global_config()`; startup diagnostics are a plain injected
 //! `StartupDiagnosticsSnapshot`). Footer Notification rows use live height
 //! + the PromptInput-scoped `FooterLayoutWake` (L1, PORTING.md; layout flips
+//!
 //! never wake the AppStore — no FooterIndicators bag);
 //! prefersReducedMotion is read from
 //! `AppState.settings` directly (no DisplaySettings bag);

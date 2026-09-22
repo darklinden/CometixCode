@@ -80,13 +80,12 @@ fn file_edit_result(message: &UserMessage) -> Option<FileEditResult> {
     let structured_patch = value
         .get("structuredPatch")
         .and_then(serde_json::Value::as_array)
-        .map(|hunks| {
+        .and_then(|hunks| {
             hunks
                 .iter()
                 .map(hunk_from_value)
                 .collect::<Option<Vec<_>>>()
         })
-        .flatten()
         .unwrap_or_default();
     let is_new_file = value.get("type").and_then(serde_json::Value::as_str) == Some("create")
         && value

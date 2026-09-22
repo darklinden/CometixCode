@@ -523,11 +523,9 @@ pub fn apply_tool_result_budget_with_state_and_skip_tool_names_result(
         if frozen_size + fresh_size > limit {
             let mut remaining = frozen_size + fresh_size;
             let mut clearable = eligible_fresh
-                .iter()
-                .cloned()
-                .filter(|candidate| candidate.clearable)
+                .iter().filter(|&candidate| candidate.clearable).cloned()
                 .collect::<Vec<_>>();
-            clearable.sort_by(|left, right| right.len.cmp(&left.len));
+            clearable.sort_by_key(|right| std::cmp::Reverse(right.len));
             for candidate in clearable {
                 if remaining <= limit {
                     break;
@@ -543,8 +541,8 @@ pub fn apply_tool_result_budget_with_state_and_skip_tool_names_result(
             .collect::<std::collections::HashSet<_>>();
         for candidate in frozen
             .into_iter()
-            .chain(skipped_fresh.into_iter())
-            .chain(eligible_fresh.into_iter())
+            .chain(skipped_fresh)
+            .chain(eligible_fresh)
             .filter(|candidate| !selected_ids.contains(&candidate.tool_use_id))
         {
             state.seen_ids.insert(candidate.tool_use_id);

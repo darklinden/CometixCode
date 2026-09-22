@@ -129,7 +129,7 @@ fn from_utf16_lossy(units: &[u16]) -> String {
 // behavior, including its non-ASCII offset semantics.
 fn remove_spans(command: &str, spans: &[Span]) -> String {
     let mut sorted = outermost_spans(spans);
-    sorted.sort_unstable_by(|left, right| right.0.cmp(&left.0));
+    sorted.sort_unstable_by_key(|right| std::cmp::Reverse(right.0));
     let mut result = command.encode_utf16().collect::<Vec<_>>();
     for (start, end) in sorted {
         let start = start.min(result.len());
@@ -155,7 +155,7 @@ fn replace_spans_keep_quotes(
         .copied()
         .filter(|(start, end, _, _)| outer.contains(&(*start, *end)))
         .collect::<Vec<_>>();
-    filtered.sort_unstable_by(|left, right| right.0.cmp(&left.0));
+    filtered.sort_unstable_by_key(|right| std::cmp::Reverse(right.0));
     let mut result = command.encode_utf16().collect::<Vec<_>>();
     for (start, end, open, close) in filtered {
         let start = start.min(result.len());

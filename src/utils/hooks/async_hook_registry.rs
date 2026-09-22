@@ -449,6 +449,9 @@ pub fn clear_all_async_hooks() {
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
     use crate::utils::hooks::hook_events::{
         HookEventHandler, HookExecutionEvent, clear_hook_event_state, register_hook_event_handler,

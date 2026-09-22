@@ -2909,7 +2909,7 @@ mod tests {
         assert_eq!(scanned, cli_args(&["--print", "hi"]));
         assert!(compute_is_non_interactive(&scanned, true));
 
-        let program_only = vec!["--print".to_string()];
+        let program_only = ["--print".to_string()];
         let scanned: Vec<String> = program_only.iter().skip(1).cloned().collect();
         assert!(!compute_is_non_interactive(&scanned, true));
     }

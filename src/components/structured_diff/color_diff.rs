@@ -143,7 +143,7 @@ fn intern_syntax_theme_name(name: &str) -> &'static str {
         .lock()
         .expect("syntax theme intern cache mutex should not be poisoned");
     if let Some(value) = interned.get(name) {
-        return *value;
+        return value;
     }
     let leaked = Box::leak(name.to_string().into_boxed_str());
     interned.insert(name.to_string(), leaked);

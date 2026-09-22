@@ -247,10 +247,9 @@ impl NotificationsState {
     /// Maps to: CC timer callbacks :64-79,108-126,167-181. Source guards
     /// by key; the real cancellable timer handle protects replacement timers.
     fn clear_current_for_timeout(&mut self, key: &str, invalidates: &[String]) -> bool {
-        if !self
+        if self
             .current
-            .as_ref()
-            .is_some_and(|current| current.key == key)
+            .as_ref().is_none_or(|current| current.key != key)
         {
             return false;
         }

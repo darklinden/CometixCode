@@ -1727,10 +1727,10 @@ pub fn apply_mcp_server_update(state: &mut McpState, update: impl Into<McpPendin
     } else if commands.as_ref().is_some_and(Vec::is_empty) {
         server.prompts.clear();
     }
-    if resources.is_none() {
-        server.resources = previous.map(|p| p.resources.clone()).unwrap_or_default();
+    if let Some(resources) = resources.as_ref() {
+        server.resources = resources.clone();
     } else {
-        server.resources = resources.as_ref().unwrap().clone();
+        server.resources = previous.map(|p| p.resources.clone()).unwrap_or_default();
     }
     if let Some(tools) = tools {
         let prefix = format!(

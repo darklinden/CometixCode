@@ -427,9 +427,7 @@ pub fn MCPListPanel<'a>(
                             View(flex_direction: FlexDirection::Column, margin_bottom: 1u32) {
                                 View(padding_left: 2u32) { Text(content: "Agent MCPs".to_string(), weight: Weight::Bold, wrap: TextWrap::NoWrap) }
                                 #(source_agents.into_iter().map(|agent_name| {
-                                    let rows = agent_servers.iter().enumerate().filter_map(|(offset, agent_server)| {
-                                        agent_server.source_agents.contains(&agent_name).then(|| (offset, agent_server.clone()))
-                                    }).collect::<Vec<_>>();
+                                    let rows = agent_servers.iter().enumerate().filter(|&(_offset, agent_server)| agent_server.source_agents.contains(&agent_name)).map(|(offset, agent_server)| (offset, agent_server.clone())).collect::<Vec<_>>();
                                     element! {
                                         View(flex_direction: FlexDirection::Column, margin_top: 1u32) {
                                             View(padding_left: 2u32) { Text(content: format!("@{agent_name}"), dim: true, wrap: TextWrap::NoWrap) }

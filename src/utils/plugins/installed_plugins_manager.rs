@@ -85,6 +85,8 @@ pub fn clear_installed_plugins_cache() {
 /// Maps to: CC installedPluginsManager.ts:259-278#readInstalledPluginsFileRaw.
 /// Native LogError retains exception names at the shared logging boundary.
 /// The pre-existing JSON->Value nonfinite/lone UTF-16 limits still apply.
+// `LogError` is the ported CC error type; callers match its fields.
+#[allow(clippy::result_large_err)]
 fn read_installed_plugins_file_raw() -> Result<Option<(f64, Value)>, LogError> {
     let _turn = InstalledPluginsTurn::enter();
     let path = get_installed_plugins_file_path();
@@ -146,6 +148,8 @@ fn migrate_v1_to_v2(v1_data: Value) -> Value {
 }
 
 /// Maps to: CC installedPluginsManager.ts:315-364#loadInstalledPluginsV2.
+// `LogError` is the ported CC error type; callers match its fields.
+#[allow(clippy::result_large_err)]
 pub fn load_installed_plugins_v2() -> InstalledPluginsReference {
     let _turn = InstalledPluginsTurn::enter();
     if let Some(data) = INSTALLED_PLUGINS_CACHE_V2.lock().unwrap().as_ref() {
@@ -246,6 +250,8 @@ pub fn get_in_memory_installed_plugins() -> InstalledPluginsReference {
 }
 
 /// Maps to: CC installedPluginsManager.ts:502-524#loadInstalledPluginsFromDisk.
+// `LogError` is the ported CC error type; callers match its fields.
+#[allow(clippy::result_large_err)]
 pub fn load_installed_plugins_from_disk() -> Value {
     let _turn = InstalledPluginsTurn::enter();
     let loaded = (|| -> Result<Value, LogError> {

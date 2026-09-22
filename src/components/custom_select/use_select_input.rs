@@ -305,6 +305,7 @@ pub fn use_select_input(
 
     // CC :173-286 — remaining raw keys: numbers, pageUp/pageDown, space.
     hooks.use_propagated_terminal_events({
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let metas = metas;
         let mut accepted = accepted;
         let mut toggled = toggled;

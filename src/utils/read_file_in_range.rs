@@ -860,7 +860,6 @@ mod tests {
             None,
             ReadFileRangeOptions {
                 truncate_on_byte_limit: true,
-                ..Default::default()
             },
         )
         .unwrap();

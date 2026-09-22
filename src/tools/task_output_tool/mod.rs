@@ -510,6 +510,9 @@ impl crate::tool::ToolCall for TaskOutputTool {
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
 
     #[test]

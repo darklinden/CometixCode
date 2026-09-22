@@ -1095,15 +1095,14 @@ mod tests {
             FileEditTool.get_activity_description(&serde_json::json!({})),
             Some("Editing file".to_string())
         );
-        assert_eq!(
+        assert!(
             FileEditTool
                 .prepare_permission_matcher(&serde_json::json!({
                     "file_path": "/repo/src/lib.rs",
                     "old_string": "a",
                     "new_string": "b"
                 }))
-                .expect("matcher")("/repo/src/**"),
-            true
+                .expect("matcher")("/repo/src/**")
         );
     }
 

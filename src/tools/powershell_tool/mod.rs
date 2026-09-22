@@ -418,10 +418,7 @@ pub(crate) fn powershell_output(
 }
 
 fn strip_leading_blank_lines(mut text: String) -> String {
-    loop {
-        let Some((first, rest)) = text.split_once('\n') else {
-            break;
-        };
+    while let Some((first, rest)) = text.split_once('\n') {
         if !first.trim().is_empty() {
             break;
         }

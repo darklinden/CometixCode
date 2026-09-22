@@ -63,7 +63,7 @@ mod tests {
         }
         .render(Some(20));
 
-        assert!(canvas.height() >= 3, "canvas=\n{}", canvas.to_string());
+        assert!(canvas.height() >= 3, "canvas=\n{}", canvas);
         assert!(canvas.to_string().contains("row"));
     }
 }

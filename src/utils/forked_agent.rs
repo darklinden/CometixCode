@@ -1122,12 +1122,11 @@ mod tests {
                 .is_some_and(|rules| rules.iter().any(|rule| rule.tool_name == "Read"))
         );
         assert!(
-            store
+            !store
                 .get()
                 .tool_permission_context
                 .always_allow_rules
-                .get(&PermissionRuleSource::Command)
-                .is_none()
+                .contains_key(&PermissionRuleSource::Command)
         );
     }
 

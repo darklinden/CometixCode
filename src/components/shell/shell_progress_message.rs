@@ -134,7 +134,7 @@ pub fn ShellProgressMessage(props: &ShellProgressMessageProps) -> impl Into<AnyE
                 View(flex_direction: FlexDirection::Column) {
                     View(
                         flex_direction: FlexDirection::Column,
-                        height: if props.verbose { display_lines.lines().count().max(1) as u32 } else { display_lines.lines().count().min(5).max(1) as u32 },
+                        height: if props.verbose { display_lines.lines().count().max(1) as u32 } else { display_lines.lines().count().clamp(1, 5) as u32 },
                         overflow: Overflow::Hidden,
                     ) {
                         Text(content: display_lines, dim: true, wrap: TextWrap::Wrap)

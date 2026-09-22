@@ -366,8 +366,7 @@ pub fn AttachmentMessage(
             Attachment::AsyncHookResponse { hook_event, .. } => {
                 // CC :350-363: SessionStart completions only in verbose; all
                 // async completions hidden outside verbose/transcript.
-                if (hook_event == "SessionStart" && !props.verbose)
-                    || (!props.verbose && !props.is_transcript_mode)
+                if (!props.is_transcript_mode || hook_event == "SessionStart") && !props.verbose
                 {
                     return element! { Fragment }.into_any();
                 }

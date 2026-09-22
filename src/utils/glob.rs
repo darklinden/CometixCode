@@ -118,7 +118,7 @@ pub fn extract_glob_base_directory(pattern: &str) -> ExtractedGlobBaseDirectory 
         .filter_map(|(index, character)| {
             (character == '/' || (cfg!(windows) && character == '\\')).then_some(index)
         })
-        .last();
+        .next_back();
     let Some(last_separator) = last_separator else {
         return ExtractedGlobBaseDirectory {
             base_dir: String::new(),

@@ -95,9 +95,7 @@ pub(crate) async fn enter_worktree_output(input: &serde_json::Value) -> Result<O
     // CC feeds `setOriginalCwd(getCwd())`, i.e. the realpath'd value `setCwd`
     // resolved — not the join()'d `session.worktreePath` (ExitWorktreeTool.ts:246-249).
     let resolved_cwd =
-        crate::utils::shell::set_cwd(std::path::Path::new(&session.worktree_path), None)
-            .map(std::path::PathBuf::from)
-            .unwrap_or_else(|_| std::path::PathBuf::from(&session.worktree_path));
+        crate::utils::shell::set_cwd(std::path::Path::new(&session.worktree_path), None).unwrap_or_else(|_| std::path::PathBuf::from(&session.worktree_path));
     crate::bootstrap::state::set_original_cwd(resolved_cwd);
     crate::utils::session_storage::save_worktree_state(
         crate::utils::worktree::worktree_session_to_persisted_json(&session),

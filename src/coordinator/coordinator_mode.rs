@@ -77,8 +77,7 @@ pub fn match_session_mode(session_mode: Option<&str>) -> Option<String> {
         && crate::utils::env_utils::is_env_truthy(
             update
                 .snapshot()
-                .var("CLAUDE_CODE_COORDINATOR_MODE")
-                .as_deref(),
+                .var("CLAUDE_CODE_COORDINATOR_MODE"),
         );
     if current_is_coordinator == session_is_coordinator {
         return None;
@@ -112,19 +111,17 @@ pub fn get_coordinator_user_context(
     let env = crate::utils::process_env::snapshot();
     if !feature_enabled(FeatureFlag::CoordinatorMode)
         || !crate::utils::env_utils::is_env_truthy(
-            env.var("CLAUDE_CODE_COORDINATOR_MODE").as_deref(),
+            env.var("CLAUDE_CODE_COORDINATOR_MODE"),
         )
     {
         return BTreeMap::new();
     }
 
     let worker_tools =
-        if crate::utils::env_utils::is_env_truthy(env.var("CLAUDE_CODE_SIMPLE").as_deref()) {
-            let mut names = vec![
-                BASH_TOOL_NAME,
+        if crate::utils::env_utils::is_env_truthy(env.var("CLAUDE_CODE_SIMPLE")) {
+            let mut names = [BASH_TOOL_NAME,
                 FILE_READ_TOOL_NAME,
-                crate::tools::file_edit_tool::constants::FILE_EDIT_TOOL_NAME,
-            ];
+                crate::tools::file_edit_tool::constants::FILE_EDIT_TOOL_NAME];
             names.sort_unstable();
             names.join(", ")
         } else {

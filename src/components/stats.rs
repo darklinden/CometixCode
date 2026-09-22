@@ -43,19 +43,15 @@ pub fn get_next_date_range(current: StatsDateRange) -> StatsDateRange {
     DATE_RANGE_ORDER[(index + 1) % DATE_RANGE_ORDER.len()]
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum StatsResult {
     Success(ClaudeCodeStats),
     Error(String),
     Empty,
+    #[default]
     Loading,
 }
 
-impl Default for StatsResult {
-    fn default() -> Self {
-        Self::Loading
-    }
-}
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum StatsTab {
@@ -409,14 +405,14 @@ fn chart_colored(symbol: char, series_index: usize) -> String {
 }
 
 fn chart_axis_label(value: f64) -> String {
-    let label = if value >= 1_000_000.0 {
+    
+    if value >= 1_000_000.0 {
         format!("{:.1}M", value / 1_000_000.0)
     } else if value >= 1_000.0 {
         format!("{:.0}k", value / 1_000.0)
     } else {
         format!("{value:.0}")
-    };
-    label
+    }
 }
 
 /// Native translation of the `asciichart.plot(...)` dependency used by
@@ -614,10 +610,10 @@ pub fn render_overview_to_ansi(stats: &ClaudeCodeStats) -> Vec<String> {
     let favorite_model = model_entries.first();
     let total_tokens = total_tokens_for_models(&model_entries);
 
-    if favorite_model.is_some() {
+    if let Some(favorite_model) = favorite_model {
         lines.push(two_column_row(
             "Favorite model",
-            &render_model_name(&favorite_model.unwrap().0),
+            &render_model_name(&favorite_model.0),
             "Total tokens",
             &format_number(total_tokens),
         ));
@@ -1150,14 +1146,13 @@ fn StatsOverviewContent(
     let theme = hooks.use_context::<Theme>();
     let overview = overview_data(&props.stats, props.date_range, false, 0);
     let heatmap = (!props.all_time_stats.daily_activity.is_empty()).then(|| {
-        crate::utils::heatmap::generate_heatmap(
-            &props.all_time_stats.daily_activity,
-            crate::utils::heatmap::HeatmapOptions {
-                terminal_width: Some(props.terminal_width),
-                show_month_labels: Some(true),
-                ..crate::utils::heatmap::HeatmapOptions::default()
-            },
-        )
+        // `today` is a `#[cfg(test)]` field, so a struct-update base would be
+        // required in test builds and a no-op in the lib build; fill the two
+        // production fields on a defaulted value instead.
+        let mut options = crate::utils::heatmap::HeatmapOptions::default();
+        options.terminal_width = Some(props.terminal_width);
+        options.show_month_labels = Some(true);
+        crate::utils::heatmap::generate_heatmap(&props.all_time_stats.daily_activity, options)
     });
     let longest_session = props
         .stats

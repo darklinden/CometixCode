@@ -321,7 +321,7 @@ fn web_search_progress_from_stream_content(
             let search_query = input.get("query").and_then(|value| value.as_str())?;
             let changed = tool_use_queries
                 .get(id)
-                .map_or(true, |previous| previous != search_query);
+                .is_none_or(|previous| previous != search_query);
             if !changed {
                 return None;
             }

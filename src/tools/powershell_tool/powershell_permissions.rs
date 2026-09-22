@@ -829,7 +829,8 @@ mod tests {
             ],
         );
 
-        for command in ["scripts\\build.exe --flag"] {
+        {
+            let command = "scripts\\build.exe --flag";
             // Pins the rule as actually matching, so the guard below stays
             // meaningful instead of passing for want of an allow rule.
             assert!(

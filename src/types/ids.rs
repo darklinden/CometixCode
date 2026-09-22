@@ -25,6 +25,8 @@ impl fmt::Display for TaskId {
 }
 
 impl SessionId {
+    // `new()` mints a fresh value, so `Default` would be misleading.
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self(uuid::Uuid::new_v4().to_string())
     }
@@ -57,6 +59,8 @@ pub fn to_agent_id(s: &str) -> Option<AgentId> {
 }
 
 impl TaskId {
+    // `new()` mints a fresh value, so `Default` would be misleading.
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self(format!("task_{}", uuid::Uuid::new_v4().simple()))
     }

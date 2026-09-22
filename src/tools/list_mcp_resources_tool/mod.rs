@@ -76,7 +76,7 @@ pub(crate) async fn list_mcp_resources_output(
         .collect::<Vec<_>>();
 
     if let Some(server) = target_server {
-        if !available_servers.iter().any(|name| *name == server) {
+        if !available_servers.contains(&server) {
             return Err(format!(
                 "Server \"{server}\" not found. Available servers: {}",
                 available_servers.join(", ")

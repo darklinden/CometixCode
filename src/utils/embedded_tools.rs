@@ -13,10 +13,10 @@ pub fn has_embedded_search_tools() -> bool {
     ) {
         return false;
     }
-    match std::env::var("CLAUDE_CODE_ENTRYPOINT").ok().as_deref() {
-        Some("sdk-ts") | Some("sdk-py") | Some("sdk-cli") | Some("local-agent") => false,
-        _ => true,
-    }
+    !matches!(
+        std::env::var("CLAUDE_CODE_ENTRYPOINT").ok().as_deref(),
+        Some("sdk-ts" | "sdk-py" | "sdk-cli" | "local-agent")
+    )
 }
 
 /// Maps to: CC `embeddedSearchToolsBinaryPath()`. Path to the binary containing

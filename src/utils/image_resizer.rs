@@ -409,7 +409,7 @@ fn try_resize_and_downsample(
         }
     }
 
-    let smaller_width = width.min(1000).max(1);
+    let smaller_width = width.clamp(1, 1000);
     let smaller_height = ((height as u64 * smaller_width as u64 + (width as u64 / 2))
         / width.max(1) as u64)
         .max(1) as u32;

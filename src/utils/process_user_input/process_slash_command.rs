@@ -1161,7 +1161,7 @@ pub(crate) fn call_rename(
             is_error: false,
         } => system_display_local_command_result(
             uuid,
-            &commands::get_command_name(command),
+            commands::get_command_name(command),
             args,
             &text,
         ),

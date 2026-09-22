@@ -239,11 +239,10 @@ impl MarkdownTableLayout {
                 .iter()
                 .enumerate()
                 .map(|(idx, min)| {
-                    if total_overflow == 0 {
-                        *min
-                    } else {
-                        min + (overflows[idx] * extra_space / total_overflow)
-                    }
+                    min + overflows[idx]
+                        .checked_mul(extra_space)
+                        .and_then(|scaled| scaled.checked_div(total_overflow))
+                        .unwrap_or(0)
                 })
                 .collect()
         } else {
@@ -722,8 +721,8 @@ fn ansi_escape_end(input: &str, start: usize) -> Option<usize> {
         return None;
     }
 
-    if rest.starts_with("\x1b[") {
-        let final_rel = rest[2..].find(|ch: char| ('@'..='~').contains(&ch))?;
+    if let Some(csi_body) = rest.strip_prefix("\x1b[") {
+        let final_rel = csi_body.find(|ch: char| ('@'..='~').contains(&ch))?;
         let final_idx = start + 2 + final_rel;
         let final_char = input[final_idx..].chars().next()?;
         return Some(final_idx + final_char.len_utf8());

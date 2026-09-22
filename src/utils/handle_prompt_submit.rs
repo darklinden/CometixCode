@@ -746,12 +746,11 @@ mod tests {
         assert_eq!(params.messages.len(), 1);
         assert_eq!(result.allowed_tools, ["Read(/repo/**)"]);
         assert!(
-            params
+            !params
                 .tool_use_context
                 .tool_permission_context
                 .always_allow_rules
-                .get(&crate::types::permissions::PermissionRuleSource::Command)
-                .is_none()
+                .contains_key(&crate::types::permissions::PermissionRuleSource::Command)
         );
     }
 

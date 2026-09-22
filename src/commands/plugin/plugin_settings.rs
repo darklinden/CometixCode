@@ -1344,6 +1344,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::possible_missing_else)] // guidance/scope are independent rows.
     fn error_rows_and_navigation_matches_official_bun() {
         use crate::types::plugin::PluginError;
         use serde_json::{Value, json};

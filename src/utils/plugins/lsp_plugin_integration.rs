@@ -91,9 +91,7 @@ fn load_lsp_servers_from_file_readonly(
     errors: &std::sync::Mutex<Vec<PluginError>>,
     optional: bool,
 ) -> Option<IndexMap<String, LspServerConfig>> {
-    let Some(file_path) = validate_path_within_plugin(&plugin.path, relative_path) else {
-        return None;
-    };
+    let file_path = validate_path_within_plugin(&plugin.path, relative_path)?;
     let content = match fs::read_to_string(&file_path) {
         Ok(content) => content,
         Err(error) => {

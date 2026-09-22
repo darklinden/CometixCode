@@ -191,7 +191,7 @@ impl IParsedCommand for TreeSitterParsedCommand {
             return self.original_command.clone();
         }
         let mut sorted = self.redirection_nodes.clone();
-        sorted.sort_unstable_by(|left, right| right.start_byte.cmp(&left.start_byte));
+        sorted.sort_unstable_by_key(|right| std::cmp::Reverse(right.start_byte));
         let mut result = self.original_command.clone();
         for redirection in sorted {
             if redirection.start_byte <= redirection.end_byte

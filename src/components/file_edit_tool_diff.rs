@@ -252,13 +252,13 @@ mod tests {
         let lines = patch_lines(&data);
 
         assert!(
-            lines.iter().any(|line| *line == " alpha"),
+            lines.contains(&" alpha"),
             "lines={lines:?}"
         );
-        assert!(lines.iter().any(|line| *line == "-old"), "lines={lines:?}");
-        assert!(lines.iter().any(|line| *line == "+new"), "lines={lines:?}");
+        assert!(lines.contains(&"-old"), "lines={lines:?}");
+        assert!(lines.contains(&"+new"), "lines={lines:?}");
         assert!(
-            lines.iter().any(|line| *line == " omega"),
+            lines.contains(&" omega"),
             "lines={lines:?}"
         );
         assert_eq!(data.first_line.as_deref(), Some("alpha"));
@@ -308,8 +308,8 @@ mod tests {
             }],
         );
         let lines = patch_lines(&data);
-        assert!(lines.iter().any(|line| *line == "-old"), "lines={lines:?}");
-        assert!(lines.iter().any(|line| *line == "+new"), "lines={lines:?}");
+        assert!(lines.contains(&"-old"), "lines={lines:?}");
+        assert!(lines.contains(&"+new"), "lines={lines:?}");
         assert!(data.file_content.is_none());
     }
 
@@ -346,11 +346,11 @@ mod tests {
         let lines = patch_lines(&data);
 
         assert!(
-            lines.iter().any(|line| *line == "-let value = \"old\";"),
+            lines.contains(&"-let value = \"old\";"),
             "lines={lines:?}"
         );
         assert!(
-            lines.iter().any(|line| *line == "+let value = \"new\";"),
+            lines.contains(&"+let value = \"new\";"),
             "lines={lines:?}"
         );
     }

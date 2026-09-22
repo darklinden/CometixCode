@@ -76,7 +76,7 @@ fn node_like_relative_path(from: &Path, to: &Path) -> Option<String> {
         .take_while(|(left, right)| left == right)
         .count();
     let mut relative = Vec::new();
-    relative.extend(std::iter::repeat("..".to_string()).take(from_parts.len() - common));
+    relative.extend(std::iter::repeat_n("..".to_string(), from_parts.len() - common));
     relative.extend(to_parts[common..].iter().cloned());
     Some(relative.join("/"))
 }

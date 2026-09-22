@@ -95,9 +95,7 @@ pub fn extract_base_command(segment: &str) -> String {
 /// to the default semantic).
 pub fn heuristically_extract_base_command(command: &str) -> String {
     let last = command
-        .split([';', '|'])
-        .filter(|segment| !segment.trim().is_empty())
-        .next_back()
+        .split([';', '|']).rfind(|segment| !segment.trim().is_empty())
         .unwrap_or(command);
     extract_base_command(last)
 }

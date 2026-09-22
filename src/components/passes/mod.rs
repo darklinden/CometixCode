@@ -53,8 +53,9 @@ fn format_amount(minor_units: i64) -> String {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum PassesViewState {
+    #[default]
     Loading,
     Unavailable,
     Available {
@@ -64,11 +65,6 @@ pub enum PassesViewState {
     },
 }
 
-impl Default for PassesViewState {
-    fn default() -> Self {
-        Self::Loading
-    }
-}
 
 /// Maps to: CC `Passes.tsx` sorted passes calculation.
 pub fn sorted_passes(pass_statuses: &[PassStatus]) -> Vec<PassStatus> {

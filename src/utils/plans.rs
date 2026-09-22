@@ -212,7 +212,7 @@ pub fn copy_plan_for_resume(
                 let recovered = find_file_snapshot_entry(&messages, "plan")
                     .and_then(|entry| entry.get("content").and_then(serde_json::Value::as_str))
                     .filter(|content| !content.is_empty())
-                    .map(|content| {
+                    .inspect(|content| {
                         crate::utils::debug::log_for_debugging_with_level(
                             &format!(
                                 "Plan recovered from file snapshot, {} chars",
@@ -220,7 +220,6 @@ pub fn copy_plan_for_resume(
                             ),
                             crate::utils::debug::DebugLogLevel::Info,
                         );
-                        content
                     })
                     .or_else(|| {
                         recover_plan_from_messages(&messages).inspect(|content| {

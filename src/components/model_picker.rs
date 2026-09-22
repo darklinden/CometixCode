@@ -225,9 +225,9 @@ pub(crate) fn default_effort_level_for_option(value: &str) -> ModelEffortLevel {
 }
 
 pub(crate) fn displayed_effort(effort: ModelEffortLevel, focused_value: &str) -> ModelEffortLevel {
-    if effort == ModelEffortLevel::Max && !model_supports_max_effort(focused_value) {
-        ModelEffortLevel::High
-    } else if effort == ModelEffortLevel::Xhigh && !model_supports_xhigh_effort(focused_value) {
+    if (effort == ModelEffortLevel::Max && !model_supports_max_effort(focused_value))
+        || (effort == ModelEffortLevel::Xhigh && !model_supports_xhigh_effort(focused_value))
+    {
         ModelEffortLevel::High
     } else {
         effort
@@ -448,12 +448,6 @@ struct ModelPickerView {
     exit_key_name: Option<String>,
 }
 
-impl Default for ModelEffortLevel {
-    fn default() -> Self {
-        Self::High
-    }
-}
-
 fn focused_model_label(options: &[SelectOptionData], focused_index: usize) -> Option<&str> {
     options
         .get(focused_index)
@@ -469,7 +463,7 @@ fn render_model_picker_content(props: &ModelPickerView, theme: Theme) -> AnyElem
         .map(|option| option.value.as_str())
         .unwrap_or(MODEL_NO_PREFERENCE);
     let focused_label = focused_model_label(&props.options, focused_index);
-    let visible_option_count = count.min(MODEL_PICKER_VISIBLE_COUNT).max(1);
+    let visible_option_count = count.clamp(1, MODEL_PICKER_VISIBLE_COUNT);
     let visible_from = props
         .visible_from_index
         .min(count.saturating_sub(visible_option_count));

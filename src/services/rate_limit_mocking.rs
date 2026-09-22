@@ -78,8 +78,8 @@ pub use crate::services::mock_rate_limits::should_process_mock_limits;
 
 #[cfg(test)]
 mod tests {
-    
-
+    // `super::` on the calls because the test is feature-gated: a module-level
+    // `use super::*` reads as unused in builds without `anthropic_internal`.
     #[cfg(feature = "anthropic_internal")]
     #[test]
     fn opus_mock_only_rejects_opus_model_like_official() {
@@ -88,8 +88,8 @@ mod tests {
         crate::services::mock_rate_limits::set_mock_rate_limit_scenario(
             crate::services::mock_rate_limits::MockScenario::OpusLimit,
         );
-        assert!(check_mock_rate_limit_error("claude-opus-4-6", false).is_some());
-        assert!(check_mock_rate_limit_error("claude-sonnet-4-6", false).is_none());
+        assert!(super::check_mock_rate_limit_error("claude-opus-4-6", false).is_some());
+        assert!(super::check_mock_rate_limit_error("claude-sonnet-4-6", false).is_none());
         crate::services::mock_rate_limits::reset_for_test();
     }
 }

@@ -73,8 +73,8 @@ mod tests {
             let _values = updates
                 .iter()
                 .map(|(key, value)| match value {
-                    Some(value) => crate::utils::env_utils::EnvVarGuard::set(*key, value),
-                    None => crate::utils::env_utils::EnvVarGuard::unset(*key),
+                    Some(value) => crate::utils::env_utils::EnvVarGuard::set(key, value),
+                    None => crate::utils::env_utils::EnvVarGuard::unset(key),
                 })
                 .collect();
             Self { _values }

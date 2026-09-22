@@ -51,9 +51,7 @@ static FIND_GIT_ROOT_IMPL: std::sync::LazyLock<
                 {
                     return Some(normalize_unicode(current));
                 }
-                let Some(parent) = current.parent() else {
-                    return None;
-                };
+                let parent = current.parent()?;
                 if parent == current {
                     return None;
                 }

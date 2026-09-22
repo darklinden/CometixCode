@@ -67,6 +67,12 @@
 //! CC's synchronous rename/materialize/cleanup helpers are serialized by that
 //! same owner before writing inline.
 
+// The parity checklist above wraps its `- [x]` task-list items with the
+// continuation aligned under the item text (column 11). Clippy measures the
+// list marker as `- ` and wants two spaces instead, which would visually
+// detach each wrapped line from its item; the alignment is deliberate.
+#![allow(clippy::doc_overindented_list_items)]
+
 use crate::utils::config;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Seek, SeekFrom};
@@ -1520,7 +1526,7 @@ pub fn list_sessions(project_path: &str) -> Vec<SessionSummary> {
 fn list_stat_sessions(project_path: &str) -> Vec<SessionSummary> {
     let dir = get_project_dir(project_path);
     let mut sessions = list_stat_sessions_in_project_dir(&dir, Some(project_path));
-    sessions.sort_by(|a, b| b.modified.cmp(&a.modified));
+    sessions.sort_by_key(|b| std::cmp::Reverse(b.modified));
     sessions
 }
 
@@ -1590,7 +1596,7 @@ pub fn search_sessions_by_custom_title(
             matching.push(log);
         }
     }
-    matching.sort_by(|a, b| b.modified.cmp(&a.modified));
+    matching.sort_by_key(|b| std::cmp::Reverse(b.modified));
     if let Some(limit) = options.limit.filter(|limit| *limit != 0) {
         let end = if limit < 0 {
             matching.len().saturating_sub(limit.unsigned_abs())
@@ -1619,7 +1625,7 @@ fn list_same_repo_stat_sessions(
         .iter()
         .map(|path| (path.clone(), sanitize_path(path)))
         .collect::<Vec<_>>();
-    indexed.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+    indexed.sort_by_key(|b| std::cmp::Reverse(b.1.len()));
 
     let mut sessions = Vec::new();
     let mut seen_dirs = HashSet::new();
@@ -1746,7 +1752,7 @@ fn deduplicate_sessions_by_id(sessions: Vec<SessionSummary>) -> Vec<SessionSumma
         }
     }
     let mut sessions = by_id.into_values().collect::<Vec<_>>();
-    sessions.sort_by(|a, b| b.modified.cmp(&a.modified));
+    sessions.sort_by_key(|b| std::cmp::Reverse(b.modified));
     sessions
 }
 
@@ -2055,8 +2061,7 @@ fn extract_json_string_field_prefix(text: &str, key: &str, max_chars: usize) -> 
             collected += 1;
         }
         let value = unescape_json_string(&raw)
-            .replace('\n', " ")
-            .replace('\t', " ")
+            .replace(['\n', '\t'], " ")
             .trim()
             .to_string();
         if !value.is_empty() {
@@ -2141,14 +2146,13 @@ fn append_entry(
     };
     let entry_type = entry.get("type").and_then(serde_json::Value::as_str);
     let agent_id = entry.get("agentId").and_then(serde_json::Value::as_str);
-    let path = if agent_id.is_some()
-        && (entry_type == Some("content-replacement")
+    let path = if let Some(agent_id) = agent_id.filter(|_| {
+        entry_type == Some("content-replacement")
             || entry
                 .get("isSidechain")
                 .and_then(serde_json::Value::as_bool)
-                .unwrap_or(false))
-    {
-        let agent_id = agent_id.expect("checked above");
+                .unwrap_or(false)
+    }) {
         // CC `Project.appendEntry` routes both flavours through the ZERO-ARG
         // `getAgentTranscriptPath(entry.agentId)` (`sessionStorage.ts:1205` for
         // `content-replacement`, `:1227` for agent sidechain messages), which
@@ -6395,8 +6399,7 @@ mod tests {
                 usage: None,
             })
         };
-        let messages = vec![
-            make(
+        let messages = [make(
                 "assistant-thinking",
                 crate::types::message::AssistantContent::Thinking {
                     text: "reasoning".to_string(),
@@ -6406,8 +6409,7 @@ mod tests {
             make(
                 "assistant-text",
                 crate::types::message::AssistantContent::Text("answer".to_string()),
-            ),
-        ];
+            )];
         let entries = messages
             .iter()
             .filter_map(typed_message_entry)
@@ -8526,8 +8528,7 @@ mod tests {
             "cometix-session-progress-bridge-{}.jsonl",
             Uuid::new_v4()
         ));
-        let entries = vec![
-            json!({
+        let entries = [json!({
                 "type": "user",
                 "uuid": "u1",
                 "parentUuid": null,
@@ -8566,8 +8567,7 @@ mod tests {
                 "sessionId": session_id,
                 "timestamp": "2026-06-13T13:39:34.000Z",
                 "message": {"role": "user", "content": "next"}
-            }),
-        ];
+            })];
         let contents = entries
             .iter()
             .map(serde_json::Value::to_string)
@@ -8601,8 +8601,7 @@ mod tests {
             "cometix-session-snip-removal-{}.jsonl",
             Uuid::new_v4()
         ));
-        let entries = vec![
-            json!({
+        let entries = [json!({
                 "type": "user",
                 "uuid": "u1",
                 "parentUuid": null,
@@ -8659,8 +8658,7 @@ mod tests {
                 "sessionId": session_id,
                 "timestamp": "2026-06-13T13:38:36.000Z",
                 "message": {"role": "user", "content": "next"}
-            }),
-        ];
+            })];
         let contents = entries
             .iter()
             .map(serde_json::Value::to_string)

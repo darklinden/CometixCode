@@ -343,8 +343,8 @@ mod tests {
             }
         });
 
-        let count = *cancel_count.lock().expect("cancel mutex");
-        count
+        
+        *cancel_count.lock().expect("cancel mutex")
     }
 
     #[test]

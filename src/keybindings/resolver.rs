@@ -110,9 +110,7 @@ pub fn resolve_key_with_chord_state(
     // Exact match: last one wins (user bindings are appended after
     // defaults, so Vec order is the override order).
     let exact_match = context_bindings
-        .iter()
-        .filter(|binding| chord_exactly_matches(&test_chord, binding))
-        .last();
+        .iter().rfind(|binding| chord_exactly_matches(&test_chord, binding));
 
     if let Some(binding) = exact_match {
         return match &binding.action {

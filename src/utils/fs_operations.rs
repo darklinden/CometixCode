@@ -382,7 +382,7 @@ pub(crate) fn force_next_replace_file_atomic_failure_for_test() {
 fn take_forced_replace_failure() -> bool {
     #[cfg(test)]
     {
-        return FORCE_REPLACE_FILE_ATOMIC_FAILURE.replace(false);
+        FORCE_REPLACE_FILE_ATOMIC_FAILURE.replace(false)
     }
     #[cfg(not(test))]
     {

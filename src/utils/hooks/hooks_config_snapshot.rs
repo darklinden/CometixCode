@@ -84,7 +84,7 @@ pub fn should_allow_managed_hooks_only(
         return true;
     }
     merged_settings.disable_all_hooks == Some(true)
-        && !policy_settings.is_some_and(|policy| policy.disable_all_hooks == Some(true))
+        && policy_settings.is_none_or(|policy| policy.disable_all_hooks != Some(true))
 }
 
 /// Maps to: CC `hooksConfigSnapshot.ts:83-88`

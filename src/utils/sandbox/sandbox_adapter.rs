@@ -39,7 +39,7 @@ pub fn run_linux_seccomp_helper_if_requested() -> Option<i32> {
     #[cfg(not(target_os = "linux"))]
     {
         eprintln!("The sandbox seccomp helper is only available on Linux");
-        return Some(1);
+        Some(1)
     }
     #[cfg(target_os = "linux")]
     {
@@ -1094,9 +1094,9 @@ pub fn resolve_path_pattern_for_sandbox(pattern: &str, source: SettingSource) ->
         return format!("/{rest}");
     }
 
-    if pattern.starts_with('/') {
+    if let Some(rest) = pattern.strip_prefix('/') {
         return normalize_path_string(
-            get_settings_root_path_for_source(source).join(&pattern[1..]),
+            get_settings_root_path_for_source(source).join(rest),
         );
     }
 

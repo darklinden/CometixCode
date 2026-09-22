@@ -343,7 +343,7 @@ impl crate::tool::ToolCall for AskUserQuestionTool {
         ) || crate::utils::feature_flags::feature_enabled(
             crate::utils::feature_flags::FeatureFlag::KairosChannels,
         );
-        !(kairos_built && !crate::bootstrap::state::get_allowed_channels().is_empty())
+        !kairos_built || crate::bootstrap::state::get_allowed_channels().is_empty()
     }
 
     /// Maps to: CC `AskUserQuestionTool.isConcurrencySafe()`

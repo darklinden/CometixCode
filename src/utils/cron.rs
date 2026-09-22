@@ -123,7 +123,7 @@ fn expand_field(field: &str, range: FieldRange) -> Option<Vec<u32>> {
 /// Returns None if invalid or unsupported syntax.
 /// Maps to: CC `utils/cron.ts` `parseCronExpression`.
 pub fn parse_cron_expression(expr: &str) -> Option<CronFields> {
-    let parts: Vec<&str> = expr.trim().split_whitespace().collect();
+    let parts: Vec<&str> = expr.split_whitespace().collect();
     if parts.len() != 5 {
         return None;
     }
@@ -256,7 +256,7 @@ fn format_utc_time_as_local(minute: u32, hour: u32) -> String {
 
 /// Maps to: CC `utils/cron.ts` `cronToHuman`.
 pub fn cron_to_human(cron: &str, utc: bool) -> String {
-    let parts: Vec<&str> = cron.trim().split_whitespace().collect();
+    let parts: Vec<&str> = cron.split_whitespace().collect();
     if parts.len() != 5 {
         return cron.to_string();
     }

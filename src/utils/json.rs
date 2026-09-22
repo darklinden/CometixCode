@@ -521,6 +521,8 @@ impl JsoncValue {
     /// Necessary JS Array.prototype.find receiver adapter for terminalSetup's
     /// actual `.find` call: an object can inherit the builtin from an array.
     /// JSON data can shadow it but cannot contain another callable function.
+    // The unit error is CC's `null` result; callers only branch on success.
+    #[allow(clippy::result_unit_err)]
     pub fn array_find_length(&self) -> Result<u64, ()> {
         if !self.has_array_builtin("find") {
             return Err(());

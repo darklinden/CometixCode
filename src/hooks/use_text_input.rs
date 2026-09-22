@@ -405,7 +405,7 @@ pub fn use_text_input(hooks: &mut Hooks, options: UseTextInputOptions) -> TextIn
                         }
                         KeyCode::Char(c) if ctrl && matches!(c.to_ascii_lowercase(), 'n' | 'p') => {
                             exit.clear();
-                            let is_down = c.to_ascii_lowercase() == 'n';
+                            let is_down = c.eq_ignore_ascii_case(&'n');
                             if options.disable_cursor_movement_for_up_down_keys {
                                 history = Some(if is_down {
                                     HistoryDirection::Down
@@ -549,7 +549,7 @@ fn modified_enter_inserts_newline(modifiers: &KeyModifiers) -> bool {
 
 fn ctrl_j_inserts_newline(c: char, modifiers: &KeyModifiers, multiline: bool) -> bool {
     multiline
-        && c.to_ascii_lowercase() == 'j'
+        && c.eq_ignore_ascii_case(&'j')
         && modifiers.contains(KeyModifiers::CONTROL)
         && !modifiers.intersects(KeyModifiers::ALT | KeyModifiers::SHIFT)
 }
@@ -627,7 +627,7 @@ fn is_kill_key(code: &KeyCode, modifiers: &KeyModifiers) -> bool {
 
 fn is_yank_key(code: &KeyCode, modifiers: &KeyModifiers) -> bool {
     let ctrl_or_alt = modifiers.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT);
-    matches!(code, KeyCode::Char(c) if ctrl_or_alt && c.to_ascii_lowercase() == 'y')
+    matches!(code, KeyCode::Char(c) if ctrl_or_alt && c.eq_ignore_ascii_case(&'y'))
 }
 
 #[cfg(test)]

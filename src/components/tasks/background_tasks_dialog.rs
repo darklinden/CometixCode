@@ -239,8 +239,8 @@ fn selectable_items(
         .iter()
         .filter(|item| {
             !(item.category == BackgroundTaskCategory::LocalAgent
-                && foregrounded == Some(item.id.as_str()))
-                && !(spinner_tree && item.category == BackgroundTaskCategory::Teammate)
+                && foregrounded == Some(item.id.as_str())
+                || spinner_tree && item.category == BackgroundTaskCategory::Teammate)
         })
         .cloned()
         .collect::<Vec<_>>();

@@ -82,7 +82,7 @@ pub(crate) struct OutputStylePickerProps {
 pub(crate) fn OutputStylePicker(props: &OutputStylePickerProps) -> impl Into<AnyElement<'static>> {
     let options = props.options.clone();
     let count = options.len();
-    let visible_count = count.min(10).max(1);
+    let visible_count = count.clamp(1, 10);
     let focused_index = props.focused_index.min(count.saturating_sub(1));
     let visible_from = props
         .visible_from_index

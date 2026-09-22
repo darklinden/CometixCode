@@ -4985,7 +4985,7 @@ mod input_contract_tests {
                     // Source raw named-argument RegExp throws during the real
                     // plugin callback. This proves preparation completed and
                     // terminates before query/model construction without a mock.
-                    let error = result.err().expect("invalid named regexp must throw");
+                    let error = result.expect_err("invalid named regexp must throw");
                     assert!(
                         error.to_string().starts_with("Invalid regular expression:"),
                         "{error}"

@@ -94,7 +94,7 @@ pub fn Settings<'a>(
     let selected_tab = hooks.use_state(move || initial_tab);
     let (_, rows) = hooks.use_terminal_size();
     // Maps to: CC contentHeight = max(15, min(floor(rows * 0.8), 30))
-    let content_height = (rows as f32 * 0.8).min(30.0).max(15.0) as u32;
+    let content_height = (rows as f32 * 0.8).clamp(15.0, 30.0) as u32;
     let theme = hooks.use_context::<Theme>();
 
     let mut should_close = hooks.use_state(|| false);
@@ -119,8 +119,7 @@ pub fn Settings<'a>(
         "confirm:no",
         crate::keybindings::types::ContextName::Settings,
         move || {
-            !tabs_hidden.get()
-                && !(selected_tab.get() == SettingsTab::Config && config_owns_esc.get())
+            !(tabs_hidden.get() || selected_tab.get() == SettingsTab::Config && config_owns_esc.get())
         },
         move || {
             should_close.set(true);

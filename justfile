@@ -83,7 +83,18 @@ iso  := 'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC= DISABLE_TELEMETRY= NODE_ENV= 
 # an is-empty filter (utils/model/model.rs:24-26), so an empty string would be
 # adopted as a model NAME. Tests that need one of these set establish it
 # themselves with EnvVarGuard.
-unhost := 'env -u ANTHROPIC_MODEL -u ANTHROPIC_SMALL_FAST_MODEL -u ANTHROPIC_DEFAULT_OPUS_MODEL -u ANTHROPIC_DEFAULT_SONNET_MODEL -u ANTHROPIC_DEFAULT_HAIKU_MODEL -u CLAUDE_CODE_MODEL -u CLAUDE_CODE_SMALL_FAST_MODEL -u CLAUDE_CODE_SUBAGENT_MODEL -u CLAUDE_CODE_DEFAULT_OPUS_MODEL -u CLAUDE_CODE_DEFAULT_SONNET_MODEL -u CLAUDE_CODE_DEFAULT_HAIKU_MODEL -u CLAUDE_CLASSIFIER_MODEL -u COMETIX_MODEL -u ANTHROPIC_CUSTOM_MODEL_OPTION -u ANTHROPIC_CUSTOM_MODEL_OPTION_NAME -u ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION -u ANTHROPIC_BASE_URL -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_API_KEY'
+#
+# Second class in the same layer: the host's build/profile gates. Nothing here
+# is named MODEL or TOKEN, so a leak does not look like one — it silently flips
+# a branch, and the failure surfaces as a MISSING piece rather than a leaked
+# variable. CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1 alone made
+# should_use_global_cache_scope() (utils/betas.rs:162) false and took six
+# prompt/cache-boundary assertions down, each reporting only its own absent
+# marker; CLAUDE_CODE_USE_{BEDROCK,VERTEX,FOUNDRY} move get_api_provider()
+# (utils/model/providers.rs:14) off FirstParty, gating that same function plus
+# the beta headers. All four are read with a bare `env::var(..)`, so `env -u`
+# again.
+unhost := 'env -u ANTHROPIC_MODEL -u ANTHROPIC_SMALL_FAST_MODEL -u ANTHROPIC_DEFAULT_OPUS_MODEL -u ANTHROPIC_DEFAULT_SONNET_MODEL -u ANTHROPIC_DEFAULT_HAIKU_MODEL -u CLAUDE_CODE_MODEL -u CLAUDE_CODE_SMALL_FAST_MODEL -u CLAUDE_CODE_SUBAGENT_MODEL -u CLAUDE_CODE_DEFAULT_OPUS_MODEL -u CLAUDE_CODE_DEFAULT_SONNET_MODEL -u CLAUDE_CODE_DEFAULT_HAIKU_MODEL -u CLAUDE_CLASSIFIER_MODEL -u COMETIX_MODEL -u ANTHROPIC_CUSTOM_MODEL_OPTION -u ANTHROPIC_CUSTOM_MODEL_OPTION_NAME -u ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION -u ANTHROPIC_BASE_URL -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_API_KEY -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS'
 nt := 'cargo nextest run --lib --no-fail-fast'
 
 # Rebuild generated state and serialize the one trusted project through a JSON
@@ -116,6 +127,17 @@ check *args:
 # Same, for the binary and its release profile.
 check-release *args:
     cargo check --release {{args}}
+
+# Lint gate. `--all-targets` covers the `#[cfg(test)]` code too, like `check`'s
+# `--lib --tests`, plus the `[[bin]]` that `check` leaves out. It executes no
+# test body, so it needs none of the env pinning `test` does. The crate-level
+# allows that preserve the 1:1 TS-port shapes (nested `if`s, CC function
+# signatures, ...) live in Cargo.toml's `[lints.clippy]` table, each with its
+# reason written next to it.
+#
+# Only the `external` audience — `just lint-ant` is the other half.
+lint *args:
+    cargo clippy --all-targets {{args}} -- -D warnings
 
 # Full suite — the gate. Trustworthy, so batches no longer scope themselves to
 # the directly-touched modules.
@@ -154,10 +176,15 @@ test-doc:
 #
 # The 50 attribute-gated sites are the real hazard: a signature change in shared
 # code cannot break them visibly, because rustc never sees them. Run `just
-# check-ant` after any cross-cutting refactor; run `just test-ant` before
-# claiming a batch is green.
+# check-ant` and `just lint-ant` after any cross-cutting refactor; run `just
+# test-ant` before claiming a batch is green.
 check-ant *args:
     cargo check --lib --tests --features anthropic_internal {{args}}
+
+# `lint`'s ant twin. Unlike the `check-ant` above, this keeps `lint`'s
+# `--all-targets` so the `[[bin]]` is covered under the feature too.
+lint-ant *args:
+    cargo clippy --all-targets --features anthropic_internal {{args}} -- -D warnings
 
 test-ant *args:
     @just _prep

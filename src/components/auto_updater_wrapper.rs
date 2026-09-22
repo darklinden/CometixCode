@@ -178,6 +178,7 @@ use crate::components::prompt_input::notifications::should_show_auto_updater;
 ///   (`useUpdateNotification` committed-null — see
 ///   hooks/use_update_notification.rs), and verbose adds the versions row
 ///   whenever the child gate passes.
+///
 /// Blind spots that cannot produce lasting rows today: native
 /// maxVersionIssue-only row (`get_max_version` → `None`), the ant-only
 /// known-issue row (external-build DCE), and the package-manager row

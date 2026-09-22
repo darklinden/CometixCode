@@ -3841,6 +3841,8 @@ async fn drain_sdk_message_stream_to_channel(
                 biased;
                 event = &mut next_event => event,
                 _ = &mut abort_wait => {
+                    // Ends the borrow before the stream is dropped below.
+                    #[allow(clippy::drop_non_drop)]
                     drop(next_event);
                     drop(stream);
                     return Err(anyhow::Error::new(anthropic_sdk::ApiError::UserAbort {
@@ -3869,6 +3871,8 @@ async fn drain_sdk_message_stream_to_channel(
                     );
                     // Drop the stream to abort the underlying SSE body (CC
                     // `releaseStreamResources()` / abort controller).
+                    // Ends the borrow before the stream is dropped below.
+                    #[allow(clippy::drop_non_drop)]
                     drop(next_event);
                     drop(stream);
                     super::api_trace::emit_current(
@@ -3886,6 +3890,8 @@ async fn drain_sdk_message_stream_to_channel(
                 biased;
                 event = &mut next_event => event,
                 _ = &mut abort_wait => {
+                    // Ends the borrow before the stream is dropped below.
+                    #[allow(clippy::drop_non_drop)]
                     drop(next_event);
                     drop(stream);
                     return Err(anyhow::Error::new(anthropic_sdk::ApiError::UserAbort {

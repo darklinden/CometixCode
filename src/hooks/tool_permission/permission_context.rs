@@ -49,7 +49,7 @@ pub fn remove_from_queue(queue: &mut Vec<ToolUseConfirm>, tool_use_id: &str) {
 }
 
 pub fn update_queue_item(
-    queue: &mut Vec<ToolUseConfirm>,
+    queue: &mut [ToolUseConfirm],
     tool_use_id: &str,
     patch: ToolUseConfirmPatch,
 ) {

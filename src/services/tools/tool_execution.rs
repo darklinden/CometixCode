@@ -10228,6 +10228,9 @@ fn attach_model_content_blocks(
 
 #[cfg(test)]
 mod executor_tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
     use crate::tools::tool_search_tool::tool_search_matches;
     

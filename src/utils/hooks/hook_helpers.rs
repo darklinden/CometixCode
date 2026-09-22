@@ -36,14 +36,14 @@ pub fn create_structured_output_tool() -> Tool {
         "required": ["ok"],
         "additionalProperties": false
     });
-    let tool = Tool {
+    
+    Tool {
         name: crate::tools::synthetic_output_tool::SYNTHETIC_OUTPUT_TOOL_NAME.into(),
         description: "Use this tool to return your verification result. You MUST call this tool exactly once at the end of your response.".into(),
         input_schema: schema,
         input_zod_schema: Some(crate::types::tools::InputSchema(hook_response_schema())),
         ..Default::default()
-    };
-    tool
+    }
 }
 
 /// Maps to: CC `utils/messages.ts#hasSuccessfulToolCall` as used by

@@ -278,7 +278,7 @@ pub fn mcp_stdio_server_config_schema() -> &'static Schema {
 /// Maps to: CC `services/mcp/types.ts:41-41#McpXaaConfigSchema`.
 fn mcp_xaa_config_schema() -> &'static Schema {
     static S: OnceLock<Schema> = OnceLock::new();
-    S.get_or_init(|| zod::boolean())
+    S.get_or_init(zod::boolean)
 }
 
 /// Maps to: CC `services/mcp/types.ts:43-56#McpOAuthConfigSchema`.

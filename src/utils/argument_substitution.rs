@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 
 /// Maps to: CC `parseArguments` (argumentSubstitution.ts:24–40).
 pub fn parse_arguments(args: &str) -> Vec<String> {
-    if args.is_empty() || !NON_WHITESPACE.find(args).is_some() {
+    if args.is_empty() || NON_WHITESPACE.find(args).is_none() {
         return Vec::new();
     }
     // Canonical shellQuote already preserves variables as literal `$KEY`.

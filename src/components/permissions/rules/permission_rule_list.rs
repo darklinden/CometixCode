@@ -948,8 +948,8 @@ pub fn PermissionRuleList<'a>(
                 modifiers,
                 kind,
                 ..
-            }) if *kind != KeyEventKind::Release => {
-                if search_active {
+            }) if *kind != KeyEventKind::Release
+                && search_active => {
                     search.reset_key_state(code, modifiers);
                     match code {
                         KeyCode::Esc => {
@@ -977,7 +977,6 @@ pub fn PermissionRuleList<'a>(
                     }
                     event.stop_propagation();
                 }
-            }
             _ => {}
         }
     });

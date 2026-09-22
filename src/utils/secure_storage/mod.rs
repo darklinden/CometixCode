@@ -31,10 +31,10 @@ pub(crate) trait SecureStorageBackend: Send + Sync {
 pub(crate) fn get_secure_storage() -> Box<dyn SecureStorageBackend> {
     #[cfg(target_os = "macos")]
     {
-        return Box::new(fallback_storage::create_fallback_storage(
+        Box::new(fallback_storage::create_fallback_storage(
             Box::new(mac_os_keychain_storage::MacOsKeychainStorage),
             Box::new(plain_text_storage::PlainTextStorage),
-        ));
+        ))
     }
 
     #[cfg(not(target_os = "macos"))]

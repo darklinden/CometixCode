@@ -61,6 +61,8 @@ impl QueryEventSender {
         self.resume.is_some()
     }
 
+    // `TrySendError<QueryEvent>` is the channel's own error type.
+    #[allow(clippy::result_large_err)]
     pub fn try_send(
         &self,
         event: QueryEvent,

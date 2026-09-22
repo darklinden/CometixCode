@@ -70,8 +70,9 @@ impl It2SetupPromptRequest {
 }
 
 /// Maps to: CC `SetupStep` union in `It2SetupPrompt.tsx`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum It2SetupStep {
+    #[default]
     Initial,
     Installing,
     InstallFailed,
@@ -82,11 +83,6 @@ pub enum It2SetupStep {
     Failed,
 }
 
-impl Default for It2SetupStep {
-    fn default() -> Self {
-        Self::Initial
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum It2SetupAction {

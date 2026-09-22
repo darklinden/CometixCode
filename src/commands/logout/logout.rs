@@ -109,7 +109,7 @@ pub fn LogoutCommand<'a>(
 mod tests {
     #[test]
     fn perform_logout_stays_closed_before_any_credential_mutation() {
-        assert!(!crate::constants::oauth::OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED);
+        const _: () = assert!(!crate::constants::oauth::OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED);
         let error = super::perform_logout(true).expect_err("logout gate must be closed");
         assert!(
             error

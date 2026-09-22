@@ -124,7 +124,7 @@ fn launched_from_home_directory() -> bool {
     let Some(home) = std::env::var_os("HOME") else {
         return false;
     };
-    cwd == std::path::PathBuf::from(home)
+    cwd == home
 }
 
 #[cfg(test)]

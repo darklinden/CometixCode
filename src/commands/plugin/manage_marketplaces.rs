@@ -1,6 +1,10 @@
 //! Maps to: CC `commands/plugin/ManageMarketplaces.tsx`.
 //! React/Ink → iocraft component-local state and callback carriers. A1/A6/A7:
 //! source async callbacks and timers run on the process lifetime runtime.
+// The pending_update / pending_remove `if`s sit in a minified element!
+// line and are independent flags, not an `else if` chain.
+#![allow(clippy::possible_missing_else)]
+
 use super::plugin_settings::ViewState;
 use crate::components::{
     configurable_shortcut_hint::ConfigurableShortcutHint,

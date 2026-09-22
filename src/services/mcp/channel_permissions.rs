@@ -27,6 +27,8 @@ impl ChannelPermissionBehavior {
         }
     }
 
+    // Returns `Option<Self>`, so `FromStr` cannot be implemented; the name mirrors CC.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(value: &str) -> Option<Self> {
         match value {
             "allow" => Some(Self::Allow),
@@ -306,10 +308,10 @@ impl ChannelPermissionRelayClientCandidate {
 }
 
 /// Maps to: CC `filterPermissionRelayClients(...)`.
-pub fn filter_permission_relay_clients<'a>(
-    clients: &'a [ChannelPermissionRelayClientCandidate],
+pub fn filter_permission_relay_clients(
+    clients: &[ChannelPermissionRelayClientCandidate],
     is_in_allowlist: impl Fn(&str) -> bool,
-) -> Vec<&'a ChannelPermissionRelayClientCandidate> {
+) -> Vec<&ChannelPermissionRelayClientCandidate> {
     clients
         .iter()
         .filter(|client| {

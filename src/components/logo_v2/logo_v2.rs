@@ -406,7 +406,7 @@ fn LogoRuntimeNotices(
     );
     let opus_notice_should_show =
         should_show_opus_1m_merge_notice(data.opus_1m_merge_enabled, data.opus_1m_merge_seen_count);
-    let tmux_rows = show_extended_notices.then(|| ()).and_then(|_| {
+    let tmux_rows = show_extended_notices.then_some(()).and_then(|_| {
         data.tmux_session.as_ref().map(|session| {
             let prefix = data
                 .tmux_prefix
@@ -444,7 +444,10 @@ fn LogoRuntimeNotices(
         });
     let sandbox_notice = data
         .show_sandbox_status
-        .then(|| matches!(props.mode, LogoLayoutMode::Compact | LogoLayoutMode::Horizontal))
+        .then_some(matches!(
+            props.mode,
+            LogoLayoutMode::Compact | LogoLayoutMode::Horizontal
+        ))
         .filter(|show| *show)
         .map(|_| element! {
             View(padding_left: 2u32, flex_direction: FlexDirection::Column) {

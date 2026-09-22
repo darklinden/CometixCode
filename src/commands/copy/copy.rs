@@ -168,7 +168,7 @@ fn parse_js_integer(text: &str) -> Option<usize> {
 
     let number = text.parse::<f64>().ok()?;
     (number.is_finite() && number >= 0.0 && number.fract() == 0.0 && number <= usize::MAX as f64)
-        .then(|| number as usize)
+        .then_some(number as usize)
 }
 
 /// Maps to: CC `commands/copy/copy.tsx:103-120` `truncateLine`, using

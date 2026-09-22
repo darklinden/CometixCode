@@ -147,9 +147,7 @@ pub fn consume_invoking_request_id() -> Option<(String, Option<InvocationKind>)>
     AGENT_CONTEXT
         .try_with(|slot| {
             let mut context = slot.borrow_mut();
-            let Some(request_id) = context.invoking_request_id().map(ToOwned::to_owned) else {
-                return None;
-            };
+            let request_id = context.invoking_request_id().map(ToOwned::to_owned)?;
             if context.invocation_emitted() {
                 return None;
             }

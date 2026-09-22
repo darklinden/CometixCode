@@ -197,10 +197,8 @@ fn run_xaa_setup(args: &[String]) -> anyhow::Result<()> {
     if let Some(old_issuer) = old_issuer {
         if crate::services::mcp::xaa_idp_login::issuer_key(&old_issuer)
             != crate::services::mcp::xaa_idp_login::issuer_key(&issuer)
+            || old_client_id.as_deref() != Some(client_id.as_str())
         {
-            crate::services::mcp::xaa_idp_login::clear_idp_id_token(&old_issuer)?;
-            crate::services::mcp::xaa_idp_login::clear_idp_client_secret(&old_issuer)?;
-        } else if old_client_id.as_deref() != Some(client_id.as_str()) {
             crate::services::mcp::xaa_idp_login::clear_idp_id_token(&old_issuer)?;
             crate::services::mcp::xaa_idp_login::clear_idp_client_secret(&old_issuer)?;
         }
@@ -328,7 +326,7 @@ fn run_mcp_xaa_cli(args: &[String], rt: &tokio::runtime::Runtime) -> anyhow::Res
 }
 
 fn parts(args: &str) -> Vec<&str> {
-    args.trim().split_whitespace().collect()
+    args.split_whitespace().collect()
 }
 
 /// Returns the official `onComplete(...)` output for the current no-client MCP

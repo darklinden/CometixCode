@@ -282,7 +282,7 @@ pub fn FallbackPermissionRequest<'a>(
         }
     });
 
-    let selected = { pending_select.read().clone() };
+    let selected = { *pending_select.read() };
     if let Some(value) = selected {
         pending_select.set(None);
         (props.on_select)(value);

@@ -23,10 +23,9 @@ use std::env;
 
 pub use crate::utils::model::providers::ApiProvider;
 
-/// CC `utils/proxy.ts#getProxyFetchOptions` joins here through reqwest's
-/// built-in `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` handling; no parallel Rust
-/// function is declared for that deferred SDK representation seam.
-
+// CC `utils/proxy.ts#getProxyFetchOptions` joins here through reqwest's
+// built-in `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` handling; no parallel Rust
+// function is declared for that deferred SDK representation seam.
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

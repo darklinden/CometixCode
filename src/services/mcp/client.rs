@@ -2687,9 +2687,9 @@ mod runtime {
         Ok(())
     }
 
-    fn remote_auth_context<'a>(
-        config: &'a ScopedMcpServerConfig,
-    ) -> Option<(&'static str, &'a str)> {
+    fn remote_auth_context(
+        config: &ScopedMcpServerConfig,
+    ) -> Option<(&'static str, &str)> {
         match config.transport {
             Transport::Http => config.url.as_deref().map(|url| ("http", url)),
             Transport::Sse => config.url.as_deref().map(|url| ("sse", url)),
@@ -2758,7 +2758,7 @@ mod runtime {
                 record_remote_auth_challenge(name, config, &error)?;
                 if refresh_after_remote_auth_failure(name, config, &error).await? {
                     match serve_transport(name, config).await {
-                        Ok(service) => return Ok(service),
+                        Ok(service) => Ok(service),
                         Err(retry_error) => {
                             if is_auth_error(&retry_error) {
                                 record_remote_auth_challenge(name, config, &retry_error)?;
@@ -3867,9 +3867,8 @@ mod runtime {
         };
         // Maps to: CC `ReadMcpResourceTool.call(...)` `client.capabilities?.resources`
         // guard before sending `resources/read`.
-        if !peer
-            .peer_info()
-            .is_some_and(|info| info.capabilities.resources.is_some())
+        if peer
+            .peer_info().is_none_or(|info| info.capabilities.resources.is_none())
         {
             return Err((
                 anyhow::anyhow!("Server \"{server_name}\" does not support resources"),
@@ -4137,6 +4136,8 @@ pub use runtime::{
 };
 
 #[cfg(test)]
+// Further ported items follow the test module in this file.
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
     use crate::utils::env_utils::EnvVarGuard;
@@ -6758,6 +6759,8 @@ rl.on('line', line => {
 
     #[cfg(feature = "mcp_runtime")]
     #[test]
+    // `Response` is rmcp's own type in the accept callback.
+    #[allow(clippy::result_large_err)]
     fn websocket_connects_and_discovers_tools_from_live_server() {
         let _guard = crate::utils::env_utils::TEST_ENV_LOCK.lock().unwrap();
 

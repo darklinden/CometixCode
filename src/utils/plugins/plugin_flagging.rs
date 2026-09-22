@@ -102,12 +102,11 @@ pub async fn load_flagged_plugins() {
     let now = chrono::Utc::now().timestamp_millis();
     let old_len = all.len();
     all.retain(|_, entry| {
-        !entry
+        entry
             .seen_at
             .as_ref()
             .filter(|s| !s.is_empty())
-            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-            .is_some_and(|seen| now - seen.timestamp_millis() >= SEEN_EXPIRY_MS)
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).is_none_or(|seen| now - seen.timestamp_millis() < SEEN_EXPIRY_MS)
     });
     *CACHE.lock().unwrap_or_else(|e| e.into_inner()) = Some(all.clone());
     if old_len != all.len() {

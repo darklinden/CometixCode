@@ -308,7 +308,7 @@ fn strip_line_number_prefix(line: &str) -> &str {
 }
 
 fn extract_cli_name(command: Option<&str>) -> Option<String> {
-    let tokens = command?.trim().split_whitespace();
+    let tokens = command?.split_whitespace();
     for token in tokens {
         if is_env_assignment(token) || token == "sudo" {
             continue;

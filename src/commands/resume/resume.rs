@@ -116,6 +116,7 @@ pub fn ResumeCommand<'a>(
     let current_session_id = props.current_session_id.clone();
 
     hooks.use_future({
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let project_path = project_path;
         let mut sessions = sessions;
         let mut worktree_paths = worktree_paths;

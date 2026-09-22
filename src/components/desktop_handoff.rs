@@ -17,8 +17,9 @@ pub const DESKTOP_DOWNLOAD_WIN32_X64: &str =
 pub const DESKTOP_DOWNLOAD_DARWIN_UNIVERSAL: &str =
     "https://claude.ai/api/desktop/darwin/universal/dmg/latest/redirect";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum DesktopHandoffState {
+    #[default]
     Checking,
     PromptDownload,
     Flushing,
@@ -27,11 +28,6 @@ pub enum DesktopHandoffState {
     Error,
 }
 
-impl Default for DesktopHandoffState {
-    fn default() -> Self {
-        Self::Checking
-    }
-}
 
 /// Maps to CC `getDownloadUrl()` using a caller-provided platform string.
 pub fn desktop_download_url_for_platform(platform: &str) -> &'static str {

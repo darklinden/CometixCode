@@ -91,14 +91,14 @@ mod tests {
         let input = json!([
             {"content": "Run tests", "status": "in_progress", "activeForm": "Running tests"}
         ]);
-        assert_eq!(safe_parse(&todo_list_schema(), &input).unwrap(), input);
+        assert_eq!(safe_parse(todo_list_schema(), &input).unwrap(), input);
     }
 
     /// Empty `content` reports CC's own message, not the generated one.
     #[test]
     fn empty_content_reports_the_official_message() {
         let input = json!([{"content": "", "status": "pending", "activeForm": "Doing"}]);
-        let error = safe_parse(&todo_list_schema(), &input).unwrap_err();
+        let error = safe_parse(todo_list_schema(), &input).unwrap_err();
         assert_eq!(error.issues.len(), 1);
         assert_eq!(error.issues[0].message, "Content cannot be empty");
     }
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn empty_active_form_reports_the_official_message() {
         let input = json!([{"content": "Do it", "status": "pending", "activeForm": ""}]);
-        let error = safe_parse(&todo_list_schema(), &input).unwrap_err();
+        let error = safe_parse(todo_list_schema(), &input).unwrap_err();
         assert_eq!(error.issues[0].message, "Active form cannot be empty");
     }
 
@@ -114,6 +114,6 @@ mod tests {
     #[test]
     fn rejects_an_unknown_status() {
         let input = json!([{"content": "x", "status": "blocked", "activeForm": "y"}]);
-        assert!(safe_parse(&todo_list_schema(), &input).is_err());
+        assert!(safe_parse(todo_list_schema(), &input).is_err());
     }
 }

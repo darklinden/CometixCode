@@ -614,6 +614,9 @@ impl crate::tool::ToolCall for TaskUpdateTool {
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     #[test]
     fn task_update_schema_matches_official_input_shape() {
         let schema = super::task_update_tool_schema();

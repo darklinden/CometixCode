@@ -115,9 +115,9 @@ pub fn check_semantics(commands: &[SimpleCommand]) -> SemanticCheckResult {
                         if matches!(
                             arg,
                             "--foreground" | "--preserve-status" | "--verbose" | "-v"
-                        ) {
-                            index += 1;
-                        } else if arg.starts_with("--kill-after=") || arg.starts_with("--signal=") {
+                        ) || arg.starts_with("--kill-after=")
+                            || arg.starts_with("--signal=")
+                        {
                             index += 1;
                         } else if matches!(arg, "--kill-after" | "--signal" | "-k" | "-s") {
                             if argv.get(index + 1).is_none() {
@@ -387,11 +387,11 @@ fn has_subscript_eval_operand(name: &str, argv: &[String]) -> bool {
             if name == "read" {
                 if READ_DATA_FLAGS.contains(&argument.as_str()) {
                     skip_next = true;
-                } else if argument.starts_with('-')
-                    && !argument.starts_with("--")
-                    && argument.len() > 2
+                } else if let Some(flags) = argument
+                    .strip_prefix('-')
+                    .filter(|flags| !flags.starts_with('-') && flags.len() > 1)
                 {
-                    for (position, flag) in argument[1..].chars().enumerate() {
+                    for (position, flag) in flags.chars().enumerate() {
                         if READ_DATA_FLAGS
                             .iter()
                             .any(|candidate| candidate.chars().nth(1) == Some(flag))
@@ -1875,10 +1875,10 @@ fn parse_redirect(
         .and_then(|descriptor| descriptor.parse::<u32>().ok());
     let destination = node.child_by_field_name("destination").or_else(|| {
         let mut cursor = node.walk();
-        let found = node
+        
+        node
             .named_children(&mut cursor)
-            .find(|child| child.kind() != "file_descriptor");
-        found
+            .find(|child| child.kind() != "file_descriptor")
     });
     let Some(destination) = destination else {
         return Err(too_complex(node, "Redirect has no static destination"));

@@ -3813,7 +3813,7 @@ where
                 .into_iter()
                 .map(crate::types::message::Message::User),
         );
-        model_messages.extend(tool_result_attachments.into_iter());
+        model_messages.extend(tool_result_attachments);
         max_output_tokens_override = None;
         stop_hook_active = None;
         turn_count = next_turn_count;
@@ -4420,7 +4420,7 @@ fn build_call_model_request(
     options.advisor_model = tool_use_context
         .get_app_state()
         .and_then(|state| state.advisor_model.clone())
-        .or_else(|| crate::utils::advisor::get_initial_advisor_setting());
+        .or_else(crate::utils::advisor::get_initial_advisor_setting);
     // Maps to CC `query.ts:666-669` `getToolPermissionContext: async () =>
     // appState.toolPermissionContext` — resolved here as a snapshot of the
     // same live projection this request already builds its tool pool from;
@@ -9062,12 +9062,9 @@ mod tests {
         ));
 
         loop {
-            match event_rx.recv().await.unwrap() {
-                QueryEvent::PermissionRequest(request) => {
-                    assert_eq!(request.tool_use_id, "toolu_abort_permission_1");
-                    break;
-                }
-                _ => {}
+            if let QueryEvent::PermissionRequest(request) = event_rx.recv().await.unwrap() {
+                assert_eq!(request.tool_use_id, "toolu_abort_permission_1");
+                break;
             }
         }
         command_tx.send(QueryCommand::Abort).await.unwrap();
@@ -9153,12 +9150,9 @@ mod tests {
         ));
 
         loop {
-            match event_rx.recv().await.unwrap() {
-                QueryEvent::PermissionRequest(request) => {
-                    assert_eq!(request.tool_use_id, "toolu_abort_max_turns");
-                    break;
-                }
-                _ => {}
+            if let QueryEvent::PermissionRequest(request) = event_rx.recv().await.unwrap() {
+                assert_eq!(request.tool_use_id, "toolu_abort_max_turns");
+                break;
             }
         }
         command_tx.send(QueryCommand::Abort).await.unwrap();
@@ -9261,6 +9255,9 @@ mod tests {
         let mut saw_final_assistant = false;
         let mut saw_system_error = false;
         while let Ok(event) = event_rx.try_recv() {
+            // Single non-wildcard arm, kept as a `match` so the streamed
+            // convergence note stays attached to its arm.
+            #[allow(clippy::single_match)]
             match event {
                 // Streamed-assistant convergence: the streamed refusal
                 // assistant arrives as a whole `QueryEvent::Message`; the
@@ -10476,16 +10473,15 @@ mod tests {
                 {
                     saw_compact_boundary_message = true;
                 }
-                QueryEvent::ToolContextUpdate(context) => {
+                QueryEvent::ToolContextUpdate(context)
                     if context
                         .read_file_state
                         .snapshot()
                         .into_iter()
                         .any(|entry| entry.path == "/tmp/post-compact.rs")
-                    {
+                    => {
                         rebuilt_read_state = Some(context.read_file_state.snapshot());
                     }
-                }
                 _ => {}
             }
         }
@@ -11977,17 +11973,16 @@ mod tests {
                     });
                 }
                 QueryEvent::Message(crate::types::message::Message::User(user))
-                | QueryEvent::ModelMessage(crate::types::message::Message::User(user)) => {
+                | QueryEvent::ModelMessage(crate::types::message::Message::User(user))
                     if user.content.iter().any(|content| {
                         matches!(
                             content,
                             crate::types::message::UserContent::MetaText(text)
                                 if text == MAX_OUTPUT_TOKENS_RECOVERY_MESSAGE
                         )
-                    }) {
+                    }) => {
                         recovery_events += 1;
                     }
-                }
                 _ => {}
             }
         }
@@ -13535,12 +13530,13 @@ mod tests {
         // non-aborting "cancelled" answer that continued the query — a path
         // CC does not have: cancellation is only the pre-canUseTool abort
         // gate (`toolExecution.ts:415-453`), never a permission response.
-        for (choice, expected_status, expected_reason, expects_continuation) in [(
+        {
+            let (choice, expected_status, expected_reason, expects_continuation) = (
             PermissionPromptChoice::Deny,
             ToolResultStatus::Rejected,
             "aborted_tools",
             false,
-        )] {
+        );
             let (terminal, seen, statuses) = run_choice(choice);
             assert_eq!(terminal.reason, expected_reason, "choice={choice:?}");
             assert!(statuses.contains(&expected_status), "choice={choice:?}");

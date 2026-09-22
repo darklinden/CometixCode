@@ -178,9 +178,7 @@ async fn get_files_using_git(cwd: &Path, respect_gitignore: bool) -> Option<Vec<
     let files = output
         .stdout
         .split(|byte| *byte == b'\n')
-        .filter_map(|line| {
-            (!line.is_empty()).then(|| String::from_utf8_lossy(line).replace('\\', "/"))
-        })
+        .filter(|&line| !line.is_empty()).map(|line| String::from_utf8_lossy(line).replace('\\', "/"))
         .collect::<Vec<_>>();
     // CC :287-297 — rebase first, then apply the ripgrep ignore files to the
     // normalized rows. Order matters: the patterns are matched against the
@@ -483,7 +481,7 @@ pub async fn generate_file_suggestions(query: &str, show_on_empty: bool) -> Vec<
         let transcript_path =
             crate::utils::session_storage::get_transcript_path_for_session(&session_id);
         let project_dir = crate::utils::git::find_git_root(&cwd)
-            .or_else(|| crate::bootstrap::state::get_session_project_dir())
+            .or_else(crate::bootstrap::state::get_session_project_dir)
             .unwrap_or_else(|| cwd.clone());
         let context = crate::services::hooks::HookContext {
             session_id,
@@ -525,7 +523,7 @@ pub async fn generate_file_suggestions(query: &str, show_on_empty: bool) -> Vec<
         // Match CC's immediate result plus background index warm-up. The
         // latter is intentionally fire-and-forget so an empty `@` never waits
         // on git/ripgrep discovery.
-        let _ = tokio::spawn(indexed_paths());
+        drop(tokio::spawn(indexed_paths()));
         return top_level
             .into_iter()
             .map(|path| create_file_suggestion_item(path, None))

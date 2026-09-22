@@ -1647,7 +1647,7 @@ impl Component for MessagesImpl {
                 start < end.min(prepared.collapsed.len())
             });
         let mut children = Vec::<AnyElement<'static>>::new();
-        if props.show_logo && !props.render_range.is_some_and(|(start, _)| start > 0) {
+        if props.show_logo && props.render_range.is_none_or(|(start, _)| start == 0) {
             let status_notice_context = props.status_notice_context.clone();
             // CC React.memo compares LogoHeader props only. Terminal width is
             // deliberately absent: LogoV2's own terminal-size hook invalidates

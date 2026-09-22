@@ -723,9 +723,7 @@ pub fn create_mode_set_request_message(mode: &str, from: &str) -> Value {
 /// Maps to: CC `teammateMailbox.ts#isModeSetRequest`.
 pub fn is_mode_set_request(message_text: &str) -> Option<Value> {
     let parsed = serde_json::from_str::<Value>(message_text).ok()?;
-    let Some(mode) = parsed.get("mode").and_then(Value::as_str) else {
-        return None;
-    };
+    let mode = parsed.get("mode").and_then(Value::as_str)?;
     let valid = parsed.get("type").and_then(Value::as_str) == Some("mode_set_request")
         && parsed.get("from").and_then(Value::as_str).is_some()
         && crate::utils::permissions::permission_mode::external_permission_mode_from_string(mode)

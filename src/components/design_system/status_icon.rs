@@ -5,21 +5,17 @@ use crate::constants::figures::MAIN_SYMBOLS;
 use crate::utils::theme::Theme;
 use iocraft::prelude::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum StatusIconStatus {
     Success,
     Error,
     Warning,
     Info,
+    #[default]
     Pending,
     Loading,
 }
 
-impl Default for StatusIconStatus {
-    fn default() -> Self {
-        Self::Pending
-    }
-}
 
 pub(crate) fn status_icon_config(
     status: StatusIconStatus,

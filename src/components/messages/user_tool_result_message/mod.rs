@@ -138,6 +138,7 @@ pub fn UserToolResultMessage(props: &UserToolResultMessageProps) -> impl Into<An
 /// - `tools/FileEditTool/UI.tsx#renderToolResultMessage`
 /// - `tools/FileEditTool/UI.tsx#renderToolUseRejectedMessage`
 /// - `tools/NotebookEditTool/UI.tsx#renderToolUseRejectedMessage`
+///
 /// Maps to: CC's per-tool element renderers for the file tools.
 /// Success renders from the raw `toolUseResult` with the tool's own schema —
 /// `FileEditTool/UI.tsx:89-108` and `FileWriteTool/UI.tsx:282-335` (update

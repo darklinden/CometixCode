@@ -200,7 +200,7 @@ fn raw_log_title(log: &SessionSummary) -> String {
                 .filter(|s| !s.is_empty())
                 .map(str::to_string)
         })
-        .or_else(|| {
+        .or({
             if use_first_prompt {
                 Some(stripped_first_prompt)
             } else {
@@ -361,7 +361,7 @@ fn group_log_rows(
     }
 
     for (_, group_logs) in groups.iter_mut() {
-        group_logs.sort_by(|(_, a), (_, b)| b.modified.cmp(&a.modified));
+        group_logs.sort_by_key(|(_, b)| std::cmp::Reverse(b.modified));
     }
     groups.sort_by(|(_, a), (_, b)| b[0].1.modified.cmp(&a[0].1.modified));
 
@@ -795,7 +795,7 @@ fn tag_tabs_for_logs(logs: &[SessionSummary]) -> Vec<String> {
     }
 }
 
-fn selected_tag<'a>(tag_tabs: &'a [String], selected_tag_index: usize) -> Option<&'a str> {
+fn selected_tag(tag_tabs: &[String], selected_tag_index: usize) -> Option<&str> {
     tag_tabs
         .get(selected_tag_index)
         .and_then(|tag| (tag != ALL_TAG_LABEL).then_some(tag.as_str()))
@@ -1152,11 +1152,14 @@ pub fn LogSelector<'a>(
     let current_load_more_signature = (props.reload_generation, focused, displayed_logs.len());
 
     hooks.use_propagated_terminal_events({
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let displayed_len = displayed_len;
         let display_rows = displayed_rows.clone();
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let visible_count = visible_count;
         let tag_tabs_len = tag_tabs.len();
         let has_current_branch = current_branch.is_some();
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let has_multiple_worktrees = has_multiple_worktrees;
         move |event| match event.event() {
             // CC LogSelector.tsx:231-250 → useSearchInput InputEvent bridge.
@@ -2282,11 +2285,11 @@ mod tests {
 
         assert_eq!(collapsed_rows.len(), 1);
         assert_eq!(
-            log_selector_title_count(ViewMode::List, collapsed_rows.get(0), &displayed_logs, 1,),
+            log_selector_title_count(ViewMode::List, collapsed_rows.first(), &displayed_logs, 1,),
             " (1 of 2)"
         );
         assert_eq!(
-            log_selector_title_count(ViewMode::Search, collapsed_rows.get(0), &displayed_logs, 1,),
+            log_selector_title_count(ViewMode::Search, collapsed_rows.first(), &displayed_logs, 1,),
             ""
         );
         assert_eq!(log_selector_title_count(ViewMode::List, None, &[], 1), "");
@@ -2770,7 +2773,7 @@ mod tests {
                 .starts_with("    ")
         );
         assert_eq!(
-            expand_collapse_hint(rows.get(0), &["shared".to_string()]),
+            expand_collapse_hint(rows.first(), &["shared".to_string()]),
             Some("← to collapse")
         );
         assert_eq!(

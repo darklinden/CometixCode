@@ -33,7 +33,7 @@ pub fn build_query_config() -> QueryConfig {
 #[cfg(test)]
 thread_local! {
     static STREAMING_TOOL_EXECUTION_TEST_OVERRIDE: std::cell::Cell<Option<bool>> =
-        std::cell::Cell::new(None);
+        const { std::cell::Cell::new(None) };
 }
 
 #[cfg(test)]

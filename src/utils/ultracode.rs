@@ -333,7 +333,7 @@ fn canonicalize_model_id(raw: &str) -> String {
     ] {
         if let Some(at) = lower.find(family) {
             if matches!(family, "claude-opus-4" | "claude-sonnet-4") {
-                let tail = lower[at + family.len()..].as_bytes();
+                let tail = &lower.as_bytes()[at + family.len()..];
                 if tail.first() == Some(&b'-')
                     && tail.get(1).is_some_and(u8::is_ascii_digit)
                     && !tail.get(2).is_some_and(u8::is_ascii_digit)

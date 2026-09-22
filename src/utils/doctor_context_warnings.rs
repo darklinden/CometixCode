@@ -97,7 +97,7 @@ pub fn check_claude_md_files(memory_files: &[MemoryFileInfo]) -> Option<ContextW
         return None;
     }
 
-    large_files.sort_by(|a, b| b.content.len().cmp(&a.content.len()));
+    large_files.sort_by_key(|b| std::cmp::Reverse(b.content.len()));
     let details = large_files
         .iter()
         .map(|file| {
@@ -157,7 +157,7 @@ pub fn check_agent_descriptions(
             )
         })
         .collect::<Vec<_>>();
-    agent_tokens.sort_by(|a, b| b.1.cmp(&a.1));
+    agent_tokens.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     let mut details = agent_tokens
         .iter()
@@ -221,7 +221,7 @@ pub fn check_mcp_tools(tools: &[Tool]) -> Option<ContextWarning> {
     }
 
     let mut sorted_servers = tools_by_server.into_iter().collect::<Vec<_>>();
-    sorted_servers.sort_by(|a, b| b.1.1.cmp(&a.1.1));
+    sorted_servers.sort_by_key(|b| std::cmp::Reverse(b.1.1));
 
     let mut details = sorted_servers
         .iter()

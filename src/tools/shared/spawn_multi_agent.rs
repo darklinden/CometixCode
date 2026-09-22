@@ -156,6 +156,7 @@ pub fn resolve_teammate_model(input_model: Option<&str>, leader_model: Option<&s
 ///     classifier auto-approves their tool calls too, instead of falling back
 ///     to `default` and blocking on prompts in a pane nobody watches;
 ///   * it emits NO `--teammate-mode`.
+///
 /// `spawnMultiAgent.ts:52` imports only `buildInheritedEnvVars` from spawnUtils,
 /// so these handlers never see the other copy.
 fn build_inherited_cli_flags_with_options(options: BuildInheritedCliFlagsOptions) -> String {
@@ -896,6 +897,7 @@ fn register_pane_kill_on_abort(
 ///     permission mode and main-loop model came from the query-start snapshot
 ///     instead of `getAppState()` (`:313`/`:320`/`:420`);
 ///   * `AppState.teamContext` (`:452-472`) was never written.
+///
 /// CC's own `PaneBackendExecutor` is reached only through
 /// `registry.ts#getTeammateExecutor`, which has ZERO production callers in
 /// 2.1.88 — it is a vestigial abstraction, not this path's owner. The Rust
@@ -1342,6 +1344,9 @@ pub async fn spawn_teammate(
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
 
     /// Seeds the team in memory AND on disk — the spawn read-modify-write

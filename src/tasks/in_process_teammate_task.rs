@@ -116,21 +116,21 @@ pub fn teammate_task_snapshot_from(
                 let blocks = assistant
                     .content
                     .iter()
-                    .filter_map(|block| match block {
+                    .map(|block| match block {
                         AssistantContent::Text(text) => {
-                            Some(TeammateMessageBlockSnapshot::Text { text: text.clone() })
+                            TeammateMessageBlockSnapshot::Text { text: text.clone() }
                         }
                         AssistantContent::ToolUse(tool_use) => {
-                            Some(TeammateMessageBlockSnapshot::ToolUse {
+                            TeammateMessageBlockSnapshot::ToolUse {
                                 name: tool_use.name.clone(),
                                 description: None,
                                 prompt: None,
                                 command: None,
                                 query: None,
                                 pattern: None,
-                            })
+                            }
                         }
-                        _ => Some(TeammateMessageBlockSnapshot::Other),
+                        _ => TeammateMessageBlockSnapshot::Other,
                     })
                     .collect::<Vec<_>>();
                 Some(TeammateMessageSnapshot {

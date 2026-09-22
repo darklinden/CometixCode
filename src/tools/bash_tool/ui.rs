@@ -402,8 +402,8 @@ fn ansi_escape_end(input: &str, start: usize) -> Option<usize> {
     }
 
     let rest = &input[start..];
-    if rest.starts_with("\x1b[") {
-        let final_rel = rest[2..].find(|ch: char| ('@'..='~').contains(&ch))?;
+    if let Some(csi_body) = rest.strip_prefix("\x1b[") {
+        let final_rel = csi_body.find(|ch: char| ('@'..='~').contains(&ch))?;
         let final_idx = start + 2 + final_rel;
         let final_char = input[final_idx..].chars().next()?;
         return Some(final_idx + final_char.len_utf8());

@@ -123,7 +123,7 @@ impl SkillContextModifier {
 
     fn is_identity(&self) -> bool {
         self.allowed_tools.is_empty()
-            && !self.model.as_deref().is_some_and(|model| !model.is_empty())
+            && self.model.as_deref().is_none_or(|model| model.is_empty())
             && self.effort.is_none()
     }
 
@@ -1340,11 +1340,10 @@ mod tests {
 
         assert_eq!(command_allow_rules(&context).len(), 1);
         assert!(
-            store
+            !store
                 .tool_permission_context()
                 .always_allow_rules
-                .get(&crate::types::permissions::PermissionRuleSource::Command)
-                .is_none()
+                .contains_key(&crate::types::permissions::PermissionRuleSource::Command)
         );
     }
 
@@ -1554,7 +1553,7 @@ mod tests {
         let command = crate::skills::load_skills_dir::find_skill_command("deep", &commands)
             .expect("fork skill");
         let prepared = crate::utils::forked_agent::prepare_forked_command_context(
-            &command,
+            command,
             None,
             &context_with_general_purpose_agent(),
         )
@@ -1564,7 +1563,7 @@ mod tests {
 
         assert_eq!(prepared.base_agent.agent_type, "general-purpose");
         assert_eq!(
-            forked_skill_agent_definition(&command, &prepared.base_agent).effort,
+            forked_skill_agent_definition(command, &prepared.base_agent).effort,
             Some(crate::utils::effort::EffortValue::Named("high".to_string()))
         );
         assert!(prepared.skill_content.contains("Deep body"));

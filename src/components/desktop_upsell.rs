@@ -13,20 +13,12 @@ use crate::components::desktop_handoff::{DesktopHandoff, DesktopHandoffDone, Des
 use iocraft::prelude::*;
 
 /// Maps to CC `DesktopUpsellConfig`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct DesktopUpsellConfig {
     pub enable_shortcut_tip: bool,
     pub enable_startup_dialog: bool,
 }
 
-impl Default for DesktopUpsellConfig {
-    fn default() -> Self {
-        Self {
-            enable_shortcut_tip: false,
-            enable_startup_dialog: false,
-        }
-    }
-}
 
 fn bool_field(value: &serde_json::Value, snake_case: &str, camel_case: &str) -> Option<bool> {
     value
@@ -204,7 +196,7 @@ pub fn DesktopUpsellStartup<'a>(
         }
     });
 
-    let selected = { pending_selection.read().clone() };
+    let selected = { *pending_selection.read() };
     if let Some(selection) = selected {
         pending_selection.set(None);
         match selection {

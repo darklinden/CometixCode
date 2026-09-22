@@ -127,7 +127,7 @@ pub(crate) fn render_tool_result_message(
             // hints, condensed shows the full content via the created
             // message); non-plan condensed collapses to the bare one-line
             // summary with no MessageResponse wrapper.
-            if !(is_plan_file && !verbose) && condensed && !verbose {
+            if !is_plan_file && !verbose && condensed {
                 let num_lines = count_lines(&output.content);
                 let label = crate::utils::path::node_path_relative(
                     &crate::bootstrap::state::get_original_cwd(),
@@ -743,7 +743,7 @@ mod tests {
             "cometix-write-ui-rel-{}",
             uuid::Uuid::new_v4().simple()
         ));
-        crate::bootstrap::state::set_original_cwd(&base.join("project"));
+        crate::bootstrap::state::set_original_cwd(base.join("project"));
         let path = base.join("elsewhere/out.txt");
         let lines = render_tool_result_lines(
             Some(&path.display().to_string()),

@@ -151,8 +151,8 @@ async fn collect_markdown_files(
     .await;
     // A failed onFile makes source Promise.all reject while siblings keep running.
     // Snapshot the entries completed at this boundary, retaining their completion order.
-    let result = files.lock().unwrap().clone();
-    result
+    
+    files.lock().unwrap().clone()
 }
 
 /// Maps to CC `transformPluginSkillFiles`.
@@ -291,10 +291,9 @@ fn create_plugin_command(
     } else {
         None
     };
-    if effort_raw.is_some() && effort.is_none() {
+    if let Some(raw) = effort_raw.as_ref().filter(|_| effort.is_none()) {
         debug(format!(
-            "Plugin command {command_name} has invalid effort '{}'. Valid options: {} or an integer",
-            effort_raw.unwrap(),
+            "Plugin command {command_name} has invalid effort '{raw}'. Valid options: {} or an integer",
             crate::utils::effort::EFFORT_LEVELS.join(", ")
         ));
     }
@@ -701,8 +700,8 @@ async fn load_skills_from_directory(
         }));
     }
     let _ = futures::future::try_join_all(workers).await;
-    let result = skills.lock().unwrap().clone();
-    result
+    
+    skills.lock().unwrap().clone()
 }
 
 // The two source memoized async functions have independent promise identities.

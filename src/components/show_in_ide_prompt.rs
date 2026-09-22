@@ -9,18 +9,14 @@ use crate::components::design_system::pane::Pane;
 use iocraft::prelude::*;
 use std::path::Path;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum ShowInIDEPermissionOptionType {
     AcceptOnce,
     Reject,
+    #[default]
     Other,
 }
 
-impl Default for ShowInIDEPermissionOptionType {
-    fn default() -> Self {
-        Self::Other
-    }
-}
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShowInIDEPermissionOption {
@@ -160,12 +156,11 @@ pub fn ShowInIDEPrompt<'a>(
                         pending_focus.set(Some(options_for_input[next].value.clone()));
                     }
                 }
-                KeyCode::Down => {
-                    if !options_for_input.is_empty() {
+                KeyCode::Down
+                    if !options_for_input.is_empty() => {
                         let next = (focused_index + 1).min(options_for_input.len() - 1);
                         pending_focus.set(Some(options_for_input[next].value.clone()));
                     }
-                }
                 _ => {}
             }
         }

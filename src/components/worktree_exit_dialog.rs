@@ -143,7 +143,7 @@ pub fn WorktreeExitDialog<'a>(
         }
     });
 
-    let action = { pending_action.read().clone() };
+    let action = { *pending_action.read() };
     if let Some(action) = action {
         pending_action.set(None);
         let result =

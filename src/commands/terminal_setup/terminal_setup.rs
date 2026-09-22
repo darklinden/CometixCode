@@ -964,25 +964,24 @@ mod tests {
     // user terminal preferences. nextest gives each test its own process.
     struct InstallerFixture {
         root: PathBuf,
-        vars: Vec<(&'static str, Option<std::ffi::OsString>)>,
+        // Restores every key the fixture writes when the fixture drops.
+        previous_env: Vec<crate::utils::env_utils::EnvVarGuard>,
     }
     impl InstallerFixture {
         fn new() -> Self {
             let root = std::env::temp_dir()
                 .join(format!("cometix-terminal-setup-{}", uuid::Uuid::new_v4()));
             std::fs::create_dir_all(&root).unwrap();
-            let vars = ["HOME", "XDG_CONFIG_HOME", "VSCODE_GIT_ASKPASS_MAIN", "PATH"]
-                .into_iter()
-                .map(|key| (key, std::env::var_os(key)))
-                .collect();
-            unsafe {
-                std::env::set_var("HOME", &root);
-                std::env::set_var("XDG_CONFIG_HOME", root.join(".config"));
-                std::env::remove_var("VSCODE_GIT_ASKPASS_MAIN");
-                std::env::set_var("PATH", "/usr/bin:/bin");
-            }
+            // Writes go through the process-env carrier (clippy.toml forbids raw
+            // set_var outside it); each guard restores its own key on drop.
+            let previous_env = vec![
+                crate::utils::env_utils::EnvVarGuard::set("HOME", &root),
+                crate::utils::env_utils::EnvVarGuard::set("XDG_CONFIG_HOME", root.join(".config")),
+                crate::utils::env_utils::EnvVarGuard::unset("VSCODE_GIT_ASKPASS_MAIN"),
+                crate::utils::env_utils::EnvVarGuard::set("PATH", "/usr/bin:/bin"),
+            ];
             chalk::set_stdout_level(0);
-            Self { root, vars }
+            Self { root, previous_env }
         }
         fn put(&self, path: &Path, value: &str) {
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -998,14 +997,8 @@ mod tests {
     }
     impl Drop for InstallerFixture {
         fn drop(&mut self) {
-            for (key, value) in &self.vars {
-                unsafe {
-                    match value {
-                        Some(value) => std::env::set_var(key, value),
-                        None => std::env::remove_var(key),
-                    }
-                }
-            }
+            // Restore the environment before the fixture root disappears.
+            self.previous_env.clear();
             let _ = std::fs::remove_dir_all(&self.root);
         }
     }
@@ -1275,12 +1268,10 @@ mod tests {
     #[tokio::test]
     async fn terminal_setup_remote_installer_matches_official_no_file_effects() {
         let fixture = InstallerFixture::new();
-        unsafe {
-            std::env::set_var(
-                "VSCODE_GIT_ASKPASS_MAIN",
-                "/remote/.cursor-server/askpass.sh",
-            );
-        }
+        let _askpass = crate::utils::env_utils::EnvVarGuard::set(
+            "VSCODE_GIT_ASKPASS_MAIN",
+            "/remote/.cursor-server/askpass.sh",
+        );
         let output = install_bindings_for_vscode_terminal(
             VSCodeFamilyEditor::Cursor,
             crate::utils::theme::ThemeName::Dark,

@@ -166,7 +166,7 @@ pub fn evict_terminal_task(task_id: &str, app_store: &AppStore) {
             if other.retain.is_some()
                 && other
                     .evict_after
-                    .map_or(true, |deadline| deadline > now_ms())
+                    .is_none_or(|deadline| deadline > now_ms())
             {
                 return UpdateDecision::Same(());
             }
@@ -257,7 +257,7 @@ mod tests {
         // the SAME reference; a fresh value-equal object would NOT be caught.
         let store = store_with(vec![("t1", other_task("t1", "running", false))]);
         let revision_before = store.revision();
-        update_task_state("t1", &store, |task| Arc::clone(task));
+        update_task_state("t1", &store, Arc::clone);
         assert_eq!(
             store.revision(),
             revision_before,
@@ -278,7 +278,7 @@ mod tests {
     fn update_task_state_missing_task_is_same_like_cc_55() {
         let store = store_with(vec![]);
         let revision_before = store.revision();
-        update_task_state("missing", &store, |task| Arc::clone(task));
+        update_task_state("missing", &store, Arc::clone);
         assert_eq!(store.revision(), revision_before);
     }
 

@@ -19,7 +19,7 @@ use crate::utils::session_restore;
 use crate::utils::session_storage::{self, SessionSelection, SessionSummary};
 use std::collections::HashMap;
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -401,7 +401,7 @@ fn resolve_arg(project_path: &str, arg: &str) -> Result<ResolvedResume, ResumeEr
     })
 }
 
-fn latest_session_match<'a>(candidates: Vec<&'a SessionSummary>) -> Option<&'a SessionSummary> {
+fn latest_session_match(candidates: Vec<&SessionSummary>) -> Option<&SessionSummary> {
     dedupe_latest_by_session_id(candidates).into_iter().next()
 }
 
@@ -420,7 +420,7 @@ fn unique_deduped_session_match<'a>(
     }
 }
 
-fn dedupe_latest_by_session_id<'a>(candidates: Vec<&'a SessionSummary>) -> Vec<&'a SessionSummary> {
+fn dedupe_latest_by_session_id(candidates: Vec<&SessionSummary>) -> Vec<&SessionSummary> {
     let mut latest: Vec<&SessionSummary> = Vec::new();
     for candidate in candidates {
         if let Some(existing) = latest
@@ -434,7 +434,7 @@ fn dedupe_latest_by_session_id<'a>(candidates: Vec<&'a SessionSummary>) -> Vec<&
             latest.push(candidate);
         }
     }
-    latest.sort_by(|a, b| b.modified.cmp(&a.modified));
+    latest.sort_by_key(|b| std::cmp::Reverse(b.modified));
     latest
 }
 
@@ -471,7 +471,7 @@ fn load_session_entries_for_selection(
 }
 
 fn load_session_entries_from_path(
-    path: &PathBuf,
+    path: &Path,
     session_id: &str,
     cwd: &str,
 ) -> Result<ResumeLoad, ResumeError> {
@@ -638,6 +638,7 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::fs;
+    use std::path::PathBuf;
     use std::time::SystemTime;
 
     fn summary(id: &str, is_sidechain: bool, team_name: Option<&str>) -> SessionSummary {
@@ -760,8 +761,7 @@ mod tests {
             "cometix-resume-parallel-tools-{}.jsonl",
             Uuid::new_v4()
         ));
-        let entries = vec![
-            json!({
+        let entries = [json!({
                 "type": "assistant",
                 "uuid": "a1",
                 "parentUuid": null,
@@ -798,8 +798,7 @@ mod tests {
                 "timestamp": "2026-06-13T13:40:34.410Z",
                 "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_2", "content": "second output", "is_error": false}]},
                 "toolUseResult": {"stdout": "second output", "stderr": "", "interrupted": false, "isImage": false, "noOutputExpected": false}
-            }),
-        ];
+            })];
         let contents = entries
             .iter()
             .map(serde_json::Value::to_string)

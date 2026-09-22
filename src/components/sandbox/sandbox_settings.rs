@@ -180,6 +180,7 @@ pub fn SandboxSettings<'a>(
         let mut mode_focus = mode_focus;
         let mut override_focus = override_focus;
         let mut pending_result = pending_result;
+        #[allow(clippy::redundant_locals)] // Capture manifest for the closure below.
         let current_enabled = current_enabled;
         move |event| {
             let TerminalEvent::Key(KeyEvent { code, kind, .. }) = event else {

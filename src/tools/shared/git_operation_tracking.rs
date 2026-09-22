@@ -193,7 +193,7 @@ pub fn detect_git_operation(command: &str, output: &str) -> DetectedGitOperation
         // FRESH `gitCmdRe(verb)` with no suffix (CC `:117`).
         let matches_verb = detect_re
             .find_iter(command)
-            .any(|matched| verb != "merge" || command[matched.end()..].chars().next() != Some('-'));
+            .any(|matched| verb != "merge" || !command[matched.end()..].starts_with('-'));
         if matches_verb && marker.iter().any(|marker| output.contains(marker)) {
             let matcher = git_command_regex(verb);
             if let Some(matched) = matcher.find(command) {

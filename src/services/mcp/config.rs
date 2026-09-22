@@ -913,13 +913,13 @@ async fn plugin_mcp_servers() -> anyhow::Result<McpConfigs> {
     }
     let errors = errors.into_inner().unwrap();
     for error in &errors {
-        let encoded = serde_json::to_value(&error).expect("plugin error serializes");
+        let encoded = serde_json::to_value(error).expect("plugin error serializes");
         crate::utils::log::log_error(crate::utils::log::LogError::new(format!(
             "Plugin MCP server error - {}: {}",
             encoded["type"]
                 .as_str()
                 .expect("plugin error discriminator"),
-            crate::types::plugin::get_plugin_error_message(&error)
+            crate::types::plugin::get_plugin_error_message(error)
         )));
     }
     Ok(McpConfigs { servers, errors })

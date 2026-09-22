@@ -496,6 +496,8 @@ pub async fn detect_empty_marketplace_reason(
 }
 
 #[cfg(test)]
+// Further ported items follow the test module in this file.
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
     use crate::utils::settings::{SettingsJson, settings_cache};

@@ -269,7 +269,7 @@ pub fn MCPAgentServerMenu<'a>(
         pending_auth_result.set(None);
         (props.on_complete)(result);
     }
-    let pending_action_value = { pending_action.read().clone() };
+    let pending_action_value = { *pending_action.read() };
     if let Some(action) = pending_action_value {
         pending_action.set(None);
         match action {

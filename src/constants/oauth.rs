@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn oauth_side_effect_switch_is_single_typed_and_default_closed() {
-        assert!(!OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED);
+        const _: () = assert!(!OAUTH_CREDENTIAL_SIDE_EFFECTS_ENABLED);
         let error = anyhow::Error::new(OAuthCredentialSideEffectsUnavailable);
         assert_eq!(
             error.root_cause().to_string(),

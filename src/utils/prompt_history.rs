@@ -368,7 +368,7 @@ mod tests {
 
     #[test]
     fn find_history_match_skips_seen_entries() {
-        let seen = vec!["hello world".to_string()];
+        let seen = ["hello world".to_string()];
         let entry = HistoryEntry {
             display: "hello world".to_string(),
             timestamp_ms: 0,

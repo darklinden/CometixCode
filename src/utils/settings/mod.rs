@@ -178,18 +178,15 @@ fn apply_settings_update(
                 if !existing.is_object() && !existing.is_array() {
                     *existing = serde_json::Value::Object(serde_json::Map::new());
                 }
-                match existing {
-                    serde_json::Value::Object(existing_object) => {
-                        apply_settings_update(existing_object, update_object);
-                    }
-                    // Object patch over an array: lodash keeps the array as the
-                    // merge base and hangs the patch's string keys off it,
-                    // which `jsonStringify` then drops. `ConfigTool` only
-                    // accepts paths from its supported-settings table
-                    // (`supportedSettings.ts#getPath`) and none of them nests
-                    // under an array, so the array is left as-is.
-                    _ => {}
+                if let serde_json::Value::Object(existing_object) = existing {
+                    apply_settings_update(existing_object, update_object);
                 }
+                // Object patch over an array: lodash keeps the array as the
+                // merge base and hangs the patch's string keys off it, which
+                // `jsonStringify` then drops. `ConfigTool` only accepts paths
+                // from its supported-settings table
+                // (`supportedSettings.ts#getPath`) and none of them nests
+                // under an array, so the array is left as-is.
             }
             // Arrays (rule 2) and scalars (default assignment) both overwrite.
             _ => {

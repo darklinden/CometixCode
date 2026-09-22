@@ -1440,7 +1440,7 @@ pub(crate) fn get_agent_listing_delta_attachment(
         .collect::<Vec<_>>();
     let added_lines = filtered
         .iter()
-        .map(|agent| crate::tools::agent_tool::prompt::format_agent_line(agent))
+        .map(crate::tools::agent_tool::prompt::format_agent_line)
         .collect::<Vec<_>>();
     let subscription = crate::utils::auth::get_subscription_type();
     Some(AttachmentMessage::new(serde_json::json!({
@@ -2547,6 +2547,9 @@ pub(crate) fn memory_header(path: &str, mtime_ms: f64) -> String {
 
 #[cfg(test)]
 mod tests {
+    // Deliberately holds TEST_ENV_LOCK across the await; nextest gives every
+    // test its own process, so the lock cannot deadlock against another test.
+    #![allow(clippy::await_holding_lock)]
     use super::*;
     use crate::services::lsp::diagnostic_registry::{
         get_pending_lsp_diagnostic_count, register_pending_lsp_diagnostic,

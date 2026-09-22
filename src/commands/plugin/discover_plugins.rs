@@ -43,6 +43,8 @@ pub struct DiscoverPluginsProps {
 }
 /// Maps to: CC DiscoverPlugins.tsx:61-64#ViewState.
 #[derive(Clone)]
+// Variant names mirror the CC states (`PluginList`, ...).
+#[allow(clippy::enum_variant_names)]
 enum ViewState {
     PluginList,
     PluginDetails,

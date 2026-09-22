@@ -213,7 +213,7 @@ fn named_syntect_theme(name: &'static str) -> &'static SyntectTheme {
         .lock()
         .expect("syntax theme cache mutex should not be poisoned");
     if let Some(theme) = themes.get(name) {
-        return *theme;
+        return theme;
     }
     let assets = HighlightingAssets::from_binary();
     let theme = Box::leak(Box::new(assets.get_theme(name).clone()));
@@ -1068,11 +1068,7 @@ fn line_background(kind: DiffLineKind) -> Option<ToolRenderBackground> {
 }
 
 fn dimmed_background(background: ToolRenderBackground) -> ToolRenderBackground {
-    match background {
-        ToolRenderBackground::DiffAdded => ToolRenderBackground::DiffAdded,
-        ToolRenderBackground::DiffRemoved => ToolRenderBackground::DiffRemoved,
-        other => other,
-    }
+    background
 }
 
 fn split_diff_line(line: &str) -> (DiffLineKind, &str) {

@@ -47,8 +47,8 @@ pub fn UserToolErrorMessage(
         }
         .into_any();
     }
-    if content.starts_with(PLAN_REJECTION_PREFIX) {
-        let plan = content[PLAN_REJECTION_PREFIX.len()..].trim().to_string();
+    if let Some(rejected_plan) = content.strip_prefix(PLAN_REJECTION_PREFIX) {
+        let plan = rejected_plan.trim().to_string();
         return element! { RejectedPlanMessage(plan: plan) }.into_any();
     }
     if content.starts_with(REJECT_MESSAGE_WITH_REASON_PREFIX) {

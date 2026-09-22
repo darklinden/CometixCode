@@ -483,9 +483,10 @@ pub fn background_all(store: &AppStore) -> bool {
             _ => None,
         })
         .collect::<Vec<_>>();
-    let mut changed = shell_ids
-        .into_iter()
-        .fold(false, |changed, id| background_task(&id, true) || changed);
+    let mut changed = false;
+    for id in shell_ids {
+        changed |= background_task(&id, true);
+    }
     for id in agent_ids {
         changed |= crate::tasks::local_agent_task::background_agent_task(&id);
     }

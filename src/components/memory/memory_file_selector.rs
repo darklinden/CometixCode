@@ -779,14 +779,14 @@ mod tests {
         let no_env = |_: &str| None::<String>;
 
         let disabled = auto_memory_snapshot(&settings, &cwd, &config_home, Some(&home), &no_env);
-        assert_eq!(disabled.enabled, false);
-        assert_eq!(disabled.dream_enabled, false);
+        assert!(!disabled.enabled);
+        assert!(!disabled.dream_enabled);
         assert_eq!(disabled.path, None);
 
         settings.auto_memory_enabled = Some(true);
         let enabled = auto_memory_snapshot(&settings, &cwd, &config_home, Some(&home), &no_env);
-        assert_eq!(enabled.enabled, true);
-        assert_eq!(enabled.dream_enabled, true);
+        assert!(enabled.enabled);
+        assert!(enabled.dream_enabled);
         assert_eq!(enabled.path, Some(PathBuf::from("/tmp/memory-dir")));
 
         let disabled_by_env =

@@ -278,7 +278,7 @@ pub(crate) fn cron_delete_output(input: &serde_json::Value) -> Result<DeleteOutp
     use crate::utils::cron_tasks::remove_cron_tasks;
 
     let id = cron_input_string(input, "id");
-    remove_cron_tasks(&[id.clone()])?;
+    remove_cron_tasks(std::slice::from_ref(&id))?;
     Ok(DeleteOutput { id })
 }
 

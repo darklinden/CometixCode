@@ -100,20 +100,16 @@ pub fn reduce_multiple_choice_state(
         MultipleChoiceAction::UpdateQuestionState {
             question_text,
             updates,
-            is_multi_select,
+            // CC's `isMultiSelect` branch yields the same empty selection
+            // list on both sides here, so the flag is not read.
+            is_multi_select: _,
         } => {
             let existing = state.question_states.get(&question_text).cloned();
             let new_state = QuestionState {
                 selected_value: updates
                     .selected_value
                     .or_else(|| existing.as_ref().map(|state| state.selected_value.clone()))
-                    .unwrap_or_else(|| {
-                        if is_multi_select {
-                            Vec::new()
-                        } else {
-                            Vec::new()
-                        }
-                    }),
+                    .unwrap_or_default(),
                 text_input_value: updates
                     .text_input_value
                     .or_else(|| {

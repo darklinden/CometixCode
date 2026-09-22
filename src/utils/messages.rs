@@ -1494,8 +1494,7 @@ pub fn strip_advisor_blocks(
 ) -> Vec<crate::types::message::Message> {
     use crate::types::message::{AssistantContent, Message};
 
-    let mut changed = false;
-    let result = messages
+    messages
         .into_iter()
         .map(|message| {
             let Message::Assistant(mut assistant) = message else {
@@ -1510,7 +1509,6 @@ pub fn strip_advisor_blocks(
             if assistant.content.len() == original_len {
                 return Message::Assistant(assistant);
             }
-            changed = true;
             let only_invisible_or_blank = !assistant.has_model_content()
                 || assistant.content.iter().all(|content| match content {
                     AssistantContent::Thinking { .. }
@@ -1527,9 +1525,7 @@ pub fn strip_advisor_blocks(
             }
             Message::Assistant(assistant)
         })
-        .collect::<Vec<_>>();
-
-    if changed { result } else { result }
+        .collect::<Vec<_>>()
 }
 
 /// Maps to: CC `utils/messages.ts` `stripSignatureBlocks(...)`.
@@ -1541,27 +1537,22 @@ pub fn strip_signature_blocks(
 ) -> Vec<crate::types::message::Message> {
     use crate::types::message::{AssistantContent, Message};
 
-    let mut changed = false;
     let mut result = Vec::with_capacity(messages.len());
     for message in messages {
         let Message::Assistant(mut assistant) = message else {
             result.push(message);
             continue;
         };
-        let original_len = assistant.content.len();
         assistant.content.retain(|content| {
             !matches!(
                 content,
                 AssistantContent::Thinking { .. } | AssistantContent::RedactedThinking { .. }
             )
         });
-        if assistant.content.len() != original_len {
-            changed = true;
-        }
         result.push(Message::Assistant(assistant));
     }
 
-    if changed { result } else { result }
+    result
 }
 
 pub fn is_tool_cancel_message(content: &str) -> bool {
@@ -1658,9 +1649,7 @@ pub fn extract_tag(content: &str, tag: &str) -> Option<String> {
             continue;
         }
 
-        let Some(open_end_rel) = content[name_end..].find('>') else {
-            return None;
-        };
+        let open_end_rel = content[name_end..].find('>')?;
         let open_end = name_end + open_end_rel;
         let content_start = open_end + 1;
         let mut inner_search = content_start;
@@ -1676,9 +1665,7 @@ pub fn extract_tag(content: &str, tag: &str) -> Option<String> {
                 (Some(open), Some(close)) if open < close => {
                     depth += 1;
                     let after_name = open + tag.len() + 1;
-                    let Some(end_rel) = content[after_name..].find('>') else {
-                        return None;
-                    };
+                    let end_rel = content[after_name..].find('>')?;
                     inner_search = after_name + end_rel + 1;
                 }
                 (_, Some(close)) if depth == 0 => {
@@ -5002,7 +4989,7 @@ mod message_merge_tests {
     fn whitespace_filter_matches_official_envelope_identity_and_js_trim() {
         use crate::types::message::{AssistantContent, AssistantMessageIdentity};
         let identity = AssistantContent::MessageIdentity(AssistantMessageIdentity::default());
-        assert!(!has_only_whitespace_text_content(&[identity.clone()]));
+        assert!(!has_only_whitespace_text_content(std::slice::from_ref(&identity)));
         assert!(has_only_whitespace_text_content(&[
             AssistantContent::Text("\u{feff} \n".into()),
             identity.clone()

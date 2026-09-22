@@ -708,9 +708,9 @@ mod tests {
         update.set(format!("{key}\0ignored"), "kept\0ignored");
         update.set("ALSO=IGNORED", "x");
         let committed = update.commit();
-        assert_eq!(committed.var(key).as_deref(), Some("kept"));
+        assert_eq!(committed.var(key), Some("kept"));
         assert_eq!(
-            committed.var(format!("{key}\0lookup-suffix")).as_deref(),
+            committed.var(format!("{key}\0lookup-suffix")),
             Some("kept")
         );
         assert_eq!(committed.var_os("ALSO=IGNORED"), None);

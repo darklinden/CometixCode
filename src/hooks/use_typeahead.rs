@@ -5,6 +5,7 @@
 //!   - Agent suggestions
 //!   - Shell completion
 //!   - Prompt suggestions (AI-generated)
+//!
 //! Returns TypeaheadState with suggestions list + selection index.
 
 use crate::commands::Command;
@@ -297,7 +298,7 @@ pub fn extract_completion_token(
                     .is_some_and(char::is_whitespace);
             if boundary_ok {
                 let end = extend_token_end(text, cursor);
-                if end >= at_idx + 1 && text[at_idx + 1..end].chars().all(is_completion_char) {
+                if end > at_idx && text[at_idx + 1..end].chars().all(is_completion_char) {
                     return Some(CompletionToken {
                         token: text[at_idx..end].to_string(),
                         start_pos: at_idx,
@@ -1459,7 +1460,7 @@ pub fn use_typeahead(
         })
         .unwrap_or_default();
     let mut selected = hooks.use_state(|| 0i32);
-    let previous_suggestions = hooks.use_state(|| Arc::<Vec<SuggestionItem>>::default());
+    let previous_suggestions = hooks.use_state(Arc::<Vec<SuggestionItem>>::default);
     let file_requests =
         hooks.use_const(|| Arc::new(async_channel::unbounded::<FileSuggestionRequest>()));
     // Monotonic request generation mirrors the source's latestSearchTokenRef:
@@ -2577,7 +2578,7 @@ mod tests {
     fn command_argument_hint_matches_static_and_progressive_source_branches() {
         let command = crate::commands::color::command();
         assert_eq!(
-            command_argument_hint_for_input("/color ", 7, &[command.clone()]),
+            command_argument_hint_for_input("/color ", 7, std::slice::from_ref(&command)),
             Some("<color|default>".into())
         );
         assert_eq!(

@@ -2286,6 +2286,7 @@ pub(crate) trait ToolCall: Sync {
     /// - `StructuredOutput` instances carry a per-instance override
     ///   (`utils/hooks/hookHelpers.ts:60-63` spreads the base tool and
     ///   replaces `prompt()`), also stored in `Tool.description`.
+    ///
     /// Constant-return tools (the other ~38, e.g. `GlobTool.ts:143`,
     /// `ConfigTool.ts:74`) ignore both parameters and forward to the same
     /// source their schema constructor renders eagerly.
@@ -3017,7 +3018,7 @@ mod tests {
         context.set_app_state(|state| {
             state.verbose = true;
         });
-        assert_eq!(store.get().verbose, true);
+        assert!(store.get().verbose);
         assert_eq!(context.get_app_state().map(|s| s.verbose), Some(true));
 
         context.set_app_state_for_tasks(|state| {

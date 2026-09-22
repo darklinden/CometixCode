@@ -84,8 +84,8 @@ pub fn load_agents_from_directory(
         .await;
     });
     *loaded_paths = shared_paths.lock().unwrap().clone();
-    let result = agents.lock().unwrap().clone();
-    result
+    
+    agents.lock().unwrap().clone()
 }
 
 /// Maps to CC `loadPluginAgents.ts#loadAgentFromFile`.

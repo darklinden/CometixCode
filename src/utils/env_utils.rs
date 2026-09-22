@@ -119,6 +119,8 @@ pub struct TestStateLock(std::sync::Mutex<()>);
 
 #[cfg(test)]
 impl TestStateLock {
+    // `new()` mints a fresh value, so `Default` would be misleading.
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self(std::sync::Mutex::new(()))
     }

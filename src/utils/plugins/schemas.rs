@@ -1197,8 +1197,7 @@ pub fn plugin_marketplace_entry_schema() -> &'static Schema {
             };
             fields.into_iter().map(|(name, field)| (name, field.optional())).collect::<Vec<_>>()
         };
-        for (name, field) in vec![
-            (
+        for (name, field) in [(
                 "name",
                 zod::string()
                     .min_with_message(1, "Plugin name cannot be empty")
@@ -1220,8 +1219,7 @@ pub fn plugin_marketplace_entry_schema() -> &'static Schema {
                     .optional()
                     .default(serde_json::json!(true))
                     .describe("Require the plugin manifest to be present in the plugin folder. If false, the marketplace entry provides the manifest."),
-            ),
-        ] {
+            )] {
             if let Some((_, current)) = fields.iter_mut().find(|(key, _)| *key == name) {
                 *current = field;
             } else {
@@ -1478,6 +1476,8 @@ pub fn known_marketplaces_file_schema() -> &'static Schema {
 }
 
 #[cfg(test)]
+// Further ported items follow the test module in this file.
+#[allow(clippy::items_after_test_module)]
 mod tests {
     #[test]
     fn plugin_scope_schema_and_typed_values_match_official_bun_oracle() {

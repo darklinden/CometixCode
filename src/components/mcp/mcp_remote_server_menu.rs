@@ -702,7 +702,7 @@ pub fn MCPRemoteServerMenu<'a>(
         pending_runtime_cancel.set(false);
         (props.on_cancel)(());
     }
-    let pending_action_value = { pending_action.read().clone() };
+    let pending_action_value = { *pending_action.read() };
     if let Some(action) = pending_action_value {
         pending_action.set(None);
         match action {

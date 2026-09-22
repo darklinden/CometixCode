@@ -162,7 +162,6 @@ pub fn use_history_search(
                             _ => {}
                         }
                         event.stop_propagation();
-                        return;
                     }
                 }
                 _ => {}

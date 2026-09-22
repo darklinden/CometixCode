@@ -11,10 +11,11 @@ use serde::{Deserialize, Serialize};
 
 /// Maps to CC `utils/effort.ts:11` `EffortLevel`, the enumerated half of the
 /// level strings in `EFFORT_LEVELS`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) enum ModelEffortLevel {
     Low,
     Medium,
+    #[default]
     High,
     Xhigh,
     Max,

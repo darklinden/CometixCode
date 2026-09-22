@@ -318,9 +318,8 @@ pub(super) async fn execute_hooks(
                 raw_behavior,
                 Some(PermissionBehavior::Allow | PermissionBehavior::Ask)
             )
+            || permission_behavior.is_none() && raw_behavior.is_none()
         {
-            result.updated_input = raw_input.clone();
-        } else if permission_behavior.is_none() && raw_behavior.is_none() {
             result.updated_input = raw_input.clone();
         }
         results.push(result);

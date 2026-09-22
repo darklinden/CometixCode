@@ -18,8 +18,10 @@ pub fn PromptInputHelpMenu(
     props: &PromptInputHelpMenuProps,
     _hooks: Hooks,
 ) -> impl Into<AnyElement<'static>> {
-    let col1_width = if props.fixed_width { 24u32 } else { 24u32 };
-    let col2_width = if props.fixed_width { 35u32 } else { 35u32 };
+    // CC's `fixedWidth` branch resolves to these same widths in this port,
+    // so the prop is inert for now.
+    let col1_width = 24u32;
+    let col2_width = 35u32;
 
     element! {
         View(
